@@ -1,0 +1,27 @@
+{
+  "name": "prenotazioni-impianto",
+  "version": "1.0.0",
+  "description": "Sistema prenotazioni e richieste trasporto per clienti e impianto",
+  "main": "server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "postinstall": "npm rebuild bcrypt --build-from-source && npm rebuild sqlite3 --build-from-source"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "author": "Biomac",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
+    "multer": "^1.4.5-lts.2",
+    "nodemailer": "^6.10.0",
+    "sqlite3": "^5.1.7",
+    "dotenv": "^16.4.5"
+  }
+}

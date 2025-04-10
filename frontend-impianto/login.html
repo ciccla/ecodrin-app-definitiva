@@ -2,22 +2,44 @@
 <html lang="it">
 
 <head>
-    <meta charset="UTF-8">
-    <title>Login Impianto</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <title>Login Impianto</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <h1>Login Impianto</h1>
-    <form action="/impianto/login" method="POST">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br><br>
+  <h1>Login Impianto</h1>
+  <form id="loginForm">
+    <label for="username">Username:</label>
+    <input type="text" id="username" name="username" required><br><br>
 
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required><br><br>
 
-        <button type="submit">Accedi</button>
-    </form>
+    <button type="submit">Accedi</button>
+  </form>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+      e.preventDefault(); // blocca il submit classico
+
+      const formData = new FormData(this);
+
+      const response = await fetch('/impianto/login', {
+        method: 'POST',
+        body: formData
+      });
+
+      const text = await response.text();
+
+      if (text.includes("Login impianto effettuato con successo")) {
+        alert(text);
+        window.location.href = "/impianto/dashboard.html"; // ✅ redirect
+      } else {
+        alert("Credenziali errate o utente non trovato.");
+      }
+    });
+  </script>
 </body>
 
 </html>

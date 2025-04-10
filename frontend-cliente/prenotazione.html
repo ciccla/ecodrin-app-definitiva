@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Nuova Prenotazione</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #e8f5e9;
+            color: #2e7d32;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        form {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #c8e6c9;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        select[multiple] {
+            height: 100px;
+        }
+
+        button {
+            background: #388e3c;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background: #2e7d32;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Inserisci Prenotazione</h1>
+    <p>
+        <a href="dashboard.html">⬅️ Torna alla Dashboard</a>
+    </p>
+    <p><a href="/cliente/dashboard.html" style="display: inline-block; background: #388e3c; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; margin-bottom: 15px;">⬅ Torna alla Dashboard</a></p>
+    
+    <form action="/cliente/prenotazione" method="POST" enctype="multipart/form-data">
+
+    <form action="/cliente/prenotazione" method="POST" enctype="multipart/form-data">
+
+        <label>Ragione Sociale</label>
+        <input type="text" name="ragione_sociale" required>
+
+        <label>Produttore</label>
+        <input type="text" name="produttore" required>
+
+        <label>Codice CER</label>
+        <input type="text" name="codice_cer" required>
+
+        <label>Caratteristiche di Pericolo</label>
+        <div class="caratteristiche-pericolo" style="display: flex; flex-wrap: wrap; gap: 5px;">
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP1"> HP1</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP2"> HP2</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP3"> HP3</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP4"> HP4</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP5"> HP5</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP6"> HP6</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP7"> HP7</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP8"> HP8</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP9"> HP9</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP10"> HP10</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP11"> HP11</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP12"> HP12</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP13"> HP13</label>
+            <label><input type="checkbox" name="caratteristiche_pericolo" value="HP14"> HP14</label>
+        </div>
+
+        <label>Tipo di Imballo</label>
+        <select name="tipo_imballo" id="tipo_imballo" onchange="checkAltro()">
+            <option value="">Seleziona</option>
+            <option value="Sfuso">Sfuso</option>
+            <option value="Cisternetta">Cisternetta</option>
+            <option value="Big Bags">Big Bags</option>
+            <option value="Pallet">Pallet</option>
+            <option value="Fusti">Fusti</option>
+            <option value="Altro">Altro</option>
+        </select>
+
+        <div id="altroImballo" style="display:none;">
+            <label>Specificare Altro</label>
+            <input type="text" name="altro_imballo">
+        </div>
+
+        <label>Stato Fisico</label>
+        <select name="stato_fisico" required>
+            <option value="">Seleziona</option>
+            <option value="SP">SP (in polvere o polverulento)</option>
+            <option value="S">S (solido)</option>
+            <option value="VS">VS (vischioso/sciropposo)</option>
+            <option value="FP">FP (fangoso)</option>
+            <option value="L">L (liquido)</option>
+        </select>
+
+        <label>Quantità (in KG)</label>
+        <input type="number" name="quantita" required>
+
+        <label>Data Conferimento</label>
+        <input type="date" name="giorno_conferimento" required>
+
+        <label>Certificato Analitico (PDF o immagine)</label>
+        <input type="file" name="certificato_analitico" accept=".pdf,image/*">
+
+        <button type="submit">Invia Prenotazione</button>
+    </form>
+
+    <script>
+        function checkAltro() {
+            const select = document.getElementById('tipo_imballo');
+            document.getElementById('altroImballo').style.display = select.value === 'Altro' ? 'block' : 'none';
+        }
+    </script>
+
+</body>
+</html>

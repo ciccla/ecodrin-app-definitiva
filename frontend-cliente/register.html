@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Registrazione Cliente</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <h1>Registrazione Cliente</h1>
+
+    <form action="/cliente/register" method="POST">
+
+        <label>Email:</label><br>
+        <input type="email" name="email" required><br><br>
+
+        <label>Username:</label><br>
+        <input type="text" name="username" required><br><br>
+
+        <label>Password:</label><br>
+        <input type="password" name="password" required><br><br>
+
+        <button type="submit">Registrati</button>
+
+    </form>
+
+    <p>Hai già un account? <a href="login.html">Login</a></p>
+
+</body>
+
+</html>

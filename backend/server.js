@@ -365,7 +365,24 @@ app.get('/impianto/download-certificato/:filename', (req, res) => {
     }
     res.download(file);
 });
-
+app.get('/crea-admin', async (req, res) => {
+    const bcrypt = require('bcrypt');
+    const hash = await bcrypt.hash('admin123', 10);
+  
+    const query = `
+      INSERT INTO utenti (username, password, email, ruolo)
+      VALUES (?, ?, ?, ?)
+    `;
+  
+    db.run(query, ['admin', hash, 'admin@example.com', 'admin'], function (err) {
+      if (err) {
+        console.error('Errore nella creazione admin:', err.message);
+        return res.send('❌ Admin NON creato. Forse esiste già.');
+      }
+      res.send('✅ Admin creato con successo!');
+    });
+  });
+  
 // ------------------------ AVVIO SERVER ------------------------
 app.listen(PORT, () => {
     console.log(`Server avviato su http://localhost:${PORT}`);

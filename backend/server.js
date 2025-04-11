@@ -382,6 +382,15 @@ app.get('/crea-admin', async (req, res) => {
       res.send('✅ Admin creato con successo!');
     });
   });
+  //------------- check-utenti
+  app.get('/check-utenti', (req, res) => {
+    db.all('SELECT * FROM utenti', [], (err, rows) => {
+      if (err) {
+        return res.status(500).send('Errore nella lettura utenti');
+      }
+      res.json(rows);
+    });
+  });
   
 // ------------------------ AVVIO SERVER ------------------------
 app.listen(PORT, () => {

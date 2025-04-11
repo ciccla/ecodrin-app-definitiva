@@ -2,406 +2,307 @@
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
-const sqlite3 = require('sqlite3').verbose();
 const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
-const db = require('./db');
+const db = require('./db'); // Usa pool PostgreSQL
 
 // ------------------------ CONFIGURAZIONE SERVER ------------------------
 const app = express();
-const PORT = 3000;
-// ✅ Middleware per parsing del body
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 // ------------------------ CONFIGURAZIONE SMTP ------------------------
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    }
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
 });
+
 // ------------------------ UPLOAD CONFIG ------------------------
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
 
-// ------------------------ MIDDLEWARE ------------------------
+// ------------------------ MIDDLEWARE SESSIONE ------------------------
 app.use(session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true
+  secret: process.env.SESSION_SECRET || 'supersecret',
+  resave: false,
+  saveUninitialized: true
 }));
-
-// ------------------------ CREAZIONE TABELLE ------------------------
-db.run(`CREATE TABLE IF NOT EXISTS note_richiesta (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    prenotazione_id INTEGER NOT NULL,
-    richiesta TEXT,
-    risposta TEXT,
-    FOREIGN KEY (prenotazione_id) REFERENCES prenotazioni(id)
-)`);
-
-db.run(`CREATE TABLE IF NOT EXISTS richieste_trasporto (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cliente_id INTEGER NOT NULL,
-    richiedente TEXT NOT NULL,
-    produttore TEXT NOT NULL,
-    codice_cer TEXT NOT NULL,
-    tipo_automezzo TEXT NOT NULL,
-    data_trasporto TEXT NOT NULL,
-    orario_preferito TEXT NOT NULL,
-    numero_referente TEXT NOT NULL,
-    prezzo_pattuito REAL NOT NULL,
-    stato TEXT DEFAULT 'in attesa',
-    nota TEXT,
-    FOREIGN KEY (cliente_id) REFERENCES utenti(id)
-)`);
 
 // ------------------------ STATIC FILES ------------------------
 app.use('/cliente', express.static(path.join(__dirname, '../frontend-cliente')));
 app.use('/impianto', express.static(path.join(__dirname, '../frontend-impianto')));
 
-// ------------------------ ROTTE ------------------------
+// ------------------------ ROUTES ------------------------
 
-// ✔️ Test server
+// Test server
 app.get('/', (req, res) => {
-    res.send('Server funzionante ✅');
+  res.send('✅ Server attivo');
 });
 
-// ------------------------ CLIENTE ------------------------
-
+// ------------------------ CLIENTE: REGISTRAZIONE ------------------------
 app.post('/cliente/register', async (req, res) => {
-    const { email, username, password } = req.body;
-    if (!email || !username || !password) return res.send('Compila tutti i campi!');
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) return res.send('Inserisci un\'email valida.');
+  const { email, username, password } = req.body;
+  if (!email || !username || !password) return res.send('Compila tutti i campi');
 
-    db.get('SELECT * FROM utenti WHERE username = ?', [username], async (err, row) => {
-        if (err) return res.send('Errore interno.');
-        if (row) return res.send('Username già registrato.');
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) return res.send('Email non valida');
 
-        const hash = await bcrypt.hash(password, 10);
-        db.run('INSERT INTO utenti (username, password, email, ruolo) VALUES (?, ?, ?, ?)',
-            [username, hash, email, 'cliente'],
-            (err) => {
-                if (err) return res.send('Errore nella registrazione.');
-                res.redirect('/cliente/dashboard.html');
-            });
-    });
+  try {
+    const exists = await db.query('SELECT id FROM utenti WHERE username = $1', [username]);
+    if (exists.rows.length > 0) return res.send('Username già registrato');
+
+    const hash = await bcrypt.hash(password, 10);
+    await db.query(
+      'INSERT INTO utenti (username, password, email, ruolo) VALUES ($1, $2, $3, $4)',
+      [username, hash, email, 'cliente']
+    );
+
+    res.redirect('/cliente/dashboard.html');
+  } catch (err) {
+    console.error('❌ Errore registrazione:', err.message);
+    res.send('Errore nella registrazione');
+  }
 });
 
-// Login cliente
-app.post('/cliente/login', (req, res) => {
-    const { username, password } = req.body;
-    if (!username || !password) return res.send('Compila tutti i campi!');
+// ------------------------ CLIENTE: LOGIN ------------------------
+app.post('/cliente/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.send('Compila tutti i campi');
 
-    db.get('SELECT * FROM utenti WHERE username = ? AND ruolo = "cliente"', [username], async (err, user) => {
-        if (err) return res.send('Errore interno.');
-        if (!user) return res.send('Utente non trovato.');
+  try {
+    const result = await db.query(
+      'SELECT * FROM utenti WHERE username = $1 AND ruolo = $2',
+      [username, 'cliente']
+    );
 
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.send('Password errata.');
+    const user = result.rows[0];
+    if (!user) return res.send('Utente non trovato');
 
-        req.session.utente = { id: user.id, username: user.username, ruolo: user.ruolo };
-        res.redirect('/cliente/dashboard.html');
-    });
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.send('Password errata');
+
+    req.session.utente = { id: user.id, username: user.username, ruolo: user.ruolo };
+    res.redirect('/cliente/dashboard.html');
+  } catch (err) {
+    console.error('❌ Login cliente:', err.message);
+    res.send('Errore durante il login');
+  }
 });
 
-// Logout cliente
+// ------------------------ CLIENTE: LOGOUT ------------------------
 app.get('/cliente/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.redirect('/cliente/login.html');
-    });
+  req.session.destroy(() => res.redirect('/cliente/login.html'));
 });
 
-// Visualizza prenotazioni cliente
-app.get('/cliente/prenotazioni', (req, res) => {
-    if (!req.session.utente) return res.status(403).send([]);
-    db.all('SELECT * FROM prenotazioni WHERE cliente_id = ?', [req.session.utente.id], (err, rows) => {
-        if (err) return res.send([]);
-        res.json(rows);
-    });
+// ------------------------ CLIENTE: PRENOTAZIONI - VISUALIZZA ------------------------
+app.get('/cliente/prenotazioni', async (req, res) => {
+  if (!req.session.utente) return res.status(403).send([]);
+  try {
+    const result = await db.query(
+      'SELECT * FROM prenotazioni WHERE cliente_id = $1',
+      [req.session.utente.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Errore caricamento prenotazioni:', err.message);
+    res.send([]);
+  }
 });
-
-// Inserisci prenotazione cliente
-app.post('/cliente/prenotazione', upload.single('certificato_analitico'), (req, res) => {
+// ------------------------ CLIENTE: NUOVA PRENOTAZIONE ------------------------
+app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async (req, res) => {
     if (!req.session.utente) return res.status(403).send('Devi essere loggato');
-
+  
     const {
-        ragione_sociale, produttore, codice_cer, quantita,
-        giorno_conferimento, stato_fisico, tipo_imballo, tipo_imballo_altro
+      ragione_sociale, produttore, codice_cer, caratteristiche_pericolo,
+      tipo_imballo, tipo_imballo_altro, stato_fisico,
+      quantita, giorno_conferimento
     } = req.body;
-
-    let caratteristiche_pericolo = req.body.caratteristiche_pericolo || [];
-    if (!Array.isArray(caratteristiche_pericolo)) {
-        caratteristiche_pericolo = [caratteristiche_pericolo];
-    }
-    caratteristiche_pericolo = caratteristiche_pericolo.join(',');
-
-    const imballo_finale = (tipo_imballo === 'Altro' && tipo_imballo_altro) ? tipo_imballo_altro : tipo_imballo;
-
-    if (!ragione_sociale || !produttore || !codice_cer || !stato_fisico || !imballo_finale || !quantita || !giorno_conferimento) {
-        return res.send('Compila tutti i campi obbligatori');
-    }
-
+  
+    const caratteristiche = Array.isArray(caratteristiche_pericolo)
+      ? caratteristiche_pericolo.join(',')
+      : caratteristiche_pericolo || '';
+  
+    const imballo_finale = tipo_imballo === 'Altro' && tipo_imballo_altro
+      ? tipo_imballo_altro
+      : tipo_imballo;
+  
     const certificato = req.file ? req.file.filename : null;
-
-    db.run(`INSERT INTO prenotazioni 
-        (cliente_id, ragione_sociale, produttore, codice_cer, caratteristiche_pericolo, tipo_imballo, stato_fisico, certificato_analitico, quantita, giorno_conferimento)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [req.session.utente.id, ragione_sociale, produttore, codice_cer, caratteristiche_pericolo, imballo_finale, stato_fisico, certificato, quantita, giorno_conferimento],
-        (err) => {
-            if (err) {
-                console.error('❌ Errore durante l\'inserimento prenotazione:', err.message);
-                return res.send('Errore durante l\'inserimento.');
-            }
-            res.send('Prenotazione inserita correttamente ✅');
-        }
-    );
-});
-// ✅ Cliente invia risposta all'impianto
-app.post('/cliente/invia-risposta', (req, res) => {
+  
+    try {
+      await db.query(`
+        INSERT INTO prenotazioni 
+        (cliente_id, ragione_sociale, produttore, codice_cer, caratteristiche_pericolo,
+        tipo_imballo, stato_fisico, certificato_analitico, quantita, giorno_conferimento)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+      `, [
+        req.session.utente.id, ragione_sociale, produttore, codice_cer,
+        caratteristiche, imballo_finale, stato_fisico,
+        certificato, quantita, giorno_conferimento
+      ]);
+  
+      res.send('Prenotazione inserita correttamente ✅');
+    } catch (err) {
+      console.error('❌ Errore inserimento:', err.message);
+      res.send('Errore durante l\'inserimento');
+    }
+  });
+  
+  // ------------------------ CLIENTE: INVIA RISPOSTA ------------------------
+  app.post('/cliente/invia-risposta', async (req, res) => {
     if (!req.session.utente) return res.status(403).send('Accesso negato');
-
     const { prenotazione_id, risposta } = req.body;
-
-    if (!risposta || !prenotazione_id) return res.send('Devi inserire una risposta valida.');
-
-    db.run(
-        'UPDATE note_richiesta SET risposta = ? WHERE prenotazione_id = ?',
-        [risposta, prenotazione_id],
-        (err) => {
-            if (err) {
-                console.error('❌ Errore salvataggio risposta:', err.message);
-                return res.send('Errore durante l\'invio della risposta.');
-            }
-            res.send('Risposta inviata ✅');
-        }
-    );
-});
-// richiesta di trasporto dal cliente loggato
-app.post('/cliente/richieste-trasporto', (req, res) => {
+    if (!risposta || !prenotazione_id) return res.send('Dati mancanti');
+  
+    try {
+      await db.query(
+        'UPDATE note_richiesta SET risposta = $1 WHERE prenotazione_id = $2',
+        [risposta, prenotazione_id]
+      );
+      res.send('Risposta inviata ✅');
+    } catch (err) {
+      console.error(err);
+      res.send('Errore nell\'invio risposta');
+    }
+  });
+  
+  // ------------------------ CLIENTE: RICHIESTA TRASPORTO ------------------------
+  app.post('/cliente/richieste-trasporto', async (req, res) => {
     if (!req.session.utente) return res.status(403).send('Accesso negato');
-
     const {
-        richiedente, produttore, codice_cer, tipo_automezzo,
-        data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
+      richiedente, produttore, codice_cer, tipo_automezzo,
+      data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
     } = req.body;
-
-    if (!richiedente || !produttore || !codice_cer || !tipo_automezzo || !data_trasporto || !orario_preferito || !numero_referente || !prezzo_pattuito) {
-        return res.send('Compila tutti i campi obbligatori.');
+  
+    try {
+      await db.query(`
+        INSERT INTO richieste_trasporto 
+        (cliente_id, richiedente, produttore, codice_cer, tipo_automezzo,
+        data_trasporto, orario_preferito, numero_referente, prezzo_pattuito)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+      `, [
+        req.session.utente.id, richiedente, produttore, codice_cer, tipo_automezzo,
+        data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
+      ]);
+      res.send('Richiesta trasporto inviata ✅');
+    } catch (err) {
+      console.error(err);
+      res.send('Errore richiesta trasporto');
     }
-
-    db.run(`INSERT INTO richieste_trasporto 
-        (cliente_id, richiedente, produttore, codice_cer, tipo_automezzo, data_trasporto, orario_preferito, numero_referente, prezzo_pattuito)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [req.session.utente.id, richiedente, produttore, codice_cer, tipo_automezzo, data_trasporto, orario_preferito, numero_referente, prezzo_pattuito],
-        (err) => {
-            if (err) {
-                console.error('Errore nel salvataggio della richiesta:', err.message);
-                return res.send('Errore nel salvataggio della richiesta.');
-            }
-            res.send('Richiesta trasporto inviata correttamente ✅');
-        }
-    );
-});
-
-//---------------------impianto 
-
-app.post('/impianto/login', (req, res) => {
+  });
+  
+  // ------------------------ IMPIANTO: LOGIN ------------------------
+  app.post('/impianto/login', async (req, res) => {
     const { username, password } = req.body;
+    if (!username || !password) return res.send('Compila tutti i campi');
   
-    if (!username || !password) return res.send('Compila tutti i campi!');
+    try {
+      const result = await db.query('SELECT * FROM utenti WHERE email = $1 AND ruolo = $2', [username, 'admin']);
+      const user = result.rows[0];
+      if (!user) return res.send('Admin non trovato');
   
-    db.get('SELECT * FROM utenti WHERE email = ? AND ruolo = "admin"', [username], async (err, user) => {
-      if (err) return res.send('Errore interno.');
-      if (!user) return res.send('Admin non trovato.');
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) return res.send('Password errata');
   
-      const validPassword = await bcrypt.compare(password, user.password);
-      if (!validPassword) return res.send('Password errata.');
-  
-      req.session.admin = {
-        id: user.id,
-        username: user.username,
-        ruolo: user.ruolo
-      };
-  
+      req.session.admin = { id: user.id, username: user.username, ruolo: user.ruolo };
       res.send('Login impianto effettuato con successo ✅');
-    });
-  });
-  
-
-
-// Logout impianto
-app.get('/impianto/logout', (req, res) => {
-    req.session.destroy(() => {
-        res.redirect('/impianto/login.html');
-    });
-});
-
-// Visualizza tutte le prenotazioni
-app.get('/impianto/prenotazioni', (req, res) => {
-    if (!req.session.admin) return res.status(403).send('Accesso negato');
-
-    db.all('SELECT * FROM prenotazioni', (err, rows) => {
-        if (err) return res.send('Errore nella lettura delle prenotazioni.');
-        res.json(rows);
-    });
-});
-// Visualizza tutte le richieste di trasporto
-app.get('/impianto/richieste-trasporto', (req, res) => {
-    if (!req.session.admin) return res.status(403).send('Accesso negato');
-
-    db.all('SELECT * FROM richieste_trasporto ORDER BY data_trasporto DESC', (err, rows) => {
-        if (err) return res.send('Errore nel recupero delle richieste.');
-        res.json(rows);
-    });
-});
-app.post('/impianto/aggiorna-trasporto', (req, res) => {
-    if (!req.session.admin) return res.status(403).send('Accesso negato');
-
-    const { id, nuovo_stato, nota } = req.body;
-
-    const stati_validi = ['accettata', 'non accettata', 'info richieste'];
-    if (!stati_validi.includes(nuovo_stato)) return res.send('Stato non valido');
-
-    db.run('UPDATE richieste_trasporto SET stato = ?, nota = ? WHERE id = ?', [nuovo_stato, nota, id], (err) => {
-        if (err) return res.send('Errore durante l\'aggiornamento');
-
-        // Invia email al cliente
-        db.get(`
-            SELECT r.*, u.email 
-            FROM richieste_trasporto r 
-            JOIN utenti u ON u.id = r.cliente_id 
-            WHERE r.id = ?
-        `, [id], (err, row) => {
-            if (err || !row) return res.send('Aggiornato ma impossibile inviare email');
-
-            const testoMail = `
-Gentile cliente,
-
-la richiesta di trasporto n°${row.id} per il produttore: ${row.produttore} è stata aggiornata a:
-
-👉 STATO: ${nuovo_stato.toUpperCase()}
-
-${nota ? `✏️ Annotazione impianto:\n${nota}` : ''}
-
-Cordiali saluti,
-Impianto
-            `;
-
-            transporter.sendMail({
-                from: '"Impianto ecodrin" <diegotrinchillo@gmail.com>',
-                to: row.email,
-                subject: `Aggiornamento richiesta trasporto #${row.id}`,
-                text: testoMail
-            }, (error, info) => {
-                if (error) {
-                    console.error('Errore invio email:', error);
-                } else {
-                    console.log('📧 Email inviata a', row.email);
-                }
-            });
-
-            res.send('Stato trasporto aggiornato con successo ✅');
-        });
-    });
-});
-// Cambia stato prenotazione + invia email al cliente
-app.post('/impianto/cambia-stato', (req, res) => {
-    if (!req.session.admin) return res.status(403).send('Accesso negato');
-
-    const { id, nuovo_stato, richiesta } = req.body;
-
-    const stati_validi = ['accettata', 'non accettata', 'info richieste'];
-    if (!stati_validi.includes(nuovo_stato)) return res.send('Stato non valido.');
-
-    db.run('UPDATE prenotazioni SET stato = ? WHERE id = ?', [nuovo_stato, id], (err) => {
-        if (err) return res.send('Errore durante l\'aggiornamento.');
-
-        // Invio mail
-        db.get(`SELECT u.email, p.produttore FROM prenotazioni p JOIN utenti u ON u.id = p.cliente_id WHERE p.id = ?`, [id], (err, cliente) => {
-            if (!err && cliente) {
-                transporter.sendMail({
-                    from: '"Impianto" <diegotrinchillo@gmail.com>',
-                    to: cliente.email,
-                    subject: `Aggiornamento prenotazione #${id} - ${cliente.produttore}`,
-                    text: `Gentile cliente, la informiamo che la tua prenotazione n°${id} relativa al produttore: ${cliente.produttore}, è stata aggiornata a: ${nuovo_stato.toUpperCase()}${nuovo_stato === 'info richieste' ? `\n\nRichiesta dell'impianto:\n${richiesta}` : ''}`
-                }, (error, info) => {
-                    if (error) {
-                        console.error('Errore invio email:', error);
-                    } else {
-                        console.log('✅ Email inviata correttamente a', cliente.email);
-                        console.log('Message ID:', info.messageId);
-                    }
-                });
-            }
-        });
-
-        // Se info richieste ➤ salva nota
-        if (nuovo_stato === 'info richieste') {
-            if (!richiesta) return res.send('Devi inserire una richiesta.');
-            db.run('INSERT INTO note_richiesta (prenotazione_id, richiesta) VALUES (?, ?)', [id, richiesta], (err) => {
-                if (err) return res.send('Errore nel salvataggio della richiesta.');
-                res.send('Stato e richiesta aggiornati ✅');
-            });
-        } else {
-            res.send('Stato aggiornato ✅');
-        }
-    });
-});
-
-// Leggi richiesta e risposta
-app.get('/impianto/note/:prenotazione_id', (req, res) => {
-    if (!req.session.admin && !req.session.utente) return res.status(403).send('Accesso negato');
-    const prenotazione_id = req.params.prenotazione_id;
-    db.get('SELECT * FROM note_richiesta WHERE prenotazione_id = ?', [prenotazione_id], (err, row) => {
-        if (err) return res.send({});
-        res.json(row || {});
-    });
-});
-
-// ------------------------ DOWNLOAD CERTIFICATO ------------------------
-app.get('/impianto/download-certificato/:filename', (req, res) => {
-    if (!req.session.admin) return res.status(403).send('Accesso negato');
-    const file = path.join(__dirname, 'uploads', req.params.filename);
-    if (!fs.existsSync(file)) {
-        return res.status(404).send('Certificato non trovato.');
+    } catch (err) {
+      console.error(err);
+      res.send('Errore login impianto');
     }
-    res.download(file);
-});
-app.get('/crea-admin', async (req, res) => {
-    const bcrypt = require('bcrypt');
-    const hash = await bcrypt.hash('admin123', 10);
-  
-    const query = `
-      INSERT INTO utenti (username, password, email, ruolo)
-      VALUES (?, ?, ?, ?)
-    `;
-  
-    db.run(query, ['admin', hash, 'admin@example.com', 'admin'], function (err) {
-      if (err) {
-        console.error('Errore nella creazione admin:', err.message);
-        return res.send('❌ Admin NON creato. Forse esiste già.');
-      }
-      res.send('✅ Admin creato con successo!');
-    });
   });
-  //------------- check-utenti
-  app.get('/check-utenti', (req, res) => {
-    db.all('SELECT * FROM utenti', [], (err, rows) => {
-      if (err) {
-        return res.status(500).send('Errore nella lettura utenti');
+  
+  // ------------------------ IMPIANTO: LOGOUT ------------------------
+  app.get('/impianto/logout', (req, res) => {
+    req.session.destroy(() => res.redirect('/impianto/login.html'));
+  });
+  
+  // ------------------------ IMPIANTO: PRENOTAZIONI ------------------------
+  app.get('/impianto/prenotazioni', async (req, res) => {
+    if (!req.session.admin) return res.status(403).send('Accesso negato');
+    try {
+      const result = await db.query('SELECT * FROM prenotazioni ORDER BY giorno_conferimento DESC');
+      res.json(result.rows);
+    } catch (err) {
+      res.send('Errore nel recupero');
+    }
+  });
+  
+  // ------------------------ IMPIANTO: CAMBIA STATO + EMAIL ------------------------
+  app.post('/impianto/cambia-stato', async (req, res) => {
+    if (!req.session.admin) return res.status(403).send('Accesso negato');
+    const { id, nuovo_stato, richiesta } = req.body;
+  
+    try {
+      await db.query('UPDATE prenotazioni SET stato = $1 WHERE id = $2', [nuovo_stato, id]);
+  
+      if (nuovo_stato === 'info richieste') {
+        await db.query('INSERT INTO note_richiesta (prenotazione_id, richiesta) VALUES ($1, $2)', [id, richiesta]);
       }
+  
+      // Email al cliente
+      const { rows } = await db.query(`
+        SELECT u.email, p.produttore FROM prenotazioni p
+        JOIN utenti u ON p.cliente_id = u.id WHERE p.id = $1
+      `, [id]);
+  
+      if (rows.length > 0) {
+        const email = rows[0].email;
+        const testo = `
+  Gentile cliente,
+  
+  La tua prenotazione n°${id} è stata aggiornata a: ${nuovo_stato.toUpperCase()}
+  ${richiesta ? `\nRichiesta dell’impianto:\n${richiesta}` : ''}
+  
+  Cordiali saluti,
+  Impianto`;
+  
+        await transporter.sendMail({
+          from: '"Ecodrin" <noreply@ecodrin.com>',
+          to: email,
+          subject: `Prenotazione #${id} aggiornata`,
+          text: testo
+        });
+      }
+  
+      res.send('Stato aggiornato ✅');
+    } catch (err) {
+      console.error(err);
+      res.send('Errore aggiornamento');
+    }
+  });
+  
+  // ------------------------ NOTE PRENOTAZIONE ------------------------
+  app.get('/impianto/note/:prenotazione_id', async (req, res) => {
+    const id = req.params.prenotazione_id;
+    try {
+      const result = await db.query('SELECT * FROM note_richiesta WHERE prenotazione_id = $1', [id]);
+      res.json(result.rows[0] || {});
+    } catch (err) {
+      res.send({});
+    }
+  });
+  
+  // ------------------------ CHECK UTENTI ------------------------
+  app.get('/check-utenti', async (req, res) => {
+    try {
+      const { rows } = await db.query('SELECT * FROM utenti');
       res.json(rows);
-    });
+    } catch {
+      res.status(500).send('Errore nel recupero utenti');
+    }
   });
   
-// ------------------------ AVVIO SERVER ------------------------
-app.listen(PORT, () => {
-    console.log(`Server avviato su http://localhost:${PORT}`);
-});
+  // ------------------------ AVVIO SERVER ------------------------
+  app.listen(PORT, () => {
+    console.log(`🚀 Server avviato su http://localhost:${PORT}`);
+  });
+  

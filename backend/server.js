@@ -209,23 +209,26 @@ app.post('/cliente/richieste-trasporto', (req, res) => {
         }
     );
 });
-// ------------------------ IMPIANTO ------------------------
+
+//---------------------impianto 
 
 app.post('/impianto/login', (req, res) => {
     const { username, password } = req.body;
-    if (!username || !password) return res.send('Compila tutti i campi!');
 
-    db.get('SELECT * FROM utenti WHERE email = ? AND ruolo = "admin"', [username], async (err, user) => {
-     if (err) return res.send('Errore interno.');
-        if (!user) return res.send('Admin non trovato.');
+    console.log("⚠️ LOGIN INPUT:", username, password);
 
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.send('Password errata.');
+    db.all('SELECT * FROM utenti', [], async (err, rows) => {
+        if (err) {
+            console.error("❌ Errore DB:", err.message);
+            return res.send('Errore interno nel DB.');
+        }
 
-        req.session.admin = { id: user.id, username: user.username, ruolo: user.ruolo };
-        res.send('Login impianto effettuato con successo ✅');
+        console.log("📄 UTENTI NEL DATABASE:", rows);
+
+        res.send('🧪 Debug completato. Controlla i log su Render per vedere i dati.');
     });
 });
+
 
 // Logout impianto
 app.get('/impianto/logout', (req, res) => {

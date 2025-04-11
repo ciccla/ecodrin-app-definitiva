@@ -62,5 +62,21 @@ db.serialize(() => {
 
     console.log("✅ Database e tabelle creati");
 });
+// Inserisce un admin di default se non esiste
+db.get("SELECT * FROM utenti WHERE email = 'admin@example.com'", async (err, row) => {
+    if (err) return console.error("Errore nella verifica admin:", err.message);
+    if (!row) {
+        const bcrypt = require('bcrypt');
+        const password = await bcrypt.hash('admin123', 10);
+        db.run(`INSERT INTO utenti (username, password, email, ruolo) VALUES (?, ?, ?, ?)`,
+            ['admin', password, 'admin@example.com', 'admin'],
+            (err) => {
+                if (err) console.error("❌ Errore inserimento admin:", err.message);
+                else console.log("✅ Admin creato automaticamente.");
+            });
+    } else {
+        console.log("ℹ️ Admin già presente nel database.");
+    }
+});
 
 module.exports = db;

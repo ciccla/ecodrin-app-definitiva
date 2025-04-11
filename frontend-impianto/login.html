@@ -19,20 +19,25 @@
 
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function (e) {
-      e.preventDefault(); // Previene il comportamento di default
+      e.preventDefault();
 
-      const formData = new FormData(this);
+      const formData = new URLSearchParams();
+      formData.append('username', document.getElementById('username').value);
+      formData.append('password', document.getElementById('password').value);
 
       const response = await fetch('/impianto/login', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: formData.toString()
       });
 
       const text = await response.text();
 
       if (text.includes("Login impianto effettuato con successo")) {
         alert(text);
-        window.location.href = "/impianto/dashboard.html"; // ✅ Redireziona se login riuscito
+        window.location.href = "/impianto/dashboard.html";
       } else {
         alert("Credenziali errate o utente non trovato.");
       }

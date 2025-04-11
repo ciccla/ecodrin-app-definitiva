@@ -8,7 +8,6 @@
 <body>
   <h1>Login Impianto</h1>
   <form id="loginForm" method="POST">
-
     <label for="username">Email:</label>
     <input type="text" id="username" name="username" required><br><br>
 
@@ -20,7 +19,7 @@
 
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function (e) {
-      e.preventDefault(); // Blocca l'invio normale del form
+      e.preventDefault(); // Previene il comportamento di default
 
       const formData = new FormData(this);
 
@@ -33,7 +32,7 @@
 
       if (text.includes("Login impianto effettuato con successo")) {
         alert(text);
-        window.location.href = "/impianto/dashboard.html"; // ✅ Reindirizza alla dashboard
+        window.location.href = "/impianto/dashboard.html"; // ✅ Redireziona se login riuscito
       } else {
         alert("Credenziali errate o utente non trovato.");
       }

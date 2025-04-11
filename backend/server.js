@@ -215,8 +215,8 @@ app.post('/impianto/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.send('Compila tutti i campi!');
 
-    db.get('SELECT * FROM utenti WHERE username = ? AND ruolo = "admin"', [username], async (err, user) => {
-        if (err) return res.send('Errore interno.');
+    db.get('SELECT * FROM utenti WHERE email = ? AND ruolo = "admin"', [username], async (err, user) => {
+     if (err) return res.send('Errore interno.');
         if (!user) return res.send('Admin non trovato.');
 
         const validPassword = await bcrypt.compare(password, user.password);

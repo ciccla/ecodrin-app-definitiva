@@ -1,122 +1,158 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>Richiesta Trasporto</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #e8f5e9;
-            color: #2e7d32;
-            margin: 0;
-            padding: 20px;
-        }
+  <meta charset="UTF-8">
+  <title>Richiesta Trasporto</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f1f8e9;
+      color: #2e7d32;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      min-height: 100vh;
+      margin: 0;
+    }
 
-        form {
-            background: #fff;
-            padding: 20px;
-            border-radius: 5px;
-            max-width: 600px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-        }
+    .form-container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
 
-        label {
-            display: block;
-            margin-top: 10px;
-            font-weight: bold;
-        }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2e7d32;
+    }
 
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            border: 1px solid #c8e6c9;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #33691e;
+    }
 
-        button {
-            background: #388e3c;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            margin-top: 15px;
-            cursor: pointer;
-        }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #c8e6c9;
+      border-radius: 5px;
+      font-size: 14px;
+    }
 
-        button:hover {
-            background: #2e7d32;
-        }
-    </style>
+    button {
+      width: 100%;
+      margin-top: 25px;
+      padding: 12px;
+      background: #2e7d32;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #27642b;
+    }
+
+    .back-link {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .back-link a {
+      color: #2e7d32;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .back-link a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 500px) {
+      .form-container {
+        padding: 20px;
+      }
+    }
+  </style>
 </head>
 <body>
 
+  <div class="form-container">
     <h1>Richiesta Trasporto</h1>
-    <p>
-        <a href="dashboard.html">⬅️ Torna alla Dashboard</a>
-    </p>
 
-    <form action="/cliente/trasporto" method="POST">
-        <label>Richiedente</label>
-        <input type="text" name="richiedente" required>
+    <div class="back-link">
+      <a href="dashboard.html">⬅ Torna alla Dashboard</a>
+    </div>
 
-        <label>Produttore</label>
-        <input type="text" name="produttore" required>
+    <form id="trasportoForm">
+      <label>Richiedente</label>
+      <input type="text" name="richiedente" required>
 
-        <label>Codice CER</label>
-        <input type="text" name="codice_cer" required>
+      <label>Produttore</label>
+      <input type="text" name="produttore" required>
 
-        <label>Tipo di Automezzo</label>
-        <select name="tipo_automezzo" required>
-            <option value="">Seleziona</option>
-            <option>Furgone</option>
-            <option>Eurocargo 100 con cassa scarrabile</option>
-            <option>Eurocargo 100 con ragno</option>
-            <option>Motrice con cassa scarrabile</option>
-            <option>Motrice con ragno</option>
-            <option>Bilico</option>
-            <option>Cisterna</option>
-        </select>
+      <label>Codice CER</label>
+      <input type="text" name="codice_cer" required>
 
-        <label>Data del Trasporto</label>
-        <input type="date" name="data_trasporto" required>
+      <label>Tipo di Automezzo</label>
+      <select name="tipo_automezzo" required>
+        <option value="">Seleziona</option>
+        <option>Furgone</option>
+        <option>Eurocargo 100 con cassa scarrabile</option>
+        <option>Eurocargo 100 con ragno</option>
+        <option>Motrice con cassa scarrabile</option>
+        <option>Motrice con ragno</option>
+        <option>Bilico</option>
+        <option>Cisterna</option>
+      </select>
 
-        <label>Orario Preferito</label>
-        <input type="time" name="orario_preferito" required>
+      <label>Data del Trasporto</label>
+      <input type="date" name="data_trasporto" required>
 
-        <label>Numero di Referente</label>
-        <input type="tel" name="numero_referente" required>
+      <label>Orario Preferito</label>
+      <input type="time" name="orario_preferito" required>
 
-        <label>Prezzo Pattuito (€)</label>
-        <input type="number" name="prezzo_pattuito" step="0.01" required>
+      <label>Numero di Referente</label>
+      <input type="tel" name="numero_referente" required>
 
-        <button type="submit">Invia Richiesta</button>
+      <label>Prezzo Pattuito (€)</label>
+      <input type="number" name="prezzo_pattuito" step="0.01" required>
+
+      <button type="submit">Invia Richiesta</button>
     </form>
+  </div>
+
+  <script>
+    document.getElementById('trasportoForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const form = e.target;
+
+      fetch('/cliente/richieste-trasporto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(new FormData(form))
+      })
+      .then(res => res.text())
+      .then(msg => {
+        alert(msg);
+        window.location.href = "dashboard.html";
+      })
+      .catch(err => {
+        alert('Errore durante l\'invio della richiesta');
+        console.error(err);
+      });
+    });
+  </script>
 
 </body>
 </html>
-<script>
-    document.querySelector('form').addEventListener('submit', function (e) {
-        e.preventDefault();
-        const form = e.target;
-
-        fetch('/cliente/richiesta-trasporto', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            body: new URLSearchParams(new FormData(form))
-        })
-        .then(res => res.text())
-        .then(msg => {
-            alert(msg);
-            window.location.href = "dashboard.html";
-        })
-        .catch(err => {
-            alert('Errore durante l\'invio della richiesta');
-            console.error(err);
-        });
-    });
-</script>

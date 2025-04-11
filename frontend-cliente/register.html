@@ -1,32 +1,115 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Registrazione Cliente</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+  <meta charset="UTF-8">
+  <title>Registrazione Cliente</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f1f8e9;
+      color: #2e7d32;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
 
+    .register-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #2e7d32;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #33691e;
+    }
+
+    input[type="email"],
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #c8e6c9;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #27642b;
+    }
+
+    .login-link {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .login-link a {
+      color: #2e7d32;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .login-link a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 480px) {
+      .register-container {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
 <body>
+
+  <div class="register-container">
     <h1>Registrazione Cliente</h1>
 
     <form action="/cliente/register" method="POST">
+      <label for="email">Email</label>
+      <input type="email" name="email" id="email" required>
 
-        <label>Email:</label><br>
-        <input type="email" name="email" required><br><br>
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username" required>
 
-        <label>Username:</label><br>
-        <input type="text" name="username" required><br><br>
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" required>
 
-        <label>Password:</label><br>
-        <input type="password" name="password" required><br><br>
-
-        <button type="submit">Registrati</button>
-
+      <button type="submit">Registrati</button>
     </form>
 
-    <p>Hai già un account? <a href="login.html">Login</a></p>
+    <div class="login-link">
+      Hai già un account? <a href="login.html">Accedi</a>
+    </div>
+  </div>
 
 </body>
-
 </html>

@@ -3,160 +3,226 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-}
-
-/* ----------------- BODY ----------------- */
-body {
-    font-family: 'Arial', sans-serif;
-    background: #f1f8e9; /* verde molto chiaro */
-    color: #2e7d32; /* verde scuro */
+  }
+  
+  /* ----------------- BODY ----------------- */
+  body {
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    background: #f1f8e9;
+    color: #2e7d32;
     padding: 20px;
-}
-
-/* ----------------- HEADER ----------------- */
-h1, h2, h3 {
-    color: #33691e;
-    margin-bottom: 10px;
-}
-
-/* ----------------- LINKS ----------------- */
-a {
+  }
+  
+  /* ----------------- HEADER ----------------- */
+  h1, h2, h3 {
+    color: #2e7d32;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  /* ----------------- LINKS ----------------- */
+  a {
     color: #2e7d32;
     text-decoration: none;
-}
-
-a:hover {
+  }
+  
+  a:hover {
     text-decoration: underline;
-}
-
-/* ----------------- TABLE ----------------- */
-table {
+  }
+  
+  /* ----------------- FORM ----------------- */
+  form {
+    background: #ffffff;
+    padding: 20px;
+    max-width: 600px;
+    margin: 30px auto;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  label {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: bold;
+  }
+  
+  input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #c5e1a5;
+    border-radius: 4px;
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+  
+  select[multiple] {
+    height: 100px;
+  }
+  
+  /* ----------------- BUTTON ----------------- */
+  button, .download-btn {
+    background: #43a047;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    transition: background 0.3s ease;
+  }
+  
+  button:hover, .download-btn:hover {
+    background: #2e7d32;
+  }
+  
+  .download-btn {
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+  
+  /* ----------------- TABELLE ----------------- */
+  table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 15px;
+    margin-top: 20px;
     background: #ffffff;
     border-radius: 5px;
     overflow: hidden;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-}
-
-th, td {
-    padding: 10px;
+  }
+  
+  th, td {
+    padding: 12px;
     border: 1px solid #c5e1a5;
     text-align: left;
-    font-size: 0.9em;
-}
-
-th {
+    font-size: 14px;
+  }
+  
+  th {
     background: #dcedc8;
-    color: #33691e;
-}
-
-tr:nth-child(even) {
+    color: #2e7d32;
+  }
+  
+  tr:nth-child(even) {
     background: #f9fbe7;
-}
-
-/* ----------------- BADGE STATO ----------------- */
-.badge {
-    padding: 3px 8px;
+  }
+  
+  /* ----------------- BADGE STATO ----------------- */
+  .badge {
+    padding: 4px 10px;
     border-radius: 4px;
     color: white;
     font-size: 0.8em;
     display: inline-block;
-}
-
-.accettata { background: #2e7d32; }
-.non-accettata { background: #c62828; }
-.info-richieste { background: #1565c0; }
-.in-attesa { background: #f9a825; }
-
-/* ----------------- BUTTON ----------------- */
-button, .download-btn {
-    background: #43a047;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 4px;
-    font-size: 0.9em;
-}
-
-button:hover, .download-btn:hover {
-    background: #2e7d32;
-}
-
-.download-btn {
-    text-decoration: none;
-    display: inline-block;
-}
-
-/* ----------------- FORM ELEMENTS ----------------- */
-select, textarea, input[type="text"] {
-    width: 100%;
-    margin-top: 4px;
-    padding: 6px;
-    border: 1px solid #c5e1a5;
-    border-radius: 3px;
-    font-size: 0.9em;
-}
-
-/* ----------------- NOTE E BOX ----------------- */
-.box-note {
+    text-transform: uppercase;
+    font-weight: bold;
+  }
+  
+  .accettata { background: #2e7d32; }
+  .non-accettata { background: #c62828; }
+  .info-richieste { background: #1565c0; }
+  .in-attesa { background: #f9a825; }
+  
+  /* ----------------- NOTIFICHE INLINE ----------------- */
+  .notifica {
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+    display: none;
+  }
+  
+  .notifica.success {
+    background-color: #d4edda;
+    color: #155724;
+    display: block;
+  }
+  
+  .notifica.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    display: block;
+  }
+  
+  /* ----------------- BLOCCHI NOTE, INFO ----------------- */
+  .box-note {
     font-size: 0.85em;
     margin-top: 5px;
     color: #555;
-}
-
-.giorno-container {
+  }
+  
+  .giorno-container {
     margin-bottom: 30px;
-}
-
-/* ----------------- NOTIFICA ----------------- */
-#notify {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: #43a047;
-    color: white;
-    padding: 10px;
-    border-radius: 5px;
-    display: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-}
-
-/* ----------------- HEADER TOGGLE ----------------- */
-h3 {
+  }
+  
+  /* ----------------- HEADER TOGGLE ----------------- */
+  h3 {
     cursor: pointer;
     padding: 5px;
     background: #c5e1a5;
     border-radius: 5px;
     transition: background 0.3s;
     user-select: none;
-}
-
-h3:hover {
+  }
+  
+  h3:hover {
     background: #aed581;
-}
-
-/* ----------------- RESPONSIVE ----------------- */
-@media (max-width: 600px) {
+  }
+  
+  /* ----------------- NOTIFICA FLOTTANTE ----------------- */
+  #notify {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #43a047;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 6px;
+    display: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+  }
+  
+  /* ----------------- RESPONSIVE ----------------- */
+  @media (max-width: 600px) {
+    body {
+      padding: 10px;
+    }
+  
+    form {
+      margin: 20px 10px;
+      padding: 15px;
+    }
+  
     table, thead, tbody, th, td, tr {
-        display: block;
+      display: block;
     }
+  
     th {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
     }
+  
     td {
-        position: relative;
-        padding-left: 50%;
+      position: relative;
+      padding-left: 50%;
+      border: none;
+      border-bottom: 1px solid #eee;
     }
+  
     td:before {
-        position: absolute;
-        left: 10px;
-        width: 45%;
-        white-space: nowrap;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      width: 45%;
+      white-space: nowrap;
+      color: #888;
+      font-weight: bold;
     }
-}
+  }
+  

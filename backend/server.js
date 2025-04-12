@@ -197,6 +197,29 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
       res.send('Errore richiesta trasporto');
     }
   });
+ // ------------------------ CLIENTE: VISUALIZZA RICHIESTE TRASPORTO ------------------------
+app.get('/cliente/richieste-trasporto', async (req, res) => {
+    if (!req.session.utente) {
+      console.warn('❌ Tentativo accesso non autorizzato a /cliente/richieste-trasporto');
+      return res.status(403).send('Non autorizzato');
+    }
+  
+    console.log(`🔍 Recupero richieste trasporto per cliente ID: ${req.session.utente.id}`);
+  
+    try {
+      const result = await db.query(
+        'SELECT * FROM richieste_trasporto WHERE cliente_id = $1 ORDER BY data_trasporto DESC',
+        [req.session.utente.id]
+      );
+  
+      console.log(`📦 Trovate ${result.rows.length} richieste di trasporto`);
+      res.json(result.rows);
+    } catch (err) {
+      console.error('❌ Errore fetch richieste trasporto cliente:', err.message);
+      res.status(500).send('Errore server');
+    }
+  });
+  
   
   // ------------------------ IMPIANTO: LOGIN ------------------------
   app.post('/impianto/login', async (req, res) => {
@@ -297,6 +320,15 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
       res.json(rows);
     } catch {
       res.status(500).send('Errore nel recupero utenti');
+    }
+  });
+  // TEMP: Verifica richieste trasporto visibili da chiunque (solo per test)
+app.get('/debug/richieste-trasporto', async (req, res) => {
+    try {
+      const { rows } = await db.query('SELECT * FROM richieste_trasporto');
+      res.json(rows);
+    } catch (err) {
+      res.status(500).send('Errore lettura richieste trasporto');
     }
   });
   

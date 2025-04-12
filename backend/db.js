@@ -1,4 +1,5 @@
 // db.js - versione PostgreSQL
+require('dotenv').config();
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -11,6 +12,11 @@ const pool = new Pool({
     rejectUnauthorized: false
   }
 });
+
+console.log("📦 Connessione al database PostgreSQL in corso...");
+console.log(`🔗 Host: ${process.env.PG_HOST}`);
+console.log(`🗄️ Database: ${process.env.PG_DATABASE}`);
+console.log(`👤 Utente: ${process.env.PG_USER}`);
 
 // ✅ Crea le tabelle solo la prima volta (utile in dev)
 const creaTabelle = async () => {
@@ -62,9 +68,10 @@ const creaTabelle = async () => {
         nota TEXT
       );
     `);
-    console.log("✅ Tabelle PostgreSQL create");
+    console.log("✅ Tabelle PostgreSQL create correttamente");
   } catch (err) {
-    console.error("❌ Errore nella creazione delle tabelle:", err.message);
+    console.error("❌ Errore nella creazione delle tabelle:");
+    console.error(err.stack);
   }
 };
 
@@ -84,7 +91,8 @@ const creaAdminDefault = async () => {
       console.log("ℹ️ Admin già presente nel database");
     }
   } catch (err) {
-    console.error("❌ Errore creazione admin:", err.message);
+    console.error("❌ Errore creazione admin:");
+    console.error(err.stack);
   }
 };
 

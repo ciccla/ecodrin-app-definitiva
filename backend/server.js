@@ -18,15 +18,15 @@ app.use(express.urlencoded({ extended: true }));
 
 // ------------------------ CONFIGURAZIONE SMTP ------------------------
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
+    host: 'smtp.libero.it',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+  
 // ------------------------ UPLOAD CONFIG ------------------------
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
 

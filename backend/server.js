@@ -18,14 +18,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // ------------------------ CONFIGURAZIONE SMTP ------------------------
 const transporter = nodemailer.createTransport({
-    host: 'smtp.libero.it',
-    port: 587,
-    secure: false,
+    service: 'SendGrid',
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+      user: 'apikey', // ← obbligatorio per SendGrid
+      pass: process.env.SENDGRID_API_KEY
     }
   });
+  
   
 // ------------------------ UPLOAD CONFIG ------------------------
 const upload = multer({ dest: path.join(__dirname, 'uploads') });
@@ -265,12 +264,12 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
   Cordiali saluti,
   Impianto`;
   
-        await transporter.sendMail({
-          from: '"Ecodrin" <noreply@ecodrin.com>',
-          to: email,
-          subject: `Prenotazione #${id} aggiornata`,
-          text: testo
-        });
+  await transporter.sendMail({
+    from: `"Ecodrin" <${process.env.EMAIL_USER}>`, // ✅ Usa la mail verificata su SendGrid
+    to: email,
+    subject: `Prenotazione #${id} aggiornata`,
+    text: testo
+  });  
       }
   
       res.send('Stato aggiornato ✅');

@@ -176,48 +176,31 @@
           return;
         }
 
-        let html = `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Produttore</th>
-                <th>Codice CER</th>
-                <th>Caratteristiche</th>
-                <th>Imballo</th>
-                <th>Stato Fisico</th>
-                <th>Quantità</th>
-                <th>Data</th>
-                <th>Certificato</th>
-                <th>Stato</th>
-                <th>Richiesta Impianto</th>
-                <th>Rispondi</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
+        let html = `<table><thead><tr>
+          <th>ID</th><th>Produttore</th><th>Codice CER</th><th>Caratteristiche</th><th>Imballo</th>
+          <th>Stato Fisico</th><th>Quantità</th><th>Data</th><th>Certificato</th>
+          <th>Stato</th><th>Richiesta Impianto</th><th>Rispondi</th>
+        </tr></thead><tbody>`;
 
         data.forEach(p => {
           const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-          html += `
-            <tr>
-              <td>${p.id}</td>
-              <td>${p.produttore}</td>
-              <td>${p.codice_cer}</td>
-              <td>${(p.caratteristiche_pericolo || '').split(',').join(', ') || '-'}</td>
-              <td>${p.tipo_imballo || '-'}</td>
-              <td>${p.stato_fisico || '-'}</td>
-              <td>${p.quantita}</td>
-              <td>${p.giorno_conferimento}</td>
-              <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" class="download-btn" target="_blank">Scarica</a>` : '-'}</td>
-              <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-              <td><div id="nota-${p.id}">-</div></td>
-              <td>
-                <textarea id="risposta-${p.id}" placeholder="Rispondi all'impianto..."></textarea>
-                <button onclick="inviaRisposta(${p.id})">Invia</button>
-              </td>
-            </tr>
-          `;
+          html += `<tr>
+            <td>${p.id}</td>
+            <td>${p.produttore}</td>
+            <td>${p.codice_cer}</td>
+            <td>${(p.caratteristiche_pericolo || '').split(',').join(', ') || '-'}</td>
+            <td>${p.tipo_imballo || '-'}</td>
+            <td>${p.stato_fisico || '-'}</td>
+            <td>${p.quantita}</td>
+            <td>${p.giorno_conferimento}</td>
+            <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" class="download-btn" target="_blank">Scarica</a>` : '-'}</td>
+            <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
+            <td><div id="nota-${p.id}">-</div></td>
+            <td>
+              <textarea id="risposta-${p.id}" placeholder="Rispondi all'impianto..."></textarea>
+              <button onclick="inviaRisposta(${p.id})">Invia</button>
+            </td>
+          </tr>`;
           caricaNota(p.id);
         });
 
@@ -234,10 +217,8 @@
             box.innerHTML = '<i>Nessuna richiesta</i>';
             return;
           }
-          box.innerHTML = `
-            <p><strong>Richiesta:</strong> ${note.richiesta}</p>
-            <p><strong>Risposta:</strong> ${note.risposta || "<i>Non ancora inviata</i>"}</p>
-          `;
+          box.innerHTML = `<p><strong>Richiesta:</strong> ${note.richiesta}</p>
+                           <p><strong>Risposta:</strong> ${note.risposta || "<i>Non ancora inviata</i>"}</p>`;
         });
     }
 
@@ -259,11 +240,12 @@
         setTimeout(() => location.reload(), 1500);
       });
     }
-
     fetch('/cliente/richieste-trasporto')
       .then(res => res.json())
       .then(data => {
+        console.log('📦 Richieste trasporto ricevute:', data); // debug
         const div = document.getElementById('trasporti');
+
         if (!data.length) {
           div.innerHTML = '<p style="text-align:center;">Nessuna richiesta trovata.</p>';
           return;
@@ -290,6 +272,7 @@
         `;
 
         data.forEach(t => {
+          const statoClass = (t.stato || 'in attesa').replace(/\s/g, '-');
           html += `
             <tr>
               <td>${t.id}</td>
@@ -301,7 +284,7 @@
               <td>${t.orario_preferito}</td>
               <td>${t.numero_referente}</td>
               <td>${t.prezzo_pattuito}</td>
-              <td><span class="badge ${t.stato.replace(/\s/g, '-')}">${t.stato}</span></td>
+              <td><span class="badge ${statoClass}">${t.stato}</span></td>
               <td>${t.nota || '-'}</td>
             </tr>
           `;
@@ -309,8 +292,11 @@
 
         html += '</tbody></table>';
         div.innerHTML = html;
+      })
+      .catch(err => {
+        console.error('❌ Errore nella fetch delle richieste trasporto:', err);
+        notify('Errore nel caricamento richieste trasporto', false);
       });
   </script>
-
 </body>
 </html>

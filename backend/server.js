@@ -351,7 +351,25 @@ app.get('/debug/richieste-trasporto', async (req, res) => {
       res.status(500).send('Errore lettura richieste trasporto');
     }
   });
-  
+  // ------------------------ IMPIANTO: AGGIORNA STATO TRASPORTO ------------------------
+app.post('/impianto/aggiorna-trasporto', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+
+  const { id, nuovo_stato, nota } = req.body;
+  if (!id || !nuovo_stato) return res.status(400).send('Dati mancanti');
+
+  try {
+    await db.query(
+      'UPDATE richieste_trasporto SET stato = $1, nota = $2 WHERE id = $3',
+      [nuovo_stato, nota, id]
+    );
+    res.send('Stato trasporto aggiornato ✅');
+  } catch (err) {
+    console.error('❌ Errore aggiornamento trasporto:', err.message);
+    res.status(500).send('Errore aggiornamento');
+  }
+});
+
   // ------------------------ AVVIO SERVER ------------------------
   app.listen(PORT, () => {
     console.log(`🚀 Server avviato su http://localhost:${PORT}`);

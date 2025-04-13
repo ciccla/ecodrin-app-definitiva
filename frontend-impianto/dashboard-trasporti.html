@@ -179,23 +179,7 @@
           notify(msg);
           setTimeout(() => location.reload(), 1500);
         });
-    }// ------------------------ IMPIANTO: AGGIORNA TRASPORTO ------------------------
-app.post('/impianto/aggiorna-trasporto', async (req, res) => {
-  if (!req.session.admin) return res.status(403).send('Accesso negato');
-  const { id, nuovo_stato, nota } = req.body;
-
-  try {
-    await db.query(
-      'UPDATE richieste_trasporto SET stato = $1, nota = $2 WHERE id = $3',
-      [nuovo_stato, nota, id]
-    );
-    res.send('Richiesta trasporto aggiornata ✅');
-  } catch (err) {
-    console.error('❌ Errore aggiornamento trasporto:', err.message);
-    res.status(500).send('Errore durante l\'aggiornamento');
-  }
-});
-
+    }
   </script>
 
 </body>

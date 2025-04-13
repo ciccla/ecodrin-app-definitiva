@@ -1,2 +1,11 @@
-.env
+# Ignora node_modules (librerie installate)
 node_modules/
+
+# Ignora file di ambiente sensibili
+.env
+
+# Ignora SQLite locale se ancora presente
+*.sqlite
+
+# Ignora log vari
+*.log

@@ -1,308 +1,308 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Impianto</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #e8f5e9;
-            color: #2e7d32;
-            margin: 0;
-            padding: 20px;
-        }
+  <meta charset="UTF-8">
+  <title>Dashboard Impianto</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #e8f5e9;
+      color: #2e7d32;
+      margin: 0;
+      padding: 20px;
+    }
 
-        h1 {
-            margin-bottom: 5px;
-        }
+    h1 {
+      margin-bottom: 5px;
+    }
 
-        h3 {
-            cursor: pointer;
-            padding: 5px;
-            background: #c5e1a5;
-            border-radius: 5px;
-            transition: background 0.3s;
-            user-select: none;
-        }
+    h3 {
+      cursor: pointer;
+      padding: 5px;
+      background: #c5e1a5;
+      border-radius: 5px;
+      transition: background 0.3s;
+      user-select: none;
+    }
 
-        h3:hover {
-            background: #aed581;
-        }
+    h3:hover {
+      background: #aed581;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
 
-        th, td {
-            padding: 6px;
-            border: 1px solid #c8e6c9;
-            text-align: left;
-            font-size: 0.9em;
-        }
+    th, td {
+      padding: 6px;
+      border: 1px solid #c8e6c9;
+      text-align: left;
+      font-size: 0.9em;
+    }
 
-        th {
-            background: #dcedc8;
-        }
+    th {
+      background: #dcedc8;
+    }
 
-        tr:nth-child(even) {
-            background: #f9fbe7;
-        }
+    tr:nth-child(even) {
+      background: #f9fbe7;
+    }
 
-        .badge {
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: white;
-            font-size: 0.8em;
-        }
+    .badge {
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: white;
+      font-size: 0.8em;
+    }
 
-        .accettata { background: #2e7d32; }
-        .non-accettata { background: #c62828; }
-        .info-richieste { background: #1565c0; }
-        .in-attesa { background: #f9a825; }
+    .accettata { background: #2e7d32; }
+    .non-accettata { background: #c62828; }
+    .info-richieste { background: #1565c0; }
+    .in-attesa { background: #f9a825; }
 
-        .download-btn {
-            background: #388e3c;
-            padding: 4px 8px;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 0.8em;
-        }
+    .download-btn {
+      background: #388e3c;
+      padding: 4px 8px;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.8em;
+    }
 
-        .download-btn:hover {
-            background: #2e7d32;
-        }
+    .download-btn:hover {
+      background: #2e7d32;
+    }
 
-        select, textarea {
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 4px;
-        }
+    select, textarea {
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 4px;
+    }
 
-        button {
-            background: #388e3c;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 5px;
-        }
+    button {
+      background: #388e3c;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 5px;
+    }
 
-        button:hover {
-            background: #2e7d32;
-        }
+    button:hover {
+      background: #2e7d32;
+    }
 
-        .giorno-container {
-            margin-bottom: 20px;
-        }
+    .giorno-container {
+      margin-bottom: 20px;
+    }
 
-        .box-note {
-            margin-top: 5px;
-            font-size: 0.85em;
-            color: #555;
-        }
+    .box-note {
+      margin-top: 5px;
+      font-size: 0.85em;
+      color: #555;
+    }
 
-        .hidden {
-            display: none;
-            transition: all 0.3s ease;
-        }
+    .hidden {
+      display: none;
+      transition: all 0.3s ease;
+    }
 
-        #notify {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #2ecc71;
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-    </style>
+    #notify {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+  </style>
 </head>
-
 <body>
 
-    <h1>Dashboard Impianto (divisa per giorno)</h1>
-    <p><a href="/impianto/logout">Logout</a></p> <p>
-     
-        <a href="dashboard-trasporti.html" style="text-decoration: none; background-color: #2e7d32; color: white; padding: 5px 15px; border-radius: 5px;">
-          📋 Vai alla Dashboard trasporti
-        </a>
-      </p>
-    
-    <button id="pdf-btn" style="margin-bottom: 20px;">📄 Scarica PDF</button>
+  <h1>Dashboard Impianto (prenotazioni + trasporti)</h1>
+  <p><a href="/impianto/logout">🔓 Logout</a></p>
 
-    <div id="prenotazioni"></div>
-    <div id="notify"></div>
+  <button id="pdf-btn" style="margin-bottom: 20px;">📄 Scarica PDF</button>
 
-    <!-- ------------------ SCRIPT ------------------ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <h2>Prenotazioni per giorno</h2>
+  <div id="prenotazioni"></div>
 
-    <script>
-        function notify(msg, success = true) {
-            const n = document.getElementById('notify');
-            n.innerText = msg;
-            n.style.background = success ? '#2ecc71' : '#e74c3c';
-            n.style.display = 'block';
-            setTimeout(() => n.style.display = 'none', 3000);
+  <h2>Richieste di Trasporto</h2>
+  <div id="trasporti"></div>
+
+  <div id="notify"></div>
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    function notify(msg, success = true) {
+      const n = document.getElementById('notify');
+      n.innerText = msg;
+      n.style.background = success ? '#2ecc71' : '#e74c3c';
+      n.style.display = 'block';
+      setTimeout(() => n.style.display = 'none', 3000);
+    }
+
+    // ------------------- Prenotazioni -------------------
+    fetch('/impianto/prenotazioni')
+      .then(res => res.json())
+      .then(data => {
+        const div = document.getElementById('prenotazioni');
+        if (!data.length) {
+          div.innerHTML = '<p>Nessuna prenotazione trovata.</p>';
+          return;
         }
 
-        fetch('/impianto/prenotazioni')
-            .then(res => {
-                if (res.status === 403) {
-                    alert('Devi fare login come impianto');
-                    window.location.href = '/impianto/login.html';
-                }
-                return res.json();
-            })
-            .then(data => {
-                const div = document.getElementById('prenotazioni');
-                if (!data.length) {
-                    div.innerHTML = '<p>Nessuna prenotazione trovata.</p>';
-                    return;
-                }
-
-                const prenotazioniPerGiorno = {};
-
-                data.forEach(p => {
-                    if (!prenotazioniPerGiorno[p.giorno_conferimento]) {
-                        prenotazioniPerGiorno[p.giorno_conferimento] = [];
-                    }
-                    prenotazioniPerGiorno[p.giorno_conferimento].push(p);
-                });
-
-                const giorniOrdinati = Object.keys(prenotazioniPerGiorno).sort((a, b) => new Date(a) - new Date(b));
-
-                giorniOrdinati.forEach(giorno => {
-                    const container = document.createElement('div');
-                    container.className = 'giorno-container';
-                    container.innerHTML = `
-                        <h3 onclick="toggle('${giorno}')">▶️ ${giorno} (${prenotazioniPerGiorno[giorno].length} prenotazioni)</h3>
-                        <div id="box-${giorno}" class="hidden">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Cliente</th>
-                                        <th>Produttore</th>
-                                        <th>Codice CER</th>
-                                        <th>Caratt. Pericolo</th>
-                                        <th>Tipo Imballo</th>
-                                        <th>Stato Fisico</th>
-                                        <th>Quantità</th>
-                                        <th>Data</th>
-                                        <th>Certificato</th>
-                                        <th>Stato</th>
-                                        <th>Azioni</th>
-                                        <th>Nota</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tbody-${giorno}"></tbody>
-                            </table>
-                        </div>
-                    `;
-                    div.appendChild(container);
-
-                    const tbody = container.querySelector(`#tbody-${giorno}`);
-
-                    prenotazioniPerGiorno[giorno].forEach(p => {
-                        const statoClass = p.stato ? p.stato.replace(/\s/g, '-') : 'in-attesa';
-
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${p.id}</td>
-                                <td>${p.ragione_sociale}</td>
-                                <td>${p.produttore}</td>
-                                <td>${p.codice_cer}</td>
-                                <td>${(p.caratteristiche_pericolo || '').split(',').filter(Boolean).join(', ') || "-"}</td>
-                                <td>${p.tipo_imballo || '-'}</td>
-                                <td>${p.stato_fisico || '-'}</td>
-                                <td>${p.quantita}</td>
-                                <td>${p.giorno_conferimento}</td>
-                                <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank" class="download-btn">Scarica</a>` : '-'}</td>
-                                <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-                                <td>
-                                    <select id="stato-${p.id}">
-                                        <option value="accettata">Accettata</option>
-                                        <option value="non accettata">Non Accettata</option>
-                                        <option value="info richieste">Info Richieste</option>
-                                    </select><br>
-                                    <textarea id="richiesta-${p.id}" placeholder="Nota (se info richieste)"></textarea><br>
-                                    <button onclick="cambiaStato(${p.id})">Aggiorna</button>
-                                </td>
-                                <td><div id="nota-${p.id}" class="box-note"></div></td>
-                            </tr>
-                        `;
-                        caricaNota(p.id);
-                    });
-                });
-            });
-
-        function toggle(giorno) {
-            const box = document.getElementById('box-' + giorno);
-            const header = document.querySelector(`h3[onclick="toggle('${giorno}')"]`);
-            if (box.classList.contains('hidden')) {
-                box.classList.remove('hidden');
-                header.innerHTML = header.innerHTML.replace('▶️', '▼');
-            } else {
-                box.classList.add('hidden');
-                header.innerHTML = header.innerHTML.replace('▼', '▶️');
-            }
-        }
-
-        function cambiaStato(id) {
-            const stato = document.getElementById('stato-' + id).value;
-            const richiesta = document.getElementById('richiesta-' + id).value.trim();
-
-            if (stato === 'info richieste' && !richiesta) {
-                notify('Devi inserire una nota per il cliente', false);
-                return;
-            }
-
-            fetch('/impianto/cambia-stato', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: id, nuovo_stato: stato, richiesta: richiesta })
-            }).then(res => res.text())
-              .then(msg => {
-                  notify(msg);
-                  setTimeout(() => location.reload(), 1000);
-              });
-        }
-
-        function caricaNota(id) {
-            fetch('/impianto/note/' + id)
-                .then(res => res.json())
-                .then(note => {
-                    const box = document.getElementById('nota-' + id);
-                    if (!note || !note.richiesta) return;
-                    box.innerHTML = `
-                        <p><strong>Richiesta:</strong> ${note.richiesta}</p>
-                        <p><strong>Risposta:</strong> ${note.risposta || "<i>In attesa di risposta</i>"}</p>
-                    `;
-                });
-        }
-
-        // PDF EXPORT
-        document.getElementById('pdf-btn').addEventListener('click', () => {
-            html2canvas(document.getElementById('prenotazioni')).then(canvas => {
-                const pdf = new jspdf.jsPDF();
-                const imgData = canvas.toDataURL('image/png');
-                const pdfWidth = pdf.internal.pageSize.getWidth() - 20;
-                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-                pdf.addImage(imgData, 'PNG', 10, 10, pdfWidth, pdfHeight);
-                pdf.save('prenotazioni.pdf');
-            });
+        const perGiorno = {};
+        data.forEach(p => {
+          if (!perGiorno[p.giorno_conferimento]) perGiorno[p.giorno_conferimento] = [];
+          perGiorno[p.giorno_conferimento].push(p);
         });
-    </script>
 
+        Object.keys(perGiorno).sort().forEach(giorno => {
+          const box = document.createElement('div');
+          box.className = 'giorno-container';
+          box.innerHTML = `
+            <h3 onclick="toggle('${giorno}')">▶️ ${giorno} (${perGiorno[giorno].length} prenotazioni)</h3>
+            <div id="box-${giorno}" class="hidden">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th><th>Cliente</th><th>Produttore</th><th>Codice CER</th>
+                    <th>Pericolo</th><th>Imballo</th><th>Stato Fisico</th><th>Quantità</th>
+                    <th>Data</th><th>Certificato</th><th>Stato</th><th>Azioni</th><th>Nota</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-${giorno}"></tbody>
+              </table>
+            </div>
+          `;
+          div.appendChild(box);
+
+          const tbody = box.querySelector('tbody');
+          perGiorno[giorno].forEach(p => {
+            const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+            tbody.innerHTML += `
+              <tr>
+                <td>${p.id}</td>
+                <td>${p.ragione_sociale}</td>
+                <td>${p.produttore}</td>
+                <td>${p.codice_cer}</td>
+                <td>${p.caratteristiche_pericolo || '-'}</td>
+                <td>${p.tipo_imballo || '-'}</td>
+                <td>${p.stato_fisico || '-'}</td>
+                <td>${p.quantita}</td>
+                <td>${p.giorno_conferimento}</td>
+                <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" class="download-btn" target="_blank">Scarica</a>` : '-'}</td>
+                <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
+                <td>
+                  <select id="stato-${p.id}">
+                    <option value="accettata">Accettata</option>
+                    <option value="non accettata">Non Accettata</option>
+                    <option value="info richieste">Info Richieste</option>
+                  </select>
+                  <textarea id="richiesta-${p.id}" placeholder="Nota per il cliente..."></textarea>
+                  <button onclick="cambiaStato(${p.id})">Aggiorna</button>
+                </td>
+                <td><div id="nota-${p.id}" class="box-note"></div></td>
+              </tr>`;
+            caricaNota(p.id);
+          });
+        });
+      });
+
+    function toggle(giorno) {
+      const box = document.getElementById('box-' + giorno);
+      const h3 = document.querySelector(`h3[onclick="toggle('${giorno}')"]`);
+      box.classList.toggle('hidden');
+      h3.innerHTML = h3.innerHTML.includes('▶️') ? h3.innerHTML.replace('▶️', '▼') : h3.innerHTML.replace('▼', '▶️');
+    }
+
+    function caricaNota(id) {
+      fetch('/impianto/note/' + id)
+        .then(res => res.json())
+        .then(n => {
+          const box = document.getElementById('nota-' + id);
+          if (!n || !n.richiesta) return;
+          box.innerHTML = `<p><strong>Richiesta:</strong> ${n.richiesta}</p><p><strong>Risposta:</strong> ${n.risposta || '<i>In attesa</i>'}</p>`;
+        });
+    }
+
+    function cambiaStato(id) {
+      const stato = document.getElementById('stato-' + id).value;
+      const richiesta = document.getElementById('richiesta-' + id).value;
+      fetch('/impianto/cambia-stato', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, nuovo_stato: stato, richiesta })
+      }).then(res => res.text())
+        .then(msg => {
+          notify(msg);
+          setTimeout(() => location.reload(), 1000);
+        });
+    }
+
+    // ------------------- Richieste Trasporto -------------------
+    fetch('/debug/richieste-trasporto')
+      .then(res => res.json())
+      .then(data => {
+        const div = document.getElementById('trasporti');
+        if (!data.length) {
+          div.innerHTML = '<p>Nessuna richiesta trasporto trovata.</p>';
+          return;
+        }
+
+        let html = `
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Cliente</th><th>Produttore</th><th>Codice CER</th>
+                <th>Automezzo</th><th>Data</th><th>Orario</th>
+                <th>Contatto</th><th>Prezzo</th><th>Stato</th><th>Nota</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+        data.forEach(r => {
+          html += `
+            <tr>
+              <td>${r.id}</td>
+              <td>${r.richiedente}</td>
+              <td>${r.produttore}</td>
+              <td>${r.codice_cer}</td>
+              <td>${r.tipo_automezzo}</td>
+              <td>${r.data_trasporto}</td>
+              <td>${r.orario_preferito}</td>
+              <td>${r.numero_referente}</td>
+              <td>${r.prezzo_pattuito} €</td>
+              <td><span class="badge ${r.stato.replace(/\s/g, '-')}">${r.stato}</span></td>
+              <td>${r.nota || '-'}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        div.innerHTML = html;
+      });
+
+    // PDF EXPORT
+    document.getElementById('pdf-btn').addEventListener('click', () => {
+      html2canvas(document.body).then(canvas => {
+        const pdf = new jspdf.jsPDF();
+        const imgData = canvas.toDataURL('image/png');
+        const width = pdf.internal.pageSize.getWidth() - 20;
+        const height = (canvas.height * width) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 10, 10, width, height);
+        pdf.save('dashboard-impianto.pdf');
+      });
+    });
+  </script>
 </body>
-
 </html>

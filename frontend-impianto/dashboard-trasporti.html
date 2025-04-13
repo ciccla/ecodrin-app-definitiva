@@ -1,150 +1,186 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard Trasporti</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f1f8e9;
-            color: #2e7d32;
-            padding: 20px;
-        }
+  <meta charset="UTF-8">
+  <title>Dashboard Trasporti</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f8e9;
+      color: #2e7d32;
+      padding: 20px;
+    }
 
-        h1 {
-            margin-bottom: 10px;
-        }
+    h1 {
+      margin-bottom: 10px;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
+    a {
+      color: #2e7d32;
+      text-decoration: none;
+      font-weight: bold;
+    }
 
-        th, td {
-            padding: 8px;
-            border: 1px solid #c5e1a5;
-            text-align: left;
-        }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
 
-        th {
-            background: #dcedc8;
-        }
+    th, td {
+      padding: 8px;
+      border: 1px solid #c5e1a5;
+      text-align: left;
+    }
 
-        .badge {
-            padding: 4px 6px;
-            border-radius: 3px;
-            font-size: 0.85em;
-            color: white;
-        }
+    th {
+      background: #dcedc8;
+    }
 
-        .accettata { background-color: #2e7d32; }
-        .non-accettata { background-color: #c62828; }
-        .info-richieste { background-color: #1565c0; }
-        .in-attesa { background-color: #f9a825; }
+    .badge {
+      padding: 4px 6px;
+      border-radius: 3px;
+      font-size: 0.85em;
+      color: white;
+    }
 
-        textarea, select {
-            width: 100%;
-            margin-top: 5px;
-        }
+    .accettata { background-color: #2e7d32; }
+    .non-accettata { background-color: #c62828; }
+    .info-richieste { background-color: #1565c0; }
+    .in-attesa { background-color: #f9a825; }
 
-        button {
-            margin-top: 5px;
-            background-color: #388e3c;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+    textarea, select {
+      width: 100%;
+      margin-top: 5px;
+      font-family: inherit;
+      font-size: 0.9em;
+    }
 
-        button:hover {
-            background-color: #2e7d32;
-        }
-    </style>
+    button {
+      margin-top: 5px;
+      background-color: #388e3c;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2e7d32;
+    }
+
+    #notify {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 6px;
+      display: none;
+      font-weight: bold;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+  </style>
 </head>
 <body>
 
-    <h1>Richieste di Trasporto</h1>
-    <p><a href="/impianto/dashboard.html">⬅️ Torna alla Dashboard Impianto</a></p>
+  <h1>Dashboard Trasporti</h1>
+  <p><a href="/impianto/dashboard.html">⬅️ Torna alla Dashboard Impianto</a></p>
 
-    <table id="tabella-trasporti">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Richiedente</th>
-                <th>Produttore</th>
-                <th>Codice CER</th>
-                <th>Tipo Automezzo</th>
-                <th>Data</th>
-                <th>Orario</th>
-                <th>Telefono</th>
-                <th>Prezzo (€)</th>
-                <th>Stato</th>
-                <th>Azioni</th>
-                <th>Nota</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+  <table id="tabella-trasporti">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Richiedente</th>
+        <th>Produttore</th>
+        <th>Codice CER</th>
+        <th>Tipo Automezzo</th>
+        <th>Data</th>
+        <th>Orario</th>
+        <th>Telefono</th>
+        <th>Prezzo (€)</th>
+        <th>Stato</th>
+        <th>Azioni</th>
+        <th>Nota</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-    <script>
-        fetch('/impianto/richieste-trasporto')
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.querySelector('#tabella-trasporti tbody');
-                if (!data.length) {
-                    tbody.innerHTML = `<tr><td colspan="12">Nessuna richiesta trovata.</td></tr>`;
-                    return;
-                }
+  <div id="notify"></div>
+  <script>
+    function notify(msg, success = true) {
+      const n = document.getElementById('notify');
+      n.innerText = msg;
+      n.style.background = success ? '#2ecc71' : '#e74c3c';
+      n.style.display = 'block';
+      setTimeout(() => n.style.display = 'none', 4000);
+    }
 
-                data.forEach(r => {
-                    const statoClass = r.stato ? r.stato.replace(/\s/g, '-') : 'in-attesa';
-                    const nota = r.nota || '';
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${r.id}</td>
-                            <td>${r.richiedente}</td>
-                            <td>${r.produttore}</td>
-                            <td>${r.codice_cer}</td>
-                            <td>${r.tipo_automezzo}</td>
-                            <td>${r.data_trasporto}</td>
-                            <td>${r.orario_preferito}</td>
-                            <td>${r.numero_referente}</td>
-                            <td>${r.prezzo_pattuito.toFixed(2)}</td>
-                            <td><span class="badge ${statoClass}">${r.stato}</span></td>
-                            <td>
-                                <select id="stato-${r.id}">
-                                    <option value="accettata">Accettata</option>
-                                    <option value="non accettata">Non Accettata</option>
-                                    <option value="info richieste">Info Richieste</option>
-                                </select>
-                                <textarea id="nota-${r.id}" placeholder="Annotazioni o motivi (opzionale)">${nota}</textarea>
-                                <button onclick="aggiornaStato(${r.id})">Aggiorna</button>
-                            </td>
-                            <td>${nota}</td>
-                        </tr>
-                    `;
-                });
-            });
-
-        function aggiornaStato(id) {
-            const nuovo_stato = document.getElementById(`stato-${id}`).value;
-            const nota = document.getElementById(`nota-${id}`).value;
-
-            fetch('/impianto/aggiorna-trasporto', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, nuovo_stato, nota })
-            }).then(res => res.text())
-              .then(msg => {
-                  alert(msg);
-                  location.reload();
-              });
+    fetch('/impianto/richieste-trasporto')
+      .then(res => {
+        if (res.status === 403) {
+          alert('Devi accedere come impianto.');
+          window.location.href = '/impianto/login.html';
         }
-    </script>
+        return res.json();
+      })
+      .then(data => {
+        const tbody = document.querySelector('#tabella-trasporti tbody');
+        if (!data.length) {
+          tbody.innerHTML = `<tr><td colspan="12">Nessuna richiesta trovata.</td></tr>`;
+          return;
+        }
+
+        data.forEach(r => {
+          const statoClass = r.stato ? r.stato.replace(/\s/g, '-') : 'in-attesa';
+          const nota = r.nota || '';
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${r.id}</td>
+              <td>${r.richiedente}</td>
+              <td>${r.produttore}</td>
+              <td>${r.codice_cer}</td>
+              <td>${r.tipo_automezzo}</td>
+              <td>${r.data_trasporto}</td>
+              <td>${r.orario_preferito}</td>
+              <td>${r.numero_referente}</td>
+              <td>${parseFloat(r.prezzo_pattuito).toFixed(2)}</td>
+              <td><span class="badge ${statoClass}">${r.stato}</span></td>
+              <td>
+                <select id="stato-${r.id}">
+                  <option value="accettata">Accettata</option>
+                  <option value="non accettata">Non Accettata</option>
+                  <option value="info richieste">Info Richieste</option>
+                </select>
+                <textarea id="nota-${r.id}" placeholder="Nota per il cliente (opzionale)">${nota}</textarea>
+                <button onclick="aggiornaStato(${r.id})">Aggiorna</button>
+              </td>
+              <td>${nota || '-'}</td>
+            </tr>
+          `;
+        });
+      });
+
+    function aggiornaStato(id) {
+      const nuovo_stato = document.getElementById(`stato-${id}`).value;
+      const nota = document.getElementById(`nota-${id}`).value;
+
+      fetch('/impianto/aggiorna-trasporto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, nuovo_stato, nota })
+      }).then(res => res.text())
+        .then(msg => {
+          notify(msg);
+          setTimeout(() => location.reload(), 1500);
+        });
+    }
+  </script>
 
 </body>
 </html>

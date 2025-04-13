@@ -247,17 +247,37 @@ app.get('/cliente/richieste-trasporto', async (req, res) => {
     req.session.destroy(() => res.redirect('/impianto/login.html'));
   });
   
-  // ------------------------ IMPIANTO: PRENOTAZIONI ------------------------
-  app.get('/impianto/prenotazioni', async (req, res) => {
-    if (!req.session.admin) return res.status(403).send('Accesso negato');
-    try {
-      const result = await db.query('SELECT * FROM prenotazioni ORDER BY giorno_conferimento DESC');
-      res.json(result.rows);
-    } catch (err) {
-      res.send('Errore nel recupero');
-    }
-  });
-  
+// ------------------------ IMPIANTO: PRENOTAZIONI ------------------------
+app.get('/impianto/prenotazioni', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  try {
+    const result = await db.query('SELECT * FROM prenotazioni ORDER BY giorno_conferimento DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.send('Errore nel recupero');
+  }
+});
+
+// ------------------------ IMPIANTO: RICHIESTE DI TRASPORTO ------------------------
+app.get('/impianto/richieste-trasporto', async (req, res) => {
+  if (!req.session.admin) {
+    console.warn('❌ Accesso negato a /impianto/richieste-trasporto');
+    return res.status(403).send('Non autorizzato');
+  }
+
+  console.log(`🔍 Admin ID ${req.session.admin.id} richiede le richieste di trasporto`);
+
+  try {
+    const result = await db.query('SELECT * FROM richieste_trasporto ORDER BY data_trasporto DESC');
+    console.log(`📦 Trovate ${result.rows.length} richieste di trasporto`);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Errore nel recupero richieste trasporto:', err.message);
+    res.status(500).send('Errore server');
+  }
+});
+
+
   // ------------------------ IMPIANTO: CAMBIA STATO + EMAIL ------------------------
   app.post('/impianto/cambia-stato', async (req, res) => {
     if (!req.session.admin) return res.status(403).send('Accesso negato');

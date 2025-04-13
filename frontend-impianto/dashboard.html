@@ -129,14 +129,18 @@
   <h1>Dashboard Impianto (prenotazioni + trasporti)</h1>
   <p><a href="/impianto/logout">🔓 Logout</a></p>
 
+<p>
+  <a href="dashboard-trasporti.html" style="text-decoration:none; background:#2e7d32; color:#fff; padding:6px 12px; border-radius:4px;">
+    🚛 Vai alla dashboard trasporti
+  </a>
+</p>
+
   <button id="pdf-btn" style="margin-bottom: 20px;">📄 Scarica PDF</button>
 
   <h2>Prenotazioni per giorno</h2>
   <div id="prenotazioni"></div>
 
-  <h2>Richieste di Trasporto</h2>
-  <div id="trasporti"></div>
-
+  
   <div id="notify"></div>
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -250,59 +254,7 @@
         });
     }
 
-    // ------------------- Richieste Trasporto -------------------
-    fetch('/debug/richieste-trasporto')
-      .then(res => res.json())
-      .then(data => {
-        const div = document.getElementById('trasporti');
-        if (!data.length) {
-          div.innerHTML = '<p>Nessuna richiesta trasporto trovata.</p>';
-          return;
-        }
-
-        let html = `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>Cliente</th><th>Produttore</th><th>Codice CER</th>
-                <th>Automezzo</th><th>Data</th><th>Orario</th>
-                <th>Contatto</th><th>Prezzo</th><th>Stato</th><th>Nota</th>
-              </tr>
-            </thead>
-            <tbody>`;
-
-        data.forEach(r => {
-          html += `
-            <tr>
-              <td>${r.id}</td>
-              <td>${r.richiedente}</td>
-              <td>${r.produttore}</td>
-              <td>${r.codice_cer}</td>
-              <td>${r.tipo_automezzo}</td>
-              <td>${r.data_trasporto}</td>
-              <td>${r.orario_preferito}</td>
-              <td>${r.numero_referente}</td>
-              <td>${r.prezzo_pattuito} €</td>
-              <td><span class="badge ${r.stato.replace(/\s/g, '-')}">${r.stato}</span></td>
-              <td>${r.nota || '-'}</td>
-            </tr>`;
-        });
-
-        html += '</tbody></table>';
-        div.innerHTML = html;
-      });
-
-    // PDF EXPORT
-    document.getElementById('pdf-btn').addEventListener('click', () => {
-      html2canvas(document.body).then(canvas => {
-        const pdf = new jspdf.jsPDF();
-        const imgData = canvas.toDataURL('image/png');
-        const width = pdf.internal.pageSize.getWidth() - 20;
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 10, 10, width, height);
-        pdf.save('dashboard-impianto.pdf');
-      });
-    });
+   
   </script>
 </body>
 </html>

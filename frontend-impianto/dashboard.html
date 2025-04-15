@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard Impianto</title>
-  <link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,43 +12,24 @@
       padding: 20px;
     }
 
-    h1 {
-      margin-bottom: 5px;
-    }
-
+    h1 { margin-bottom: 5px; }
     h3 {
       cursor: pointer;
       padding: 5px;
       background: #c5e1a5;
       border-radius: 5px;
-      transition: background 0.3s;
       user-select: none;
     }
+    h3:hover { background: #aed581; }
 
-    h3:hover {
-      background: #aed581;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     th, td {
       padding: 6px;
       border: 1px solid #c8e6c9;
-      text-align: left;
       font-size: 0.9em;
     }
-
-    th {
-      background: #dcedc8;
-    }
-
-    tr:nth-child(even) {
-      background: #f9fbe7;
-    }
+    th { background: #dcedc8; }
+    tr:nth-child(even) { background: #f9fbe7; }
 
     .badge {
       padding: 2px 6px;
@@ -57,77 +37,17 @@
       color: white;
       font-size: 0.8em;
     }
-
     .accettata { background: #2e7d32; }
     .non-accettata { background: #c62828; }
     .info-richieste { background: #1565c0; }
     .in-attesa { background: #f9a825; }
-
-    .download-btn {
-      background: #388e3c;
-      padding: 4px 8px;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
-      font-size: 0.8em;
-    }
-
-    .download-btn:hover {
-      background: #2e7d32;
-    }
-
-    select, textarea {
-      width: 100%;
-      box-sizing: border-box;
-      margin-top: 4px;
-    }
-
-    button {
-      background: #388e3c;
-      color: white;
-      padding: 5px 10px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 5px;
-    }
-
-    button:hover {
-      background: #2e7d32;
-    }
-
-    .giorno-container {
-      margin-bottom: 20px;
-    }
-
-    .box-note {
-      margin-top: 5px;
-      font-size: 0.85em;
-      color: #555;
-    }
-
-    .hidden {
-      display: none;
-      transition: all 0.3s ease;
-    }
-
-    #notify {
-      display: none;
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #2ecc71;
-      color: white;
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
 
     .chat-box {
       border: 1px solid #c5e1a5;
       padding: 8px;
       border-radius: 6px;
       background: #ffffff;
+      margin-top: 6px;
     }
 
     .chat-messages {
@@ -144,196 +64,262 @@
       font-size: 0.85em;
       display: inline-block;
       clear: both;
+      position: relative;
     }
 
-    .bubble-left {
-      background: #e0f2f1;
-      float: left;
-    }
+    .bubble-left { background: #e0f2f1; float: left; }
+    .bubble-right { background: #c8e6c9; float: right; }
 
-    .bubble-right {
-      background: #c8e6c9;
-      float: right;
+    .bubble-time {
+      display: block;
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
     }
 
     .chat-input {
-      width: calc(100% - 65px);
+      width: calc(100% - 80px);
       padding: 4px;
       font-size: 0.9em;
+    }
+
+    .upload-label {
+      cursor: pointer;
+      font-size: 1.2em;
+      padding: 0 6px;
+    }
+
+    .badge-unread {
+      background: red;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.7em;
+      display: none;
+    }
+
+    button {
+      background: #388e3c;
+      color: white;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #notify {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
   </style>
 </head>
 <body>
 
-  <h1>Dashboard Impianto (prenotazioni + trasporti)</h1>
-  <p><a href="/impianto/logout">🔓 Logout</a></p>
+<h1>Dashboard Impianto</h1>
+<p><a href="/impianto/logout">🔓 Logout</a></p>
+<p><a href="dashboard-trasporti.html" style="text-decoration:none;background:#2e7d32;color:#fff;padding:6px 12px;border-radius:4px;">🚛 Vai alla dashboard trasporti</a></p>
 
-  <p>
-    <a href="dashboard-trasporti.html" style="text-decoration:none; background:#2e7d32; color:#fff; padding:6px 12px; border-radius:4px;">
-      🚛 Vai alla dashboard trasporti
-    </a>
-  </p>
+<button id="pdf-btn" style="margin-bottom: 20px;">📄 Scarica PDF</button>
 
-  <button id="pdf-btn" style="margin-bottom: 20px;">📄 Scarica PDF</button>
+<h2>Prenotazioni per giorno</h2>
+<div id="prenotazioni"></div>
+<div id="notify"></div>
+<audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 
-  <h2>Prenotazioni per giorno</h2>
-  <div id="prenotazioni"></div>
-
-  <div id="notify"></div>
-
-  <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-  <script>
-    function notify(msg, success = true) {
-      const n = document.getElementById('notify');
-      n.innerText = msg;
-      n.style.background = success ? '#2ecc71' : '#e74c3c';
-      n.style.display = 'block';
-      setTimeout(() => n.style.display = 'none', 3000);
-    }
-
-    function caricaChatPrenotazione(id) {
-      fetch('/chat/prenotazione/' + id)
-        .then(res => res.json())
-        .then(messaggi => {
-          const chat = document.getElementById(`chat-messages-${id}`);
-          chat.innerHTML = '';
-          messaggi.forEach(msg => {
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble ' + (msg.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-            bubble.textContent = msg.messaggio;
-            chat.appendChild(bubble);
-          });
-          chat.scrollTop = chat.scrollHeight;
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+  let messaggiLetti = {};
+  
+  function notify(msg, success = true) {
+    const n = document.getElementById('notify');
+    n.innerText = msg;
+    n.style.background = success ? '#2ecc71' : '#e74c3c';
+    n.style.display = 'block';
+    setTimeout(() => n.style.display = 'none', 3000);
+  }
+  
+  function suonoNotifica() {
+    const audio = document.getElementById('suonoNotifica');
+    if (audio) audio.play();
+  }
+  
+  function toggle(giorno) {
+    const box = document.getElementById('box-' + giorno);
+    const h3 = document.querySelector(`h3[onclick="toggle('${giorno}')"]`);
+    box.classList.toggle('hidden');
+    h3.innerHTML = h3.innerHTML.includes('▶️') ? h3.innerHTML.replace('▶️', '▼') : h3.innerHTML.replace('▼', '▶️');
+  }
+  
+  function caricaChat(id) {
+    fetch('/chat/prenotazione/' + id)
+      .then(res => res.json())
+      .then(msgs => {
+        const div = document.getElementById(`chat-messages-${id}`);
+        const badge = document.getElementById(`unread-${id}`);
+        const nuovi = msgs.filter(m => m.mittente === 'cliente').length;
+        if (messaggiLetti[id] !== undefined && nuovi > messaggiLetti[id]) {
+          suonoNotifica();
+          badge.style.display = 'inline-block';
+        }
+        messaggiLetti[id] = nuovi;
+        div.innerHTML = '';
+        msgs.forEach(m => {
+          const bubble = document.createElement('div');
+          bubble.className = 'chat-bubble ' + (m.mittente === 'cliente' ? 'bubble-left' : 'bubble-right');
+          const time = new Date(m.timestamp).toLocaleString();
+          bubble.innerHTML = `<div>${m.messaggio}</div><span class="bubble-time">${time}</span>`;
+          div.appendChild(bubble);
         });
-    }
-
-    function inviaMessaggioPrenotazione(id) {
-      const input = document.getElementById(`msg-input-${id}`);
-      const messaggio = input.value.trim();
-      if (!messaggio) return;
-
+        div.scrollTop = div.scrollHeight;
+      });
+  }
+  
+  function inviaMessaggio(id) {
+    const input = document.getElementById(`msg-input-${id}`);
+    const testo = input.value.trim();
+    if (!testo) return;
+    fetch('/chat/prenotazione', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenotazione_id: id, mittente: 'admin', messaggio: testo })
+    }).then(() => {
+      input.value = '';
+      document.getElementById(`unread-${id}`).style.display = 'none';
+      caricaChat(id);
+    });
+  }
+  
+  function uploadFile(id) {
+    const input = document.getElementById(`file-upload-${id}`);
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      const msg = `📎 <a href="${base64}" target="_blank">${file.name}</a>`;
       fetch('/chat/prenotazione', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prenotazione_id: id,
-          mittente: 'admin',
-          messaggio
-        })
-      }).then(() => {
-        input.value = '';
-        caricaChatPrenotazione(id);
+        body: JSON.stringify({ prenotazione_id: id, mittente: 'admin', messaggio: msg })
+      }).then(() => caricaChat(id));
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  function cambiaStato(id) {
+    const stato = document.getElementById(`stato-${id}`).value;
+    fetch('/impianto/cambia-stato', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato: stato, richiesta: '' })
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify(msg);
+      setTimeout(() => location.reload(), 1000);
+    });
+  }
+  
+  function generaPDF() {
+    html2canvas(document.body).then(canvas => {
+      const pdf = new jspdf.jsPDF();
+      const img = canvas.toDataURL('image/png');
+      const width = pdf.internal.pageSize.getWidth() - 20;
+      const height = (canvas.height * width) / canvas.width;
+      pdf.addImage(img, 'PNG', 10, 10, width, height);
+      pdf.save('dashboard-impianto.pdf');
+    });
+  }
+  
+  document.getElementById('pdf-btn').addEventListener('click', generaPDF);
+  
+  // ---------------- Prenotazioni ----------------
+  fetch('/impianto/prenotazioni')
+    .then(res => res.json())
+    .then(data => {
+      const div = document.getElementById('prenotazioni');
+      if (!data.length) {
+        div.innerHTML = '<p>Nessuna prenotazione trovata.</p>';
+        return;
+      }
+  
+      const perGiorno = {};
+      data.forEach(p => {
+        if (!perGiorno[p.giorno_conferimento]) perGiorno[p.giorno_conferimento] = [];
+        perGiorno[p.giorno_conferimento].push(p);
       });
-    }
-
-    fetch('/impianto/prenotazioni')
-      .then(res => res.json())
-      .then(data => {
-        const div = document.getElementById('prenotazioni');
-        if (!data.length) {
-          div.innerHTML = '<p>Nessuna prenotazione trovata.</p>';
-          return;
-        }
-
-        const perGiorno = {};
-        data.forEach(p => {
-          if (!perGiorno[p.giorno_conferimento]) perGiorno[p.giorno_conferimento] = [];
-          perGiorno[p.giorno_conferimento].push(p);
+  
+      Object.keys(perGiorno).sort().forEach(giorno => {
+        const box = document.createElement('div');
+        box.className = 'giorno-container';
+        box.innerHTML = `
+          <h3 onclick="toggle('${giorno}')">▶️ ${giorno} (${perGiorno[giorno].length} prenotazioni)</h3>
+          <div id="box-${giorno}" class="hidden">
+            <table><thead><tr>
+              <th>ID</th><th>Cliente</th><th>Produttore</th><th>Codice CER</th>
+              <th>Pericolo</th><th>Imballo</th><th>Stato Fisico</th><th>Quantità</th>
+              <th>Data</th><th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+            </tr></thead><tbody id="tbody-${giorno}"></tbody></table>
+          </div>`;
+        div.appendChild(box);
+  
+        const tbody = box.querySelector('tbody');
+        perGiorno[giorno].forEach(p => {
+          const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+          tbody.innerHTML += `
+          <tr>
+            <td>${p.id}</td>
+            <td>${p.ragione_sociale}</td>
+            <td>${p.produttore}</td>
+            <td>${p.codice_cer}</td>
+            <td>${p.caratteristiche_pericolo || '-'}</td>
+            <td>${p.tipo_imballo || '-'}</td>
+            <td>${p.stato_fisico || '-'}</td>
+            <td>${p.quantita}</td>
+            <td>${p.giorno_conferimento}</td>
+            <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" class="download-btn" target="_blank">Scarica</a>` : '-'}</td>
+            <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
+            <td>
+              <select id="stato-${p.id}">
+                <option value="accettata">Accettata</option>
+                <option value="non accettata">Non Accettata</option>
+                <option value="info richieste">Info Richieste</option>
+              </select>
+              <button onclick="cambiaStato(${p.id})">Aggiorna</button>
+            </td>
+            <td>
+              <div class="chat-box">
+                <div class="chat-messages" id="chat-messages-${p.id}"></div>
+                <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi un messaggio..." onkeydown="if(event.key==='Enter') inviaMessaggio(${p.id})">
+                <label class="upload-label" for="file-upload-${p.id}">📎</label>
+                <input type="file" id="file-upload-${p.id}" onchange="uploadFile(${p.id})">
+                <button onclick="inviaMessaggio(${p.id})">Invia</button>
+                <span class="badge-unread" id="unread-${p.id}">NUOVO</span>
+              </div>
+            </td>
+          </tr>`;
+          caricaChat(p.id);
         });
-
-        Object.keys(perGiorno).sort().forEach(giorno => {
-          const box = document.createElement('div');
-          box.className = 'giorno-container';
-          box.innerHTML = `
-            <h3 onclick="toggle('${giorno}')">▶️ ${giorno} (${perGiorno[giorno].length} prenotazioni)</h3>
-            <div id="box-${giorno}" class="hidden">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th><th>Cliente</th><th>Produttore</th><th>Codice CER</th>
-                    <th>Pericolo</th><th>Imballo</th><th>Stato Fisico</th><th>Quantità</th>
-                    <th>Data</th><th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-${giorno}"></tbody>
-              </table>
-            </div>
-          `;
-          div.appendChild(box);
-
-          const tbody = box.querySelector('tbody');
-          perGiorno[giorno].forEach(p => {
-            const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-            tbody.innerHTML += `
-              <tr>
-                <td>${p.id}</td>
-                <td>${p.ragione_sociale}</td>
-                <td>${p.produttore}</td>
-                <td>${p.codice_cer}</td>
-                <td>${p.caratteristiche_pericolo || '-'}</td>
-                <td>${p.tipo_imballo || '-'}</td>
-                <td>${p.stato_fisico || '-'}</td>
-                <td>${p.quantita}</td>
-                <td>${p.giorno_conferimento}</td>
-                <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" class="download-btn" target="_blank">Scarica</a>` : '-'}</td>
-                <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-                <td>
-                  <select id="stato-${p.id}">
-                    <option value="accettata">Accettata</option>
-                    <option value="non accettata">Non Accettata</option>
-                    <option value="info richieste">Info Richieste</option>
-                  </select>
-                  <button onclick="cambiaStato(${p.id})">Aggiorna</button>
-                </td>
-                <td>
-                  <div class="chat-box" id="chat-box-${p.id}">
-                    <div class="chat-messages" id="chat-messages-${p.id}"></div>
-                    <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi un messaggio...">
-                    <button onclick="inviaMessaggioPrenotazione(${p.id})">Invia</button>
-                  </div>
-                </td>
-              </tr>`;
-            caricaChatPrenotazione(p.id);
-          });
-        });
-      });
-
-    function toggle(giorno) {
-      const box = document.getElementById('box-' + giorno);
-      const h3 = document.querySelector(`h3[onclick="toggle('${giorno}')"]`);
-      box.classList.toggle('hidden');
-      h3.innerHTML = h3.innerHTML.includes('▶️') ? h3.innerHTML.replace('▶️', '▼') : h3.innerHTML.replace('▼', '▶️');
-    }
-
-    function cambiaStato(id) {
-      const stato = document.getElementById(`stato-${id}`).value;
-      const richiesta = ''; // Rimosso textarea per "richiesta", se ti serve reinseriamola
-      fetch('/impianto/cambia-stato', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, nuovo_stato: stato, richiesta })
-      })
-      .then(res => res.text())
-      .then(msg => {
-        notify(msg);
-        setTimeout(() => location.reload(), 1000);
-      });
-    }
-
-    // PDF
-    document.getElementById('pdf-btn').addEventListener('click', () => {
-      html2canvas(document.body).then(canvas => {
-        const pdf = new jspdf.jsPDF();
-        const imgData = canvas.toDataURL('image/png');
-        const width = pdf.internal.pageSize.getWidth() - 20;
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 10, 10, width, height);
-        pdf.save('dashboard-impianto.pdf');
       });
     });
+  
+  // ---------------- Polling ----------------
+  setInterval(() => {
+    const allBoxes = document.querySelectorAll("[id^='chat-messages-']");
+    allBoxes.forEach(box => {
+      const id = box.id.split('-')[2];
+      if (id) caricaChat(id);
+    });
+  }, 2000);
   </script>
-</body>
-</html>
+  </body>
+  </html>
+  

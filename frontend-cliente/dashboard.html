@@ -14,7 +14,6 @@
 
     h1, h2 {
       text-align: center;
-      color: #2e7d32;
       margin-bottom: 20px;
     }
 
@@ -22,10 +21,6 @@
       color: #2e7d32;
       text-decoration: none;
       font-weight: bold;
-    }
-
-    a:hover {
-      text-decoration: underline;
     }
 
     .actions {
@@ -45,16 +40,11 @@
     th, td {
       padding: 10px;
       border: 1px solid #c8e6c9;
-      text-align: left;
       font-size: 14px;
     }
 
     th {
       background: #dcedc8;
-    }
-
-    tr:nth-child(even) {
-      background: #f9fbe7;
     }
 
     .badge {
@@ -71,41 +61,61 @@
     .info-richieste { background: #1565c0; }
     .in-attesa { background: #f9a825; }
 
-    .download-btn {
-      background: #388e3c;
-      padding: 6px 12px;
-      color: white;
-      text-decoration: none;
-      border-radius: 4px;
+    .chat-box {
+      border: 1px solid #c5e1a5;
+      padding: 8px;
+      border-radius: 6px;
+      background: #ffffff;
+      margin-top: 8px;
+    }
+
+    .chat-messages {
+      max-height: 130px;
+      overflow-y: auto;
+      margin-bottom: 5px;
+    }
+
+    .chat-bubble {
+      max-width: 80%;
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 12px;
       font-size: 0.85em;
       display: inline-block;
+      clear: both;
+      position: relative;
     }
 
-    .download-btn:hover {
-      background: #2e7d32;
+    .bubble-left {
+      background: #e0f2f1;
+      float: left;
     }
 
-    textarea {
-      width: 100%;
-      padding: 6px;
-      margin-top: 5px;
+    .bubble-right {
+      background: #c8e6c9;
+      float: right;
+    }
+
+    .bubble-time {
+      display: block;
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .chat-input, .chat-file {
+      margin-top: 6px;
+      width: calc(100% - 80px);
       font-size: 0.9em;
-      border: 1px solid #c8e6c9;
-      border-radius: 4px;
     }
 
     button {
       background: #2e7d32;
       color: white;
       padding: 6px 12px;
-      margin-top: 5px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
-    }
-
-    button:hover {
-      background: #27642b;
     }
 
     #notify {
@@ -118,185 +128,291 @@
       border-radius: 6px;
       display: none;
       font-weight: bold;
-      z-index: 1000;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-
-    @media (max-width: 768px) {
-      th, td {
-        font-size: 13px;
-      }
-
-      .download-btn, button {
-        width: 100%;
-        box-sizing: border-box;
-      }
     }
   </style>
 </head>
 <body>
 
-  <h1>Dashboard Cliente</h1>
+<h1>Dashboard Cliente</h1>
 
-  <div class="actions">
-    <a href="prenotazione.html">➕ Nuova Prenotazione</a> |
-    <a href="trasporto.html">🚚 Richiedi Trasporto</a> |
-    <a href="/cliente/logout">🔒 Logout</a>
-  </div>
+<div class="actions">
+  <a href="prenotazione.html">➕ Nuova Prenotazione</a> |
+  <a href="trasporto.html">🚚 Richiedi Trasporto</a> |
+  <a href="/cliente/logout">🔒 Logout</a>
+</div>
 
-  <h2>Le tue Prenotazioni</h2>
-  <div id="prenotazioni"></div>
+<h2>Le tue Prenotazioni</h2>
+<div id="prenotazioni"></div>
 
-  <h2>Richieste di Trasporto</h2>
-  <div id="trasporti"></div>
+<div id="notify"></div>
 
-  <div id="notify"></div>
+<!-- Audio per notifiche -->
+<audio id="notification-sound" src="https://notificationsounds.com/storage/sounds/file-sounds-1153-pristine.mp3" preload="auto"></audio>
 
-  <script>
-    function notify(msg, success = true) {
-      const n = document.getElementById('notify');
-      n.innerText = msg;
-      n.style.background = success ? '#2e7d32' : '#c62828';
-      n.style.display = 'block';
-      setTimeout(() => n.style.display = 'none', 4000);
-    }
+<script>
+function notify(msg, success = true) {
+  const n = document.getElementById('notify');
+  n.innerText = msg;
+  n.style.background = success ? '#2e7d32' : '#c62828';
+  n.style.display = 'block';
+  setTimeout(() => n.style.display = 'none', 4000);
+}
 
-    fetch('/cliente/prenotazioni')
-      .then(res => {
-        if (res.status === 403) {
-          alert('Devi fare login');
-          window.location.href = '/cliente/login.html';
-        }
-        return res.json();
-      })
-      .then(data => {
-        const div = document.getElementById('prenotazioni');
-        if (!data.length) {
-          div.innerHTML = '<p style="text-align:center;">Nessuna prenotazione trovata.</p>';
-          return;
-        }
-
-        let html = `<table><thead><tr>
-          <th>ID</th><th>Produttore</th><th>Codice CER</th><th>Caratteristiche</th><th>Imballo</th>
-          <th>Stato Fisico</th><th>Quantità</th><th>Data</th><th>Certificato</th>
-          <th>Stato</th><th>Richiesta Impianto</th><th>Rispondi</th>
-        </tr></thead><tbody>`;
-
-        data.forEach(p => {
-          const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-          html += `<tr>
-            <td>${p.id}</td>
-            <td>${p.produttore}</td>
-            <td>${p.codice_cer}</td>
-            <td>${(p.caratteristiche_pericolo || '').split(',').join(', ') || '-'}</td>
-            <td>${p.tipo_imballo || '-'}</td>
-            <td>${p.stato_fisico || '-'}</td>
-            <td>${p.quantita}</td>
-            <td>${p.giorno_conferimento}</td>
-            <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" class="download-btn" target="_blank">Scarica</a>` : '-'}</td>
-            <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-            <td><div id="nota-${p.id}">-</div></td>
-            <td>
-              <textarea id="risposta-${p.id}" placeholder="Rispondi all'impianto..."></textarea>
-              <button onclick="inviaRisposta(${p.id})">Invia</button>
-            </td>
-          </tr>`;
-          caricaNota(p.id);
-        });
-
-        html += '</tbody></table>';
-        div.innerHTML = html;
-      });
-
-    function caricaNota(id) {
-      fetch('/impianto/note/' + id)
-        .then(res => res.json())
-        .then(note => {
-          const box = document.getElementById('nota-' + id);
-          if (!note || !note.richiesta) {
-            box.innerHTML = '<i>Nessuna richiesta</i>';
-            return;
-          }
-          box.innerHTML = `<p><strong>Richiesta:</strong> ${note.richiesta}</p>
-                           <p><strong>Risposta:</strong> ${note.risposta || "<i>Non ancora inviata</i>"}</p>`;
-        });
-    }
-
-    function inviaRisposta(id) {
-      const risposta = document.getElementById('risposta-' + id).value.trim();
-      if (!risposta) {
-        notify('Inserisci una risposta', false);
+function playSound() {
+  const sound = document.getElementById('notification-sound');
+  if (sound) sound.play();
+}
+</script>
+<script>
+  const notifyEl = document.getElementById('notify');
+  const notifySound = document.getElementById('notify-sound');
+  let messaggiLetti = {};
+  
+  function notify(msg, success = true) {
+    notifyEl.innerText = msg;
+    notifyEl.style.background = success ? '#2e7d32' : '#c62828';
+    notifyEl.style.display = 'block';
+    setTimeout(() => notifyEl.style.display = 'none', 4000);
+  }
+  
+  // ------------------------ PRENOTAZIONI ------------------------
+  fetch('/cliente/prenotazioni')
+    .then(res => res.json())
+    .then(data => {
+      const div = document.getElementById('prenotazioni');
+      if (!data.length) {
+        div.innerHTML = '<p style="text-align:center;">Nessuna prenotazione trovata.</p>';
         return;
       }
-
-      fetch('/cliente/invia-risposta', {
+  
+      let html = `<table><thead><tr>
+        <th>ID</th><th>Produttore</th><th>Codice CER</th><th>Quantità</th><th>Data</th><th>Certificato</th><th>Stato</th><th>Chat</th>
+      </tr></thead><tbody>`;
+  
+      data.forEach(p => {
+        const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+        html += `<tr>
+          <td>${p.id}</td>
+          <td>${p.produttore}</td>
+          <td>${p.codice_cer}</td>
+          <td>${p.quantita}</td>
+          <td>${p.giorno_conferimento}</td>
+          <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
+          <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
+          <td>
+            <div class="chat-box">
+              <div class="chat-messages" id="chat-messages-${p.id}"></div>
+              <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggioPrenotazione(${p.id})">
+              <label class="upload-label" for="file-upload-${p.id}">📎</label>
+              <input type="file" id="file-upload-${p.id}" onchange="uploadFile(${p.id}, 'prenotazione')">
+              <button onclick="inviaMessaggioPrenotazione(${p.id})">Invia</button>
+              <span class="badge-unread" id="unread-${p.id}" style="display:none;">NUOVO</span>
+            </div>
+          </td>
+        </tr>`;
+        setTimeout(() => caricaChat('prenotazione', p.id), 0);
+      });
+  
+      html += '</tbody></table>';
+      div.innerHTML = html;
+    });
+  
+  function caricaChat(tipo, id) {
+    fetch(`/chat/${tipo}/${id}`)
+      .then(res => res.json())
+      .then(msgs => {
+        const container = document.getElementById(`chat-messages-${id}`);
+        const unreadBadge = document.getElementById(`unread-${id}`);
+        const nuovi = msgs.filter(m => m.mittente === 'admin').length;
+  
+        if (messaggiLetti[id] !== undefined && nuovi > messaggiLetti[id]) {
+          unreadBadge.style.display = 'inline-block';
+          notifySound.play();
+        }
+  
+        messaggiLetti[id] = nuovi;
+        container.innerHTML = '';
+        msgs.forEach(m => {
+          const bubble = document.createElement('div');
+          const timestamp = new Date(m.timestamp).toLocaleString();
+          bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+          bubble.innerHTML = `<div>${m.messaggio}</div><span class="timestamp">${timestamp}</span>`;
+          container.appendChild(bubble);
+        });
+  
+        container.scrollTop = container.scrollHeight;
+      });
+  }
+  
+  function inviaMessaggioPrenotazione(id) {
+    const input = document.getElementById(`msg-input-${id}`);
+    const testo = input.value.trim();
+    if (!testo) return;
+    fetch('/chat/prenotazione', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenotazione_id: id, mittente: 'cliente', messaggio: testo })
+    }).then(() => {
+      input.value = '';
+      caricaChat('prenotazione', id);
+      document.getElementById(`unread-${id}`).style.display = 'none';
+    });
+  }
+  
+  function uploadFile(id, tipo) {
+    const input = document.getElementById(`file-upload-${id}`);
+    const file = input.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      const fileName = file.name;
+      const messaggio = `📎 <a href="${base64}" target="_blank">${fileName}</a>`;
+      fetch(`/chat/${tipo}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prenotazione_id: id, risposta })
-      })
-      .then(res => res.text())
-      .then(msg => {
-        notify(msg);
-        setTimeout(() => location.reload(), 1500);
+        body: JSON.stringify({
+          [`${tipo}_id`]: id,
+          mittente: 'cliente',
+          messaggio
+        })
+      }).then(() => caricaChat(tipo, id));
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  // ------------------------ TRASPORTO ------------------------
+  fetch('/cliente/richieste-trasporto')
+    .then(res => res.json())
+    .then(data => {
+      const div = document.getElementById('trasporti');
+      if (!data.length) {
+        div.innerHTML = '<p style="text-align:center;">Nessuna richiesta trovata.</p>';
+        return;
+      }
+  
+      let html = `<table><thead><tr>
+        <th>ID</th><th>Produttore</th><th>Codice CER</th><th>Automezzo</th>
+        <th>Data</th><th>Orario</th><th>Referente</th><th>Prezzo</th><th>Stato</th><th>Chat</th>
+      </tr></thead><tbody>`;
+  
+      data.forEach(t => {
+        const statoClass = (t.stato || 'in attesa').replace(/\s/g, '-');
+        html += `<tr>
+          <td>${t.id}</td>
+          <td>${t.produttore}</td>
+          <td>${t.codice_cer}</td>
+          <td>${t.tipo_automezzo}</td>
+          <td>${t.data_trasporto}</td>
+          <td>${t.orario_preferito}</td>
+          <td>${t.numero_referente}</td>
+          <td>${parseFloat(t.prezzo_pattuito).toFixed(2)} €</td>
+          <td><span class="badge ${statoClass}">${t.stato}</span></td>
+          <td>
+            <div class="chat-box">
+              <div class="chat-messages" id="chat-messages-trasporto-${t.id}"></div>
+              <input type="text" class="chat-input" id="msg-input-trasporto-${t.id}" placeholder="Scrivi..." 
+                onkeydown="if(event.key==='Enter') inviaMessaggioTrasporto(${t.id})">
+              <label class="upload-label" for="file-upload-trasporto-${t.id}">📎</label>
+              <input type="file" id="file-upload-trasporto-${t.id}" onchange="uploadFileTrasporto(${t.id})">
+              <button onclick="inviaMessaggioTrasporto(${t.id})">Invia</button>
+              <span class="badge-unread" id="unread-trasporto-${t.id}" style="display:none;">NUOVO</span>
+            </div>
+          </td>
+        </tr>`;
+        setTimeout(() => caricaChatTrasporto(t.id), 0);
       });
-    }
-    fetch('/cliente/richieste-trasporto')
+  
+      html += '</tbody></table>';
+      div.innerHTML = html;
+    });
+  
+  function caricaChatTrasporto(id) {
+    fetch('/chat/trasporto/' + id)
       .then(res => res.json())
-      .then(data => {
-        console.log('📦 Richieste trasporto ricevute:', data); // debug
-        const div = document.getElementById('trasporti');
-
-        if (!data.length) {
-          div.innerHTML = '<p style="text-align:center;">Nessuna richiesta trovata.</p>';
-          return;
+      .then(msgs => {
+        const container = document.getElementById(`chat-messages-trasporto-${id}`);
+        const unreadBadge = document.getElementById(`unread-trasporto-${id}`);
+        const nuovi = msgs.filter(m => m.mittente === 'admin').length;
+  
+        if (messaggiLetti['t-' + id] !== undefined && nuovi > messaggiLetti['t-' + id]) {
+          unreadBadge.style.display = 'inline-block';
+          notifySound.play();
         }
-
-        let html = `
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Richiedente</th>
-                <th>Produttore</th>
-                <th>Codice CER</th>
-                <th>Automezzo</th>
-                <th>Data</th>
-                <th>Orario</th>
-                <th>Referente</th>
-                <th>Prezzo (€)</th>
-                <th>Stato</th>
-                <th>Nota Impianto</th>
-              </tr>
-            </thead>
-            <tbody>
-        `;
-
-        data.forEach(t => {
-          const statoClass = (t.stato || 'in attesa').replace(/\s/g, '-');
-          html += `
-            <tr>
-              <td>${t.id}</td>
-              <td>${t.richiedente}</td>
-              <td>${t.produttore}</td>
-              <td>${t.codice_cer}</td>
-              <td>${t.tipo_automezzo}</td>
-              <td>${t.data_trasporto}</td>
-              <td>${t.orario_preferito}</td>
-              <td>${t.numero_referente}</td>
-              <td>${t.prezzo_pattuito}</td>
-              <td><span class="badge ${statoClass}">${t.stato}</span></td>
-              <td>${t.nota || '-'}</td>
-            </tr>
-          `;
+  
+        messaggiLetti['t-' + id] = nuovi;
+        container.innerHTML = '';
+        msgs.forEach(m => {
+          const bubble = document.createElement('div');
+          const timestamp = new Date(m.timestamp).toLocaleString();
+          bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+          bubble.innerHTML = `<div>${m.messaggio}</div><span class="timestamp">${timestamp}</span>`;
+          container.appendChild(bubble);
         });
-
-        html += '</tbody></table>';
-        div.innerHTML = html;
-      })
-      .catch(err => {
-        console.error('❌ Errore nella fetch delle richieste trasporto:', err);
-        notify('Errore nel caricamento richieste trasporto', false);
+  
+        container.scrollTop = container.scrollHeight;
       });
+  }
+  
+  function inviaMessaggioTrasporto(id) {
+    const input = document.getElementById(`msg-input-trasporto-${id}`);
+    const testo = input.value.trim();
+    if (!testo) return;
+  
+    fetch('/chat/trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trasporto_id: id, mittente: 'cliente', messaggio: testo })
+    }).then(() => {
+      input.value = '';
+      caricaChatTrasporto(id);
+      document.getElementById(`unread-trasporto-${id}`).style.display = 'none';
+    });
+  }
+  
+  function uploadFileTrasporto(id) {
+    const input = document.getElementById(`file-upload-trasporto-${id}`);
+    const file = input.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result;
+      const fileName = file.name;
+      const messaggio = `📎 <a href="${base64}" target="_blank">${fileName}</a>`;
+      fetch('/chat/trasporto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trasporto_id: id,
+          mittente: 'cliente',
+          messaggio
+        })
+      }).then(() => caricaChatTrasporto(id));
+    };
+    reader.readAsDataURL(file);
+  }
+  setInterval(() => {
+  // Polling per tutte le prenotazioni
+  document.querySelectorAll('[id^="chat-messages-"]').forEach(box => {
+    const id = box.id.replace('chat-messages-', '');
+    if (!isNaN(id)) {
+      caricaChat('prenotazione', parseInt(id));
+    }
+  });
+
+  // Polling per tutti i trasporti
+  document.querySelectorAll('[id^="chat-messages-trasporto-"]').forEach(box => {
+    const id = box.id.replace('chat-messages-trasporto-', '');
+    if (!isNaN(id)) {
+      caricaChatTrasporto(parseInt(id));
+    }
+  });
+}, 2000); // ogni 2 secondi
+
   </script>
-</body>
-</html>
+  </body>
+  </html>
+  

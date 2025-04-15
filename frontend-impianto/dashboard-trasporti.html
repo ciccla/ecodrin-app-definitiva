@@ -15,12 +15,6 @@
       margin-bottom: 10px;
     }
 
-    a {
-      color: #2e7d32;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -31,7 +25,6 @@
       padding: 8px;
       border: 1px solid #c5e1a5;
       text-align: left;
-      vertical-align: top;
     }
 
     th {
@@ -45,6 +38,15 @@
       color: white;
     }
 
+    .badge-unread {
+      background: red;
+      color: white;
+      font-size: 0.7em;
+      padding: 2px 5px;
+      border-radius: 4px;
+      display: none;
+    }
+
     .accettata { background-color: #2e7d32; }
     .non-accettata { background-color: #c62828; }
     .info-richieste { background-color: #1565c0; }
@@ -53,8 +55,6 @@
     textarea, select {
       width: 100%;
       margin-top: 5px;
-      font-family: inherit;
-      font-size: 0.9em;
     }
 
     button {
@@ -81,7 +81,6 @@
       border-radius: 6px;
       display: none;
       font-weight: bold;
-      z-index: 1000;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
@@ -121,66 +120,129 @@
     }
 
     .chat-input {
-      width: calc(100% - 65px);
+      width: calc(100% - 80px);
       padding: 4px;
       font-size: 0.9em;
+    }
+
+    .chat-time {
+      font-size: 10px;
+      display: block;
+      color: #777;
     }
   </style>
 </head>
 <body>
 
-  <h1>Dashboard Trasporti</h1>
-  <p><a href="/impianto/dashboard.html">⬅️ Torna alla Dashboard Impianto</a></p>
+<h1>Dashboard Trasporti</h1>
+<p><a href="/impianto/dashboard.html">⬅️ Torna alla Dashboard Impianto</a></p>
 
-  <table id="tabella-trasporti">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Richiedente</th>
-        <th>Produttore</th>
-        <th>Codice CER</th>
-        <th>Tipo Automezzo</th>
-        <th>Data</th>
-        <th>Orario</th>
-        <th>Telefono</th>
-        <th>Prezzo (€)</th>
-        <th>Stato</th>
-        <th>Azioni</th>
-        <th>Chat</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<audio id="suonoNotifica" src="https://cdn.pixabay.com/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 
-  <div id="notify"></div>
+<table id="tabella-trasporti">
+  <thead>
+    <tr>
+      <th>ID</th><th>Richiedente</th><th>Produttore</th><th>Codice CER</th>
+      <th>Automezzo</th><th>Data</th><th>Orario</th><th>Telefono</th>
+      <th>Prezzo (€)</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
 
-  <script>
-    function notify(msg, success = true) {
-      const n = document.getElementById('notify');
-      n.innerText = msg;
-      n.style.background = success ? '#2ecc71' : '#e74c3c';
-      n.style.display = 'block';
-      setTimeout(() => n.style.display = 'none', 4000);
-    }
-
-    fetch('/impianto/richieste-trasporto')
-      .then(res => {
-        if (res.status === 403) {
-          alert('Devi accedere come impianto.');
-          window.location.href = '/impianto/login.html';
+<div id="notify"></div>
+<script>
+  let messaggiLetti = {};
+  
+  function notify(msg, success = true) {
+    const n = document.getElementById('notify');
+    n.innerText = msg;
+    n.style.background = success ? '#2ecc71' : '#e74c3c';
+    n.style.display = 'block';
+    setTimeout(() => n.style.display = 'none', 4000);
+  }
+  
+  function playSuono() {
+    const audio = document.getElementById('suonoNotifica');
+    if (audio) audio.play();
+  }
+  
+  function aggiornaStato(id) {
+    const nuovo_stato = document.getElementById(`stato-${id}`).value;
+    const nota = document.getElementById(`nota-${id}`).value;
+  
+    fetch('/impianto/aggiorna-trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato, nota })
+    }).then(res => res.text())
+      .then(msg => {
+        notify(msg);
+        setTimeout(() => location.reload(), 1500);
+      });
+  }
+  
+  function caricaChat(id, iniziale = false) {
+    fetch('/chat/trasporto/' + id)
+      .then(res => res.json())
+      .then(messaggi => {
+        const container = document.getElementById(`chat-messages-${id}`);
+        const badge = document.getElementById(`badge-${id}`);
+        const nuovi = messaggi.filter(m => m.mittente === 'cliente').length;
+  
+        if (!iniziale && nuovi > (messaggiLetti[id] || 0)) {
+          badge.style.display = 'inline-block';
+          playSuono();
         }
-        return res.json();
+  
+        messaggiLetti[id] = nuovi;
+        container.innerHTML = '';
+  
+        messaggi.forEach(m => {
+          const bubble = document.createElement('div');
+          const time = new Date(m.timestamp || Date.now()).toLocaleTimeString();
+          bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+          bubble.innerHTML = `${m.messaggio}<span class="chat-time">${time}</span>`;
+          container.appendChild(bubble);
+        });
+  
+        container.scrollTop = container.scrollHeight;
+      });
+  }
+  
+  function inviaMessaggio(id) {
+    const input = document.getElementById(`msg-input-${id}`);
+    const testo = input.value.trim();
+    if (!testo) return;
+  
+    fetch('/chat/trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        trasporto_id: id,
+        mittente: 'admin',
+        messaggio: testo
       })
+    }).then(() => {
+      input.value = '';
+      caricaChat(id);
+      document.getElementById(`badge-${id}`).style.display = 'none';
+    });
+  }
+  
+  function inizializza() {
+    fetch('/impianto/richieste-trasporto')
+      .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector('#tabella-trasporti tbody');
         if (!data.length) {
           tbody.innerHTML = `<tr><td colspan="12">Nessuna richiesta trovata.</td></tr>`;
           return;
         }
-
+  
         data.forEach(r => {
           const statoClass = r.stato ? r.stato.replace(/\s/g, '-') : 'in-attesa';
-
+  
           tbody.innerHTML += `
             <tr>
               <td>${r.id}</td>
@@ -203,68 +265,27 @@
                 <button onclick="aggiornaStato(${r.id})">Aggiorna</button>
               </td>
               <td>
-                <div class="chat-box" id="chat-box-${r.id}">
+                <div class="chat-box">
                   <div class="chat-messages" id="chat-messages-${r.id}"></div>
-                  <input type="text" class="chat-input" id="msg-input-${r.id}" placeholder="Scrivi...">
+                  <input type="text" class="chat-input" id="msg-input-${r.id}" placeholder="Scrivi..."
+                    onkeydown="if(event.key==='Enter') inviaMessaggio(${r.id})">
                   <button onclick="inviaMessaggio(${r.id})">Invia</button>
+                  <span class="badge-unread" id="badge-${r.id}">NUOVO</span>
                 </div>
               </td>
             </tr>`;
-          
-          caricaChat(r.id);
+          setTimeout(() => caricaChat(r.id, true), 0);
         });
       });
-
-    function aggiornaStato(id) {
-      const nuovo_stato = document.getElementById(`stato-${id}`).value;
-      const nota = document.getElementById(`nota-${id}`).value;
-
-      fetch('/impianto/aggiorna-trasporto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, nuovo_stato, nota })
-      }).then(res => res.text())
-        .then(msg => {
-          notify(msg);
-          setTimeout(() => location.reload(), 1500);
-        });
-    }
-
-    function caricaChat(id) {
-      fetch('/chat/trasporto/' + id)
-        .then(res => res.json())
-        .then(messaggi => {
-          const container = document.getElementById(`chat-messages-${id}`);
-          container.innerHTML = '';
-          messaggi.forEach(msg => {
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble ' + (msg.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-            bubble.textContent = msg.messaggio;
-            container.appendChild(bubble);
-          });
-          container.scrollTop = container.scrollHeight;
-        });
-    }
-
-    function inviaMessaggio(id) {
-      const input = document.getElementById(`msg-input-${id}`);
-      const messaggio = input.value.trim();
-      if (!messaggio) return;
-
-      fetch('/chat/trasporto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          trasporto_id: id,
-          mittente: 'admin',
-          messaggio
-        })
-      }).then(() => {
-        input.value = '';
-        caricaChat(id);
-      });
-    }
+  }
+  
+  inizializza();
+  setInterval(() => {
+    const allIds = Object.keys(messaggiLetti);
+    allIds.forEach(id => caricaChat(id));
+  }, 2000);
   </script>
-
-</body>
-</html>
+  
+  </body>
+  </html>
+  

@@ -369,6 +369,77 @@ app.post('/impianto/aggiorna-trasporto', async (req, res) => {
     res.status(500).send('Errore aggiornamento');
   }
 });
+// GET messaggi per una richiesta trasporto
+app.get('/chat/trasporto/:id', async (req, res) => {
+  const trasportoId = req.params.id;
+
+  try {
+    const result = await db.query(
+      'SELECT * FROM messaggi_trasporto WHERE trasporto_id = $1 ORDER BY timestamp ASC',
+      [trasportoId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Errore nel recupero messaggi trasporto:', err.message);
+    res.status(500).send('Errore server');
+  }
+});
+// POST nuovo messaggio nella chat trasporto
+app.post('/chat/trasporto', async (req, res) => {
+  const { trasporto_id, mittente, messaggio } = req.body;
+
+  if (!trasporto_id || !mittente || !messaggio) {
+    return res.status(400).send('Dati mancanti');
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO messaggi_trasporto (trasporto_id, mittente, messaggio) VALUES ($1, $2, $3)',
+      [trasporto_id, mittente, messaggio]
+    );
+    res.send('Messaggio inviato ✅');
+  } catch (err) {
+    console.error('Errore invio messaggio chat trasporto:', err.message);
+    res.status(500).send('Errore durante invio');
+  }
+});
+// ------------------------ CHAT PRENOTAZIONI ------------------------
+
+// GET messaggi per una prenotazione
+app.get('/chat/prenotazione/:id', async (req, res) => {
+  const prenotazioneId = req.params.id;
+
+  try {
+    const result = await db.query(
+      'SELECT * FROM messaggi WHERE prenotazione_id = $1 ORDER BY timestamp ASC',
+      [prenotazioneId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Errore nel recupero messaggi prenotazione:', err.message);
+    res.status(500).send('Errore server');
+  }
+});
+
+// POST nuovo messaggio nella chat prenotazione
+app.post('/chat/prenotazione', async (req, res) => {
+  const { prenotazione_id, mittente, messaggio } = req.body;
+
+  if (!prenotazione_id || !mittente || !messaggio) {
+    return res.status(400).send('Dati mancanti');
+  }
+
+  try {
+    await db.query(
+      'INSERT INTO messaggi (prenotazione_id, mittente, messaggio) VALUES ($1, $2, $3)',
+      [prenotazione_id, mittente, messaggio]
+    );
+    res.send('Messaggio inviato ✅');
+  } catch (err) {
+    console.error('❌ Errore invio messaggio chat prenotazione:', err.message);
+    res.status(500).send('Errore durante invio');
+  }
+});
 
   // ------------------------ AVVIO SERVER ------------------------
   app.listen(PORT, () => {

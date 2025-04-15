@@ -122,6 +122,45 @@
       border-radius: 5px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
+
+    .chat-box {
+      border: 1px solid #c5e1a5;
+      padding: 8px;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .chat-messages {
+      max-height: 130px;
+      overflow-y: auto;
+      margin-bottom: 5px;
+    }
+
+    .chat-bubble {
+      max-width: 70%;
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 12px;
+      font-size: 0.85em;
+      display: inline-block;
+      clear: both;
+    }
+
+    .bubble-left {
+      background: #e0f2f1;
+      float: left;
+    }
+
+    .bubble-right {
+      background: #c8e6c9;
+      float: right;
+    }
+
+    .chat-input {
+      width: calc(100% - 65px);
+      padding: 4px;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -129,19 +168,19 @@
   <h1>Dashboard Impianto (prenotazioni + trasporti)</h1>
   <p><a href="/impianto/logout">🔓 Logout</a></p>
 
-<p>
-  <a href="dashboard-trasporti.html" style="text-decoration:none; background:#2e7d32; color:#fff; padding:6px 12px; border-radius:4px;">
-    🚛 Vai alla dashboard trasporti
-  </a>
-</p>
+  <p>
+    <a href="dashboard-trasporti.html" style="text-decoration:none; background:#2e7d32; color:#fff; padding:6px 12px; border-radius:4px;">
+      🚛 Vai alla dashboard trasporti
+    </a>
+  </p>
 
   <button id="pdf-btn" style="margin-bottom: 20px;">📄 Scarica PDF</button>
 
   <h2>Prenotazioni per giorno</h2>
   <div id="prenotazioni"></div>
 
-  
   <div id="notify"></div>
+
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -155,7 +194,41 @@
       setTimeout(() => n.style.display = 'none', 3000);
     }
 
-    // ------------------- Prenotazioni -------------------
+    function caricaChatPrenotazione(id) {
+      fetch('/chat/prenotazione/' + id)
+        .then(res => res.json())
+        .then(messaggi => {
+          const chat = document.getElementById(`chat-messages-${id}`);
+          chat.innerHTML = '';
+          messaggi.forEach(msg => {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble ' + (msg.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+            bubble.textContent = msg.messaggio;
+            chat.appendChild(bubble);
+          });
+          chat.scrollTop = chat.scrollHeight;
+        });
+    }
+
+    function inviaMessaggioPrenotazione(id) {
+      const input = document.getElementById(`msg-input-${id}`);
+      const messaggio = input.value.trim();
+      if (!messaggio) return;
+
+      fetch('/chat/prenotazione', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prenotazione_id: id,
+          mittente: 'admin',
+          messaggio
+        })
+      }).then(() => {
+        input.value = '';
+        caricaChatPrenotazione(id);
+      });
+    }
+
     fetch('/impianto/prenotazioni')
       .then(res => res.json())
       .then(data => {
@@ -182,7 +255,7 @@
                   <tr>
                     <th>ID</th><th>Cliente</th><th>Produttore</th><th>Codice CER</th>
                     <th>Pericolo</th><th>Imballo</th><th>Stato Fisico</th><th>Quantità</th>
-                    <th>Data</th><th>Certificato</th><th>Stato</th><th>Azioni</th><th>Nota</th>
+                    <th>Data</th><th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-${giorno}"></tbody>
@@ -213,12 +286,17 @@
                     <option value="non accettata">Non Accettata</option>
                     <option value="info richieste">Info Richieste</option>
                   </select>
-                  <textarea id="richiesta-${p.id}" placeholder="Nota per il cliente..."></textarea>
                   <button onclick="cambiaStato(${p.id})">Aggiorna</button>
                 </td>
-                <td><div id="nota-${p.id}" class="box-note"></div></td>
+                <td>
+                  <div class="chat-box" id="chat-box-${p.id}">
+                    <div class="chat-messages" id="chat-messages-${p.id}"></div>
+                    <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi un messaggio...">
+                    <button onclick="inviaMessaggioPrenotazione(${p.id})">Invia</button>
+                  </div>
+                </td>
               </tr>`;
-            caricaNota(p.id);
+            caricaChatPrenotazione(p.id);
           });
         });
       });
@@ -230,31 +308,32 @@
       h3.innerHTML = h3.innerHTML.includes('▶️') ? h3.innerHTML.replace('▶️', '▼') : h3.innerHTML.replace('▼', '▶️');
     }
 
-    function caricaNota(id) {
-      fetch('/impianto/note/' + id)
-        .then(res => res.json())
-        .then(n => {
-          const box = document.getElementById('nota-' + id);
-          if (!n || !n.richiesta) return;
-          box.innerHTML = `<p><strong>Richiesta:</strong> ${n.richiesta}</p><p><strong>Risposta:</strong> ${n.risposta || '<i>In attesa</i>'}</p>`;
-        });
-    }
-
     function cambiaStato(id) {
-      const stato = document.getElementById('stato-' + id).value;
-      const richiesta = document.getElementById('richiesta-' + id).value;
+      const stato = document.getElementById(`stato-${id}`).value;
+      const richiesta = ''; // Rimosso textarea per "richiesta", se ti serve reinseriamola
       fetch('/impianto/cambia-stato', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, nuovo_stato: stato, richiesta })
-      }).then(res => res.text())
-        .then(msg => {
-          notify(msg);
-          setTimeout(() => location.reload(), 1000);
-        });
+      })
+      .then(res => res.text())
+      .then(msg => {
+        notify(msg);
+        setTimeout(() => location.reload(), 1000);
+      });
     }
 
-   
+    // PDF
+    document.getElementById('pdf-btn').addEventListener('click', () => {
+      html2canvas(document.body).then(canvas => {
+        const pdf = new jspdf.jsPDF();
+        const imgData = canvas.toDataURL('image/png');
+        const width = pdf.internal.pageSize.getWidth() - 20;
+        const height = (canvas.height * width) / canvas.width;
+        pdf.addImage(imgData, 'PNG', 10, 10, width, height);
+        pdf.save('dashboard-impianto.pdf');
+      });
+    });
   </script>
 </body>
 </html>

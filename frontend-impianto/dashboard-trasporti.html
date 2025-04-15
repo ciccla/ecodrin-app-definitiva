@@ -31,6 +31,7 @@
       padding: 8px;
       border: 1px solid #c5e1a5;
       text-align: left;
+      vertical-align: top;
     }
 
     th {
@@ -83,6 +84,47 @@
       z-index: 1000;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
+
+    /* Chat styles */
+    .chat-box {
+      border: 1px solid #c5e1a5;
+      padding: 8px;
+      border-radius: 6px;
+      background: #ffffff;
+      margin-top: 5px;
+    }
+
+    .chat-messages {
+      max-height: 130px;
+      overflow-y: auto;
+      margin-bottom: 5px;
+    }
+
+    .chat-bubble {
+      max-width: 70%;
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 12px;
+      font-size: 0.85em;
+      display: inline-block;
+      clear: both;
+    }
+
+    .bubble-left {
+      background: #e0f2f1;
+      float: left;
+    }
+
+    .bubble-right {
+      background: #c8e6c9;
+      float: right;
+    }
+
+    .chat-input {
+      width: calc(100% - 65px);
+      padding: 4px;
+      font-size: 0.9em;
+    }
   </style>
 </head>
 <body>
@@ -104,13 +146,14 @@
         <th>Prezzo (€)</th>
         <th>Stato</th>
         <th>Azioni</th>
-        <th>Nota</th>
+        <th>Chat</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <div id="notify"></div>
+
   <script>
     function notify(msg, success = true) {
       const n = document.getElementById('notify');
@@ -137,7 +180,6 @@
 
         data.forEach(r => {
           const statoClass = r.stato ? r.stato.replace(/\s/g, '-') : 'in-attesa';
-          const nota = r.nota || '';
 
           tbody.innerHTML += `
             <tr>
@@ -157,12 +199,19 @@
                   <option value="non accettata">Non Accettata</option>
                   <option value="info richieste">Info Richieste</option>
                 </select>
-                <textarea id="nota-${r.id}" placeholder="Nota per il cliente (opzionale)">${nota}</textarea>
+                <textarea id="nota-${r.id}" placeholder="Nota per il cliente">${r.nota || ''}</textarea>
                 <button onclick="aggiornaStato(${r.id})">Aggiorna</button>
               </td>
-              <td>${nota || '-'}</td>
-            </tr>
-          `;
+              <td>
+                <div class="chat-box" id="chat-box-${r.id}">
+                  <div class="chat-messages" id="chat-messages-${r.id}"></div>
+                  <input type="text" class="chat-input" id="msg-input-${r.id}" placeholder="Scrivi...">
+                  <button onclick="inviaMessaggio(${r.id})">Invia</button>
+                </div>
+              </td>
+            </tr>`;
+          
+          caricaChat(r.id);
         });
       });
 
@@ -179,6 +228,41 @@
           notify(msg);
           setTimeout(() => location.reload(), 1500);
         });
+    }
+
+    function caricaChat(id) {
+      fetch('/chat/trasporto/' + id)
+        .then(res => res.json())
+        .then(messaggi => {
+          const container = document.getElementById(`chat-messages-${id}`);
+          container.innerHTML = '';
+          messaggi.forEach(msg => {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble ' + (msg.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+            bubble.textContent = msg.messaggio;
+            container.appendChild(bubble);
+          });
+          container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    function inviaMessaggio(id) {
+      const input = document.getElementById(`msg-input-${id}`);
+      const messaggio = input.value.trim();
+      if (!messaggio) return;
+
+      fetch('/chat/trasporto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trasporto_id: id,
+          mittente: 'admin',
+          messaggio
+        })
+      }).then(() => {
+        input.value = '';
+        caricaChat(id);
+      });
     }
   </script>
 

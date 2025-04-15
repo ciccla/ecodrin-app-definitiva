@@ -45,13 +45,15 @@ const creaTabelle = async () => {
         stato TEXT DEFAULT 'in attesa'
       );
 
-      CREATE TABLE IF NOT EXISTS messaggi (
-        id SERIAL PRIMARY KEY,
-        prenotazione_id INTEGER REFERENCES prenotazioni(id),
-        mittente TEXT,
-        messaggio TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+CREATE TABLE IF NOT EXISTS messaggi (
+  id SERIAL PRIMARY KEY,
+  tipo TEXT CHECK (tipo IN ('prenotazione', 'trasporto')) NOT NULL,
+  riferimento_id INTEGER NOT NULL,
+  mittente TEXT NOT NULL,
+  messaggio TEXT NOT NULL,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 
       CREATE TABLE IF NOT EXISTS richieste_trasporto (
         id SERIAL PRIMARY KEY,

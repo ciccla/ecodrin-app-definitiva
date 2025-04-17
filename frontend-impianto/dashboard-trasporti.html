@@ -22,17 +22,29 @@
       color: #ffffff;
     }
 
-    h1 {
-      margin-bottom: 10px;
-    }
-
     .theme-toggle {
       float: right;
-      margin-bottom: 10px;
+      margin-left: 10px;
     }
 
     .btn-top {
       margin-bottom: 15px;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-info {
+      font-weight: bold;
+      font-size: 0.95em;
+      color: #555;
+    }
+
+    h1 {
+      margin: 0;
     }
 
     a {
@@ -49,6 +61,7 @@
     th, td {
       padding: 8px;
       border: 1px solid #c5e1a5;
+      font-size: 14px;
     }
 
     th {
@@ -66,19 +79,6 @@
     .non-accettata { background-color: #c62828; }
     .info-richieste { background-color: #1565c0; }
     .in-attesa { background-color: #f9a825; }
-
-    button {
-      background-color: #388e3c;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #2e7d32;
-    }
 
     .giorno-toggle {
       cursor: pointer;
@@ -134,18 +134,51 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       z-index: 999;
     }
+
+    .filter-bar {
+      margin: 10px 0 25px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .filter-bar select,
+    .filter-bar input {
+      padding: 6px;
+      font-size: 0.9em;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body class="light">
 
-<h1>Dashboard Trasporti
-  <button class="theme-toggle" onclick="toggleTheme()">🌓 Tema</button>
-</h1>
+<div class="header-bar">
+  <h1>Dashboard Trasporti</h1>
+  <div>
+    <span class="user-info">👤 Impianto: Mario Rossi</span>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 Tema</button>
+  </div>
+</div>
 
-<p class="btn-top">
-  <a href="dashboard.html"><button>🏠 Torna alla Dashboard Prenotazioni</button></a>
+<div class="btn-top">
+  <a href="dashboard.html"><button>📋 Pannello Prenotazioni</button></a>
   <a href="/impianto/logout"><button style="background:#c62828">Logout</button></a>
-</p>
+</div>
+
+<div class="filter-bar">
+  <input type="text" id="filter-produttore" placeholder="Produttore">
+  <input type="text" id="filter-cer" placeholder="Codice CER">
+  <select id="filter-stato">
+    <option value="">-- Stato --</option>
+    <option>accettata</option>
+    <option>non accettata</option>
+    <option>info richieste</option>
+    <option>in attesa</option>
+  </select>
+  <input type="text" id="filter-automezzo" placeholder="Tipo Automezzo">
+  <button onclick="applicaFiltri()">🔍 Filtra</button>
+</div>
 
 <div id="trasporti-container"></div>
 <div id="notify"></div>
@@ -177,78 +210,105 @@
 
   initTheme();
 
+  let tutteLeRichieste = [];
+
+  function applicaFiltri() {
+    const prod = document.getElementById('filter-produttore').value.toLowerCase();
+    const cer = document.getElementById('filter-cer').value.toLowerCase();
+    const stato = document.getElementById('filter-stato').value;
+    const auto = document.getElementById('filter-automezzo').value.toLowerCase();
+
+    const filtrate = tutteLeRichieste.filter(r => {
+      return (!prod || r.produttore.toLowerCase().includes(prod)) &&
+             (!cer || r.codice_cer.toLowerCase().includes(cer)) &&
+             (!stato || r.stato === stato) &&
+             (!auto || r.tipo_automezzo.toLowerCase().includes(auto));
+    });
+
+    renderizzaTrasporti(filtrate);
+  }
+
   fetch('/impianto/richieste-trasporto')
     .then(res => res.json())
     .then(data => {
-      const div = document.getElementById('trasporti-container');
-      if (!data.length) {
-        div.innerHTML = '<p>Nessuna richiesta trovata.</p>';
-        return;
-      }
+      tutteLeRichieste = data;
+      renderizzaTrasporti(data);
+    });
 
-      const perGiorno = {};
-      data.forEach(t => {
-        if (!perGiorno[t.data_trasporto]) perGiorno[t.data_trasporto] = [];
-        perGiorno[t.data_trasporto].push(t);
-      });
+  function renderizzaTrasporti(data) {
+    const div = document.getElementById('trasporti-container');
+    div.innerHTML = '';
 
-      Object.keys(perGiorno).sort().forEach(data => {
-        const blocco = document.createElement('div');
-        blocco.innerHTML = `
-          <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length} richieste)</div>
-          <div id="box-${data}" class="hidden">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
-                  <th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-${data}"></tbody>
-            </table>
-          </div>
+    if (!data.length) {
+      div.innerHTML = '<p>Nessuna richiesta trovata.</p>';
+      return;
+    }
+
+    const perGiorno = {};
+    data.forEach(t => {
+      if (!perGiorno[t.data_trasporto]) perGiorno[t.data_trasporto] = [];
+      perGiorno[t.data_trasporto].push(t);
+    });
+
+    Object.keys(perGiorno).sort().forEach(data => {
+      const blocco = document.createElement('div');
+      blocco.innerHTML = `
+        <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length})</div>
+        <div id="box-${data}" class="hidden">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
+                <th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-${data}"></tbody>
+          </table>
+        </div>
+      `;
+      div.appendChild(blocco);
+
+      const tbody = blocco.querySelector('tbody');
+      perGiorno[data].forEach(r => {
+        const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
+        const id = r.id;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${id}</td>
+          <td>${r.richiedente}</td>
+          <td>${r.produttore}</td>
+          <td>${r.codice_cer}</td>
+          <td>${r.tipo_automezzo}</td>
+          <td>${r.orario_preferito}</td>
+          <td>${r.numero_referente}</td>
+          <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
+          <td><span class="badge ${statoClass}">${r.stato}</span></td>
+          <td>
+            <select id="stato-${id}">
+              <option value="accettata">Accettata</option>
+              <option value="non accettata">Non Accettata</option>
+              <option value="info richieste">Info Richieste</option>
+            </select>
+            <button onclick="aggiornaStato(${id})">✔️</button>
+          </td>
+          <td>
+            <div class="chat-box">
+              <div class="chat-messages" id="chat-${id}"></div>
+              <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." 
+                     onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+              <button onclick="inviaMessaggio(${id})">Invia</button>
+              <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
+            </div>
+          </td>
         `;
-        div.appendChild(blocco);
+        tbody.appendChild(row);
 
-        const tbody = blocco.querySelector('tbody');
-        perGiorno[data].forEach(r => {
-          const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
-          const id = r.id;
-
-          tbody.innerHTML += `
-            <tr>
-              <td>${id}</td>
-              <td>${r.richiedente}</td>
-              <td>${r.produttore}</td>
-              <td>${r.codice_cer}</td>
-              <td>${r.tipo_automezzo}</td>
-              <td>${r.orario_preferito}</td>
-              <td>${r.numero_referente}</td>
-              <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
-              <td><span class="badge ${statoClass}">${r.stato}</span></td>
-              <td>
-                <select id="stato-${id}">
-                  <option value="accettata">Accettata</option>
-                  <option value="non accettata">Non Accettata</option>
-                  <option value="info richieste">Info Richieste</option>
-                </select>
-                <button onclick="aggiornaStato(${id})">✔️</button>
-              </td>
-              <td>
-                <div class="chat-box">
-                  <div class="chat-messages" id="chat-${id}"></div>
-                  <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
-                  <button onclick="inviaMessaggio(${id})">Invia</button>
-                  <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
-                </div>
-              </td>
-            </tr>
-          `;
-          caricaChat(id);
-          setInterval(() => caricaChat(id), 2000);
-        });
+        caricaChat(id);
+        setInterval(() => caricaChat(id), 2000);
       });
     });
+  }
 
   function toggleGiorno(data) {
     const box = document.getElementById(`box-${data}`);
@@ -280,7 +340,6 @@
         }
 
         chatsLetti[id] = nuovi;
-
         box.innerHTML = '';
         msgs.forEach(m => {
           const bubble = document.createElement('div');
@@ -308,6 +367,5 @@
     });
   }
 </script>
-
 </body>
 </html>

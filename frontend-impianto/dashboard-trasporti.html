@@ -3,68 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard Trasporti</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
-      background-color: #f1f8e9;
-      color: #2e7d32;
       margin: 0;
       padding: 20px;
+      transition: background 0.3s, color 0.3s;
     }
 
-    h1, h2 {
-      text-align: center;
+    body.light {
+      background: #f1f8e9;
       color: #2e7d32;
-      margin-bottom: 20px;
+    }
+
+    body.dark {
+      background: #263238;
+      color: #ffffff;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    .theme-toggle {
+      float: right;
+      margin-bottom: 10px;
+    }
+
+    .btn-top {
+      margin-bottom: 15px;
     }
 
     a {
-      color: #2e7d32;
       text-decoration: none;
-      font-weight: bold;
-    }
-
-    a:hover {
-      text-decoration: underline;
-    }
-
-    .giorno-container {
-      margin-bottom: 20px;
-    }
-
-    h3 {
-      cursor: pointer;
-      background: #c5e1a5;
-      padding: 8px;
-      border-radius: 6px;
-      transition: background 0.3s;
-      user-select: none;
-    }
-
-    h3:hover {
-      background: #aed581;
-    }
-
-    .hidden {
-      display: none;
+      color: inherit;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      background: #fff;
-      box-shadow: 0 0 5px rgba(0,0,0,0.05);
       margin-top: 10px;
-      border-radius: 6px;
-      overflow: hidden;
     }
 
     th, td {
-      padding: 10px;
-      border: 1px solid #c8e6c9;
-      text-align: left;
-      font-size: 14px;
-      vertical-align: top;
+      padding: 8px;
+      border: 1px solid #c5e1a5;
     }
 
     th {
@@ -72,12 +56,10 @@
     }
 
     .badge {
-      padding: 4px 8px;
+      padding: 4px 6px;
       border-radius: 4px;
-      font-size: 0.75em;
-      font-weight: bold;
-      text-transform: uppercase;
       color: white;
+      font-size: 0.85em;
     }
 
     .accettata { background-color: #2e7d32; }
@@ -85,15 +67,7 @@
     .info-richieste { background-color: #1565c0; }
     .in-attesa { background-color: #f9a825; }
 
-    textarea, select {
-      width: 100%;
-      margin-top: 5px;
-      font-family: inherit;
-      font-size: 0.9em;
-    }
-
     button {
-      margin-top: 6px;
       background-color: #388e3c;
       color: white;
       border: none;
@@ -106,6 +80,19 @@
       background-color: #2e7d32;
     }
 
+    .giorno-toggle {
+      cursor: pointer;
+      font-weight: bold;
+      padding: 10px;
+      margin-top: 15px;
+      background: #aed581;
+      border-radius: 4px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
     .chat-box {
       border: 1px solid #c5e1a5;
       padding: 8px;
@@ -115,7 +102,7 @@
     }
 
     .chat-messages {
-      max-height: 130px;
+      max-height: 120px;
       overflow-y: auto;
       margin-bottom: 5px;
     }
@@ -130,21 +117,9 @@
       clear: both;
     }
 
-    .bubble-left {
-      background: #e0f2f1;
-      float: left;
-    }
-
-    .bubble-right {
-      background: #c8e6c9;
-      float: right;
-    }
-
-    .chat-input {
-      width: calc(100% - 70px);
-      padding: 4px;
-      font-size: 0.9em;
-    }
+    .bubble-left { background: #e0f2f1; float: left; }
+    .bubble-right { background: #c8e6c9; float: right; }
+    .badge-unread { background: red; color: white; padding: 2px 6px; margin-left: 6px; border-radius: 10px; font-size: 0.7em; }
 
     #notify {
       position: fixed;
@@ -156,167 +131,183 @@
       border-radius: 6px;
       display: none;
       font-weight: bold;
-      z-index: 1000;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 999;
     }
   </style>
 </head>
-<body>
+<body class="light">
 
-  <h1>Dashboard Trasporti</h1>
-  <p style="text-align:center;">
-    <a href="/impianto/dashboard.html">⬅️ Torna alla Dashboard Impianto</a>
-  </p>
+<h1>Dashboard Trasporti
+  <button class="theme-toggle" onclick="toggleTheme()">🌓 Tema</button>
+</h1>
 
-  <div id="contenitore-trasporti"></div>
-  <div id="notify"></div>
+<p class="btn-top">
+  <a href="dashboard.html"><button>🏠 Torna alla Dashboard Prenotazioni</button></a>
+  <a href="/impianto/logout"><button style="background:#c62828">Logout</button></a>
+</p>
 
-  <audio id="sound" src="https://notificationsounds.com/storage/sounds/file-sounds-1153-pristine.mp3" preload="auto"></audio>
-  <script>
-    const notifyEl = document.getElementById('notify');
-    const audio = document.getElementById('sound');
-    let messaggiLetti = {};
+<div id="trasporti-container"></div>
+<div id="notify"></div>
+<audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+<script>
+  let chatsLetti = {};
 
-    function notify(msg, success = true) {
-      notifyEl.innerText = msg;
-      notifyEl.style.background = success ? '#2ecc71' : '#e74c3c';
-      notifyEl.style.display = 'block';
-      setTimeout(() => notifyEl.style.display = 'none', 3000);
-    }
+  function notify(msg, success = true) {
+    const n = document.getElementById('notify');
+    n.innerText = msg;
+    n.style.background = success ? '#2ecc71' : '#e74c3c';
+    n.style.display = 'block';
+    setTimeout(() => n.style.display = 'none', 4000);
+  }
 
-    function toggle(giorno) {
-      const box = document.getElementById('box-' + giorno);
-      const h3 = document.querySelector(`h3[onclick="toggle('${giorno}')"]`);
-      box.classList.toggle('hidden');
-      h3.innerHTML = h3.innerHTML.includes('▶️') ? h3.innerHTML.replace('▶️', '▼') : h3.innerHTML.replace('▼', '▶️');
-    }
+  function toggleTheme() {
+    const body = document.body;
+    const current = body.classList.contains('dark') ? 'dark' : 'light';
+    const next = current === 'light' ? 'dark' : 'light';
+    body.classList.remove(current);
+    body.classList.add(next);
+    localStorage.setItem('theme', next);
+  }
 
-    function caricaChat(id) {
-      fetch('/chat/trasporto/' + id)
-        .then(res => res.json())
-        .then(messaggi => {
-          const container = document.getElementById(`chat-messages-${id}`);
-          const nuovi = messaggi.filter(m => m.mittente === 'cliente').length;
-          if (messaggiLetti[id] !== undefined && nuovi > messaggiLetti[id]) {
-            audio.play();
-          }
-          messaggiLetti[id] = nuovi;
-          container.innerHTML = '';
-          messaggi.forEach(msg => {
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble ' + (msg.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-            bubble.innerHTML = `<div>${msg.messaggio}</div><div style="font-size:10px;color:#666;">${new Date(msg.timestamp).toLocaleString()}</div>`;
-            container.appendChild(bubble);
-          });
-          container.scrollTop = container.scrollHeight;
-        });
-    }
+  function initTheme() {
+    const saved = localStorage.getItem('theme') || 'light';
+    document.body.classList.add(saved);
+  }
 
-    function inviaMessaggio(id) {
-      const input = document.getElementById(`msg-input-${id}`);
-      const messaggio = input.value.trim();
-      if (!messaggio) return;
+  initTheme();
 
-      fetch('/chat/trasporto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          trasporto_id: id,
-          mittente: 'admin',
-          messaggio
-        })
-      }).then(() => {
-        input.value = '';
-        caricaChat(id);
+  fetch('/impianto/richieste-trasporto')
+    .then(res => res.json())
+    .then(data => {
+      const div = document.getElementById('trasporti-container');
+      if (!data.length) {
+        div.innerHTML = '<p>Nessuna richiesta trovata.</p>';
+        return;
+      }
+
+      const perGiorno = {};
+      data.forEach(t => {
+        if (!perGiorno[t.data_trasporto]) perGiorno[t.data_trasporto] = [];
+        perGiorno[t.data_trasporto].push(t);
       });
-    }
 
-    function aggiornaStato(id) {
-      const nuovo_stato = document.getElementById(`stato-${id}`).value;
-      const nota = document.getElementById(`nota-${id}`).value;
+      Object.keys(perGiorno).sort().forEach(data => {
+        const blocco = document.createElement('div');
+        blocco.innerHTML = `
+          <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length} richieste)</div>
+          <div id="box-${data}" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
+                  <th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-${data}"></tbody>
+            </table>
+          </div>
+        `;
+        div.appendChild(blocco);
 
-      fetch('/impianto/aggiorna-trasporto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, nuovo_stato, nota })
-      }).then(res => res.text())
-        .then(msg => {
-          notify(msg);
-          setTimeout(() => location.reload(), 1000);
+        const tbody = blocco.querySelector('tbody');
+        perGiorno[data].forEach(r => {
+          const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
+          const id = r.id;
+
+          tbody.innerHTML += `
+            <tr>
+              <td>${id}</td>
+              <td>${r.richiedente}</td>
+              <td>${r.produttore}</td>
+              <td>${r.codice_cer}</td>
+              <td>${r.tipo_automezzo}</td>
+              <td>${r.orario_preferito}</td>
+              <td>${r.numero_referente}</td>
+              <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
+              <td><span class="badge ${statoClass}">${r.stato}</span></td>
+              <td>
+                <select id="stato-${id}">
+                  <option value="accettata">Accettata</option>
+                  <option value="non accettata">Non Accettata</option>
+                  <option value="info richieste">Info Richieste</option>
+                </select>
+                <button onclick="aggiornaStato(${id})">✔️</button>
+              </td>
+              <td>
+                <div class="chat-box">
+                  <div class="chat-messages" id="chat-${id}"></div>
+                  <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+                  <button onclick="inviaMessaggio(${id})">Invia</button>
+                  <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
+                </div>
+              </td>
+            </tr>
+          `;
+          caricaChat(id);
+          setInterval(() => caricaChat(id), 2000);
         });
-    }
+      });
+    });
 
-    // Fetch e rendering dei trasporti raggruppati per giorno
-    fetch('/impianto/richieste-trasporto')
+  function toggleGiorno(data) {
+    const box = document.getElementById(`box-${data}`);
+    box.classList.toggle('hidden');
+  }
+
+  function aggiornaStato(id) {
+    const stato = document.getElementById(`stato-${id}`).value;
+    fetch('/impianto/aggiorna-trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato: stato, nota: "" })
+    })
+    .then(res => res.text())
+    .then(msg => notify(msg));
+  }
+
+  function caricaChat(id) {
+    fetch('/chat/trasporto/' + id)
       .then(res => res.json())
-      .then(data => {
-        const div = document.getElementById('contenitore-trasporti');
-        if (!data.length) {
-          div.innerHTML = '<p style="text-align:center;">Nessuna richiesta trovata.</p>';
-          return;
+      .then(msgs => {
+        const box = document.getElementById(`chat-${id}`);
+        const unread = document.getElementById(`unread-${id}`);
+        const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
+
+        if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
+          unread.style.display = 'inline-block';
+          document.getElementById('suonoNotifica').play();
         }
 
-        const byDay = {};
-        data.forEach(t => {
-          if (!byDay[t.data_trasporto]) byDay[t.data_trasporto] = [];
-          byDay[t.data_trasporto].push(t);
-        });
+        chatsLetti[id] = nuovi;
 
-        Object.keys(byDay).sort().forEach(giorno => {
-          const box = document.createElement('div');
-          box.className = 'giorno-container';
-          box.innerHTML = `
-            <h3 onclick="toggle('${giorno}')">▶️ ${giorno} (${byDay[giorno].length} richieste)</h3>
-            <div id="box-${giorno}" class="hidden">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th><th>Richiedente</th><th>Produttore</th><th>Codice CER</th>
-                    <th>Automezzo</th><th>Orario</th><th>Telefono</th><th>Prezzo (€)</th><th>Stato</th><th>Azioni</th><th>Chat</th>
-                  </tr>
-                </thead>
-                <tbody id="tbody-${giorno}"></tbody>
-              </table>
-            </div>`;
-          div.appendChild(box);
-
-          const tbody = box.querySelector('tbody');
-          byDay[giorno].forEach(r => {
-            const statoClass = r.stato ? r.stato.replace(/\s/g, '-') : 'in-attesa';
-            tbody.innerHTML += `
-              <tr>
-                <td>${r.id}</td>
-                <td>${r.richiedente}</td>
-                <td>${r.produttore}</td>
-                <td>${r.codice_cer}</td>
-                <td>${r.tipo_automezzo}</td>
-                <td>${r.orario_preferito}</td>
-                <td>${r.numero_referente}</td>
-                <td>${parseFloat(r.prezzo_pattuito).toFixed(2)}</td>
-                <td><span class="badge ${statoClass}">${r.stato}</span></td>
-                <td>
-                  <select id="stato-${r.id}">
-                    <option value="accettata">Accettata</option>
-                    <option value="non accettata">Non Accettata</option>
-                    <option value="info richieste">Info Richieste</option>
-                  </select>
-                  <textarea id="nota-${r.id}" placeholder="Nota">${r.nota || ''}</textarea>
-                  <button onclick="aggiornaStato(${r.id})">Aggiorna</button>
-                </td>
-                <td>
-                  <div class="chat-box">
-                    <div class="chat-messages" id="chat-messages-${r.id}"></div>
-                    <input type="text" class="chat-input" id="msg-input-${r.id}" placeholder="Scrivi..." 
-                      onkeydown="if(event.key==='Enter') inviaMessaggio(${r.id})">
-                    <button onclick="inviaMessaggio(${r.id})">Invia</button>
-                  </div>
-                </td>
-              </tr>`;
-            setTimeout(() => caricaChat(r.id), 0);
-            setInterval(() => caricaChat(r.id), 3000); // polling
-          });
+        box.innerHTML = '';
+        msgs.forEach(m => {
+          const bubble = document.createElement('div');
+          bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+          bubble.textContent = m.messaggio;
+          box.appendChild(bubble);
         });
+        box.scrollTop = box.scrollHeight;
       });
-  </script>
+  }
+
+  function inviaMessaggio(id) {
+    const input = document.getElementById(`msg-${id}`);
+    const testo = input.value.trim();
+    if (!testo) return;
+
+    fetch('/chat/trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trasporto_id: id, mittente: 'admin', messaggio: testo })
+    }).then(() => {
+      input.value = '';
+      caricaChat(id);
+      document.getElementById(`unread-${id}`).style.display = 'none';
+    });
+  }
+</script>
+
 </body>
 </html>

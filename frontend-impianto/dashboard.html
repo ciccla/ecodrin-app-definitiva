@@ -1,16 +1,30 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dashboard Impianto</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
+    :root {
+      --bg-light: #f4fce3;
+      --bg-dark: #263238;
+      --text-light: #2e7d32;
+      --text-dark: #e0f2f1;
+      --accent: #81c784;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f1f8e9;
-      color: #2e7d32;
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-light);
       margin: 0;
       padding: 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-dark);
     }
 
     h1, h2 {
@@ -18,64 +32,42 @@
       margin-bottom: 20px;
     }
 
-    .navbar {
-      text-align: center;
-      margin-bottom: 20px;
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
     }
 
-    .navbar a {
-      background: #2e7d32;
-      color: white;
-      padding: 8px 16px;
-      border-radius: 4px;
-      text-decoration: none;
-      margin: 0 5px;
-      font-weight: bold;
-      display: inline-block;
-    }
-
-    .navbar a:hover {
-      background: #1b5e20;
-    }
-
-    h3 {
-      cursor: pointer;
-      background: #c5e1a5;
-      padding: 8px 12px;
-      margin-top: 20px;
+    .topbar button, .topbar a {
+      margin-right: 10px;
+      padding: 6px 12px;
+      border: none;
       border-radius: 5px;
+      font-size: 0.9em;
+      cursor: pointer;
+      background: #388e3c;
+      color: #fff;
+      text-decoration: none;
     }
 
-    .giorno-container {
-      margin-bottom: 25px;
+    .topbar button:hover, .topbar a:hover {
+      background: #2e7d32;
     }
 
-    .hidden {
-      display: none;
+    .toggle-dark {
+      background: #555;
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-
-    th, td {
-      border: 1px solid #c8e6c9;
-      padding: 8px;
-      font-size: 14px;
-    }
-
-    th {
-      background: #dcedc8;
+    .toggle-dark:hover {
+      background: #333;
     }
 
     .badge {
-      padding: 3px 6px;
-      border-radius: 3px;
-      font-size: 0.8em;
-      color: white;
-      font-weight: bold;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 0.75em;
+      color: #fff;
     }
 
     .accettata { background: #2e7d32; }
@@ -83,13 +75,26 @@
     .info-richieste { background: #1565c0; }
     .in-attesa { background: #f9a825; }
 
-    .download-btn {
-      background: #388e3c;
-      color: white;
-      text-decoration: none;
-      padding: 5px 8px;
-      border-radius: 4px;
-      font-size: 0.85em;
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      margin-bottom: 20px;
+    }
+
+    th, td {
+      padding: 8px;
+      border: 1px solid #c8e6c9;
+      font-size: 14px;
+      vertical-align: top;
+    }
+
+    th {
+      background: #dcedc8;
+    }
+
+    tr:nth-child(even) {
+      background: #f1f8e9;
     }
 
     .chat-box {
@@ -97,73 +102,108 @@
       padding: 8px;
       border-radius: 6px;
       background: #ffffff;
-      margin-top: 6px;
+      margin-top: 5px;
     }
 
     .chat-messages {
-      max-height: 120px;
+      max-height: 130px;
       overflow-y: auto;
       margin-bottom: 5px;
     }
 
     .chat-bubble {
+      max-width: 70%;
       padding: 6px 10px;
       margin: 4px 0;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 0.85em;
-      display: inline-block;
-      max-width: 75%;
       clear: both;
     }
 
-    .bubble-left {
-      background: #e0f2f1;
-      float: left;
-    }
-
-    .bubble-right {
-      background: #c8e6c9;
-      float: right;
-    }
+    .bubble-left { background: #e0f2f1; float: left; }
+    .bubble-right { background: #c8e6c9; float: right; }
 
     .chat-input {
-      width: calc(100% - 70px);
+      width: calc(100% - 60px);
       padding: 4px;
     }
 
-    .notify {
+    .hidden {
       display: none;
+    }
+
+    #notify {
       position: fixed;
       bottom: 20px;
       right: 20px;
       background: #2ecc71;
       color: white;
-      padding: 10px;
+      padding: 12px 18px;
+      border-radius: 6px;
+      display: none;
+      font-weight: bold;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .giorno-container {
+      margin-bottom: 30px;
+    }
+
+    .badge-unread {
+      background: #d32f2f;
+      color: white;
+      font-size: 10px;
+      padding: 2px 5px;
+      margin-left: 5px;
       border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      z-index: 999;
+      display: inline-block;
+    }
+
+    .search-bar {
+      margin: 15px auto;
+      text-align: center;
+    }
+
+    .search-bar input {
+      padding: 6px 10px;
+      border: 1px solid #ccc;
+      width: 300px;
+      border-radius: 4px;
     }
 
   </style>
 </head>
 <body>
-
-  <h1>📋 Dashboard Impianto</h1>
-
-  <div class="navbar">
-    <a href="/impianto/dashboard.html">🏠 Prenotazioni</a>
-    <a href="dashboard-trasporti.html">🚛 Richieste Trasporto</a>
-    <a href="/impianto/logout">🔒 Logout</a>
+  <div class="topbar">
+    <div>
+      <a href="/impianto/logout">🔒 Logout</a>
+      <a href="dashboard-trasporti.html">🚚 Trasporti</a>
+      <button onclick="openStats()">📊 Statistiche</button>
+    </div>
+    <div>
+      <button onclick="toggleTheme()" class="toggle-dark">🌓 Tema</button>
+    </div>
   </div>
 
-  <div id="notify" class="notify"></div>
+  <h1>Dashboard Prenotazioni</h1>
+
+  <div class="search-bar">
+    <input type="text" id="search" placeholder="🔍 Cerca cliente, CER, produttore..." onkeyup="filtraPrenotazioni()">
+  </div>
 
   <div id="prenotazioni"></div>
+  <div id="notify"></div>
+  <audio id="notify-sound" src="https://notificationsounds.com/storage/sounds/file-sounds-1153-pristine.mp3" preload="auto"></audio>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
-    // Notifica
+    const sound = document.getElementById('notify-sound');
+    let messaggiLetti = {};
+    
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+    }
+    
     function notify(msg, success = true) {
       const n = document.getElementById('notify');
       n.innerText = msg;
@@ -171,146 +211,149 @@
       n.style.display = 'block';
       setTimeout(() => n.style.display = 'none', 3000);
     }
-  
-    // Carica tutte le prenotazioni
+    
+    function filtraPrenotazioni() {
+      const value = document.getElementById('search').value.toLowerCase();
+      document.querySelectorAll('.giorno-container').forEach(container => {
+        container.style.display = container.innerText.toLowerCase().includes(value) ? 'block' : 'none';
+      });
+    }
+    
+    function toggle(giorno) {
+      const box = document.getElementById('box-' + giorno);
+      const h3 = document.querySelector(`h3[onclick="toggle('${giorno}')"]`);
+      box.classList.toggle('hidden');
+      h3.innerHTML = h3.innerHTML.includes('▶️') ? h3.innerHTML.replace('▶️', '▼') : h3.innerHTML.replace('▼', '▶️');
+    }
+    
+    function openStats() {
+      alert("📊 Prossimamente disponibile: pannello statistiche!");
+    }
+    
+    // --------------------- CHAT ---------------------
+    
+    function caricaChat(id) {
+      fetch('/chat/prenotazione/' + id)
+        .then(res => res.json())
+        .then(msgs => {
+          const box = document.getElementById('chat-messages-' + id);
+          const badge = document.getElementById('badge-' + id);
+          const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
+    
+          if (messaggiLetti[id] !== undefined && nuovi > messaggiLetti[id]) {
+            badge.style.display = 'inline-block';
+            sound.play();
+          }
+    
+          messaggiLetti[id] = nuovi;
+          box.innerHTML = '';
+          msgs.forEach(m => {
+            const bubble = document.createElement('div');
+            bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+            bubble.innerHTML = `<div>${m.messaggio}</div><div style="font-size:10px;margin-top:2px;">${new Date(m.timestamp).toLocaleString()}</div>`;
+            box.appendChild(bubble);
+          });
+          box.scrollTop = box.scrollHeight;
+        });
+    }
+    
+    function inviaMessaggio(id) {
+      const input = document.getElementById('msg-input-' + id);
+      const testo = input.value.trim();
+      if (!testo) return;
+    
+      fetch('/chat/prenotazione', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prenotazione_id: id, mittente: 'admin', messaggio: testo })
+      }).then(() => {
+        input.value = '';
+        caricaChat(id);
+        document.getElementById('badge-' + id).style.display = 'none';
+      });
+    }
+    
+    function cambiaStato(id) {
+      const stato = document.getElementById(`stato-${id}`).value;
+    
+      fetch('/impianto/cambia-stato', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, nuovo_stato: stato })
+      }).then(res => res.text())
+        .then(msg => notify(msg));
+    }
+    
     fetch('/impianto/prenotazioni')
       .then(res => res.json())
       .then(data => {
         const div = document.getElementById('prenotazioni');
         if (!data.length) {
-          div.innerHTML = '<p style="text-align:center;">Nessuna prenotazione trovata.</p>';
+          div.innerHTML = '<p>Nessuna prenotazione trovata.</p>';
           return;
         }
-  
+    
         const perGiorno = {};
         data.forEach(p => {
           if (!perGiorno[p.giorno_conferimento]) perGiorno[p.giorno_conferimento] = [];
           perGiorno[p.giorno_conferimento].push(p);
         });
-  
+    
         Object.keys(perGiorno).sort().forEach(giorno => {
           const box = document.createElement('div');
           box.className = 'giorno-container';
           box.innerHTML = `
-            <h3 onclick="toggle('${giorno}')">▶️ ${giorno} (${perGiorno[giorno].length} prenotazioni)</h3>
+            <h3 onclick="toggle('${giorno}')">▶️ ${giorno} (${perGiorno[giorno].length})</h3>
             <div id="box-${giorno}" class="hidden">
               <table>
                 <thead>
                   <tr>
-                    <th>ID</th><th>Cliente</th><th>Produttore</th><th>Codice CER</th>
-                    <th>Pericolo</th><th>Imballo</th><th>Stato</th><th>Quantità</th>
-                    <th>Data</th><th>Certificato</th><th>Chat</th><th>Azioni</th><th>PDF</th>
+                    <th>ID</th><th>Cliente</th><th>Produttore</th><th>CER</th><th>Quantità</th>
+                    <th>Data</th><th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-${giorno}"></tbody>
               </table>
             </div>`;
           div.appendChild(box);
-  
+    
           const tbody = box.querySelector('tbody');
           perGiorno[giorno].forEach(p => {
             const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-            tbody.innerHTML += `
-              <tr id="row-${p.id}">
-                <td>${p.id}</td>
-                <td>${p.ragione_sociale}</td>
-                <td>${p.produttore}</td>
-                <td>${p.codice_cer}</td>
-                <td>${p.caratteristiche_pericolo || '-'}</td>
-                <td>${p.tipo_imballo || '-'}</td>
-                <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-                <td>${p.quantita}</td>
-                <td>${p.giorno_conferimento}</td>
-                <td>${p.certificato_analitico 
-                      ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" class="download-btn" target="_blank">Scarica</a>` 
-                      : '-'}</td>
-                <td>
-                  <div class="chat-box">
-                    <div class="chat-messages" id="chat-messages-${p.id}"></div>
-                    <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi...">
-                    <button onclick="inviaMessaggio(${p.id})">Invia</button>
-                  </div>
-                </td>
-                <td>
-                  <select id="stato-${p.id}">
-                    <option value="accettata">Accettata</option>
-                    <option value="non accettata">Non Accettata</option>
-                    <option value="info richieste">Info Richieste</option>
-                  </select>
-                  <button onclick="cambiaStato(${p.id})">Aggiorna</button>
-                </td>
-                <td><button onclick="scaricaPDF(${p.id})">📄</button></td>
-              </tr>`;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${p.id}</td>
+              <td>${p.ragione_sociale}</td>
+              <td>${p.produttore}</td>
+              <td>${p.codice_cer}</td>
+              <td>${p.quantita}</td>
+              <td>${p.giorno_conferimento}</td>
+              <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
+              <td><span class="badge ${statoClass}">${p.stato}</span></td>
+              <td>
+                <select id="stato-${p.id}">
+                  <option value="accettata">Accettata</option>
+                  <option value="non accettata">Non Accettata</option>
+                  <option value="info richieste">Info Richieste</option>
+                </select>
+                <button onclick="cambiaStato(${p.id})">Aggiorna</button>
+              </td>
+              <td>
+                <div class="chat-box">
+                  <div class="chat-messages" id="chat-messages-${p.id}"></div>
+                  <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi..." 
+                    onkeydown="if(event.key==='Enter') inviaMessaggio(${p.id})">
+                  <button onclick="inviaMessaggio(${p.id})">Invia</button>
+                  <span class="badge-unread" id="badge-${p.id}" style="display:none;">NUOVO</span>
+                </div>
+              </td>`;
+            tbody.appendChild(row);
             caricaChat(p.id);
             setInterval(() => caricaChat(p.id), 2000);
           });
         });
       });
-  
-    function toggle(giorno) {
-      const el = document.getElementById('box-' + giorno);
-      const title = el.previousElementSibling;
-      el.classList.toggle('hidden');
-      title.innerHTML = title.innerHTML.includes('▶️') 
-        ? title.innerHTML.replace('▶️', '▼') 
-        : title.innerHTML.replace('▼', '▶️');
-    }
-  
-    function caricaChat(id) {
-      fetch('/chat/prenotazione/' + id)
-        .then(res => res.json())
-        .then(msgs => {
-          const chat = document.getElementById(`chat-messages-${id}`);
-          chat.innerHTML = '';
-          msgs.forEach(m => {
-            const b = document.createElement('div');
-            b.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-            b.textContent = m.messaggio;
-            chat.appendChild(b);
-          });
-          chat.scrollTop = chat.scrollHeight;
-        });
-    }
-  
-    function inviaMessaggio(id) {
-      const input = document.getElementById(`msg-input-${id}`);
-      const msg = input.value.trim();
-      if (!msg) return;
-      fetch('/chat/prenotazione', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ prenotazione_id: id, mittente: 'admin', messaggio: msg })
-      }).then(() => {
-        input.value = '';
-        caricaChat(id);
-      });
-    }
-  
-    function cambiaStato(id) {
-      const stato = document.getElementById(`stato-${id}`).value;
-      fetch('/impianto/cambia-stato', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, nuovo_stato: stato })
-      }).then(res => res.text())
-        .then(msg => {
-          notify(msg);
-          setTimeout(() => location.reload(), 1000);
-        });
-    }
-  
-    function scaricaPDF(id) {
-      const row = document.getElementById(`row-${id}`);
-      html2canvas(row).then(canvas => {
-        const pdf = new jspdf.jsPDF();
-        const imgData = canvas.toDataURL('image/png');
-        const width = pdf.internal.pageSize.getWidth() - 20;
-        const height = (canvas.height * width) / canvas.width;
-        pdf.addImage(imgData, 'PNG', 10, 10, width, height);
-        pdf.save(`prenotazione-${id}.pdf`);
-      });
-    }
-  </script>
-  </body>
-  </html>
-s  
+    </script>
+    </body>
+    </html>
+    

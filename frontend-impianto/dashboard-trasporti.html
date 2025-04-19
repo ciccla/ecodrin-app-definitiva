@@ -1,67 +1,100 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dashboard Trasporti</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       transition: background 0.3s, color 0.3s;
     }
 
     body.light {
-      background: #f1f8e9;
-      color: #2e7d32;
+      background: #f9f9f9;
+      color: #1e1e1e;
     }
 
     body.dark {
-      background: #263238;
-      color: #ffffff;
+      background: #121212;
+      color: #f1f1f1;
     }
 
-    .theme-toggle {
-      float: right;
-      margin-left: 10px;
-    }
-
-    .btn-top {
-      margin-bottom: 15px;
-    }
-
-    .header-bar {
+    header {
+      background: #ffffff;
+      color: #2e7d32;
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border-bottom: 1px solid #e0e0e0;
     }
 
-    .user-info {
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-buttons button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #2e7d32;
+      color: white;
+      cursor: pointer;
+    }
+
+    .nav-buttons button:hover {
+      background: #1b5e20;
+    }
+
+    .filter-bar {
+      padding: 15px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .filter-bar select,
+    .filter-bar input {
+      padding: 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    h2 {
+      padding: 20px 20px 0;
+    }
+
+    .giorno-toggle {
+      cursor: pointer;
+      padding: 12px 20px;
+      margin: 10px 20px 0;
+      background: #c5e1a5;
+      border-radius: 6px;
       font-weight: bold;
-      font-size: 0.95em;
-      color: #555;
     }
 
-    h1 {
-      margin: 0;
-    }
-
-    a {
-      text-decoration: none;
-      color: inherit;
+    .hidden {
+      display: none;
     }
 
     table {
-      width: 100%;
+      width: calc(100% - 40px);
+      margin: 10px 20px;
       border-collapse: collapse;
-      margin-top: 10px;
+      background: white;
+      border-radius: 6px;
+      overflow: hidden;
     }
 
     th, td {
       padding: 8px;
-      border: 1px solid #c5e1a5;
-      font-size: 14px;
+      border: 1px solid #dcedc8;
     }
 
     th {
@@ -69,35 +102,22 @@
     }
 
     .badge {
-      padding: 4px 6px;
+      padding: 4px 8px;
       border-radius: 4px;
+      font-size: 0.75em;
       color: white;
-      font-size: 0.85em;
     }
 
-    .accettata { background-color: #2e7d32; }
-    .non-accettata { background-color: #c62828; }
-    .info-richieste { background-color: #1565c0; }
-    .in-attesa { background-color: #f9a825; }
-
-    .giorno-toggle {
-      cursor: pointer;
-      font-weight: bold;
-      padding: 10px;
-      margin-top: 15px;
-      background: #aed581;
-      border-radius: 4px;
-    }
-
-    .hidden {
-      display: none;
-    }
+    .accettata { background: #2e7d32; }
+    .non-accettata { background: #c62828; }
+    .info-richieste { background: #1565c0; }
+    .in-attesa { background: #f9a825; }
 
     .chat-box {
       border: 1px solid #c5e1a5;
-      padding: 8px;
+      padding: 6px;
       border-radius: 6px;
-      background: #ffffff;
+      background: #f4f4f4;
       margin-top: 5px;
     }
 
@@ -110,16 +130,31 @@
     .chat-bubble {
       max-width: 70%;
       padding: 6px 10px;
-      margin: 4px 0;
+      margin: 3px 0;
       border-radius: 12px;
       font-size: 0.85em;
       display: inline-block;
       clear: both;
     }
 
-    .bubble-left { background: #e0f2f1; float: left; }
-    .bubble-right { background: #c8e6c9; float: right; }
-    .badge-unread { background: red; color: white; padding: 2px 6px; margin-left: 6px; border-radius: 10px; font-size: 0.7em; }
+    .bubble-left {
+      background: #d0f0ef;
+      float: left;
+    }
+
+    .bubble-right {
+      background: #c8e6c9;
+      float: right;
+    }
+
+    .badge-unread {
+      background: red;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 12px;
+      font-size: 0.75em;
+      margin-left: 6px;
+    }
 
     #notify {
       position: fixed;
@@ -131,76 +166,55 @@
       border-radius: 6px;
       display: none;
       font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       z-index: 999;
-    }
-
-    .filter-bar {
-      margin: 10px 0 25px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .filter-bar select,
-    .filter-bar input {
-      padding: 6px;
-      font-size: 0.9em;
-      border-radius: 4px;
-      border: 1px solid #ccc;
     }
   </style>
 </head>
+
 <body class="light">
 
-<div class="header-bar">
-  <h1>Dashboard Trasporti</h1>
-  <div>
-    <span class="user-info">👤 Impianto: Mario Rossi</span>
-    <button class="theme-toggle" onclick="toggleTheme()">🌓 Tema</button>
+<header>
+  <div><strong>Utente:</strong> Impianto</div>
+  <div class="nav-buttons">
+    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+    <button onclick="toggleTheme()">🌓 Tema</button>
   </div>
-</div>
+</header>
 
-<div class="btn-top">
-  <a href="dashboard.html"><button>📋 Pannello Prenotazioni</button></a>
-  <a href="/impianto/logout"><button style="background:#c62828">Logout</button></a>
-</div>
-
-<div class="filter-bar">
-  <input type="text" id="filter-produttore" placeholder="Produttore">
-  <input type="text" id="filter-cer" placeholder="Codice CER">
-  <select id="filter-stato">
-    <option value="">-- Stato --</option>
-    <option>accettata</option>
-    <option>non accettata</option>
-    <option>info richieste</option>
-    <option>in attesa</option>
+<section class="filter-bar">
+  <label for="filter-type">Filtro:</label>
+  <select id="filter-type">
+    <option value="id">ID</option>
+    <option value="produttore">Produttore</option>
+    <option value="cer">Codice CER</option>
+    <option value="stato">Stato</option>
   </select>
-  <input type="text" id="filter-automezzo" placeholder="Tipo Automezzo">
-  <button onclick="applicaFiltri()">🔍 Filtra</button>
-</div>
+  <input type="text" id="filter-value" placeholder="Valore da cercare..." oninput="applyFilter()" />
+</section>
 
+<h2>Richieste di Trasporto</h2>
 <div id="trasporti-container"></div>
 <div id="notify"></div>
 <audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 <script>
-  let chatsLetti = {};
+  const notifyBox = document.getElementById('notify');
+  const chatsLetti = {};
 
   function notify(msg, success = true) {
-    const n = document.getElementById('notify');
-    n.innerText = msg;
-    n.style.background = success ? '#2ecc71' : '#e74c3c';
-    n.style.display = 'block';
-    setTimeout(() => n.style.display = 'none', 4000);
+    notifyBox.innerText = msg;
+    notifyBox.style.background = success ? '#2ecc71' : '#e74c3c';
+    notifyBox.style.display = 'block';
+    setTimeout(() => notifyBox.style.display = 'none', 4000);
   }
 
   function toggleTheme() {
     const body = document.body;
-    const current = body.classList.contains('dark') ? 'dark' : 'light';
-    const next = current === 'light' ? 'dark' : 'light';
-    body.classList.remove(current);
-    body.classList.add(next);
-    localStorage.setItem('theme', next);
+    const theme = body.classList.contains('dark') ? 'light' : 'dark';
+    body.classList.remove('dark', 'light');
+    body.classList.add(theme);
+    localStorage.setItem('theme', theme);
   }
 
   function initTheme() {
@@ -210,120 +224,9 @@
 
   initTheme();
 
-  let tutteLeRichieste = [];
-
-  function applicaFiltri() {
-    const prod = document.getElementById('filter-produttore').value.toLowerCase();
-    const cer = document.getElementById('filter-cer').value.toLowerCase();
-    const stato = document.getElementById('filter-stato').value;
-    const auto = document.getElementById('filter-automezzo').value.toLowerCase();
-
-    const filtrate = tutteLeRichieste.filter(r => {
-      return (!prod || r.produttore.toLowerCase().includes(prod)) &&
-             (!cer || r.codice_cer.toLowerCase().includes(cer)) &&
-             (!stato || r.stato === stato) &&
-             (!auto || r.tipo_automezzo.toLowerCase().includes(auto));
-    });
-
-    renderizzaTrasporti(filtrate);
-  }
-
-  fetch('/impianto/richieste-trasporto')
-    .then(res => res.json())
-    .then(data => {
-      tutteLeRichieste = data;
-      renderizzaTrasporti(data);
-    });
-
-  function renderizzaTrasporti(data) {
-    const div = document.getElementById('trasporti-container');
-    div.innerHTML = '';
-
-    if (!data.length) {
-      div.innerHTML = '<p>Nessuna richiesta trovata.</p>';
-      return;
-    }
-
-    const perGiorno = {};
-    data.forEach(t => {
-      if (!perGiorno[t.data_trasporto]) perGiorno[t.data_trasporto] = [];
-      perGiorno[t.data_trasporto].push(t);
-    });
-
-    Object.keys(perGiorno).sort().forEach(data => {
-      const blocco = document.createElement('div');
-      blocco.innerHTML = `
-        <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length})</div>
-        <div id="box-${data}" class="hidden">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
-                <th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
-              </tr>
-            </thead>
-            <tbody id="tbody-${data}"></tbody>
-          </table>
-        </div>
-      `;
-      div.appendChild(blocco);
-
-      const tbody = blocco.querySelector('tbody');
-      perGiorno[data].forEach(r => {
-        const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
-        const id = r.id;
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${id}</td>
-          <td>${r.richiedente}</td>
-          <td>${r.produttore}</td>
-          <td>${r.codice_cer}</td>
-          <td>${r.tipo_automezzo}</td>
-          <td>${r.orario_preferito}</td>
-          <td>${r.numero_referente}</td>
-          <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
-          <td><span class="badge ${statoClass}">${r.stato}</span></td>
-          <td>
-            <select id="stato-${id}">
-              <option value="accettata">Accettata</option>
-              <option value="non accettata">Non Accettata</option>
-              <option value="info richieste">Info Richieste</option>
-            </select>
-            <button onclick="aggiornaStato(${id})">✔️</button>
-          </td>
-          <td>
-            <div class="chat-box">
-              <div class="chat-messages" id="chat-${id}"></div>
-              <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." 
-                     onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
-              <button onclick="inviaMessaggio(${id})">Invia</button>
-              <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(row);
-
-        caricaChat(id);
-        setInterval(() => caricaChat(id), 2000);
-      });
-    });
-  }
-
   function toggleGiorno(data) {
     const box = document.getElementById(`box-${data}`);
     box.classList.toggle('hidden');
-  }
-
-  function aggiornaStato(id) {
-    const stato = document.getElementById(`stato-${id}`).value;
-    fetch('/impianto/aggiorna-trasporto', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, nuovo_stato: stato, nota: "" })
-    })
-    .then(res => res.text())
-    .then(msg => notify(msg));
   }
 
   function caricaChat(id) {
@@ -340,6 +243,7 @@
         }
 
         chatsLetti[id] = nuovi;
+
         box.innerHTML = '';
         msgs.forEach(m => {
           const bubble = document.createElement('div');
@@ -347,6 +251,7 @@
           bubble.textContent = m.messaggio;
           box.appendChild(bubble);
         });
+
         box.scrollTop = box.scrollHeight;
       });
   }
@@ -366,6 +271,109 @@
       document.getElementById(`unread-${id}`).style.display = 'none';
     });
   }
+
+  function aggiornaStato(id) {
+    const stato = document.getElementById(`stato-${id}`).value;
+
+    fetch('/impianto/aggiorna-trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato: stato, nota: '' })
+    }).then(res => res.text())
+      .then(msg => notify(msg));
+  }
+
+  function applyFilter() {
+    const type = document.getElementById('filter-type').value;
+    const value = document.getElementById('filter-value').value.toLowerCase();
+    const rows = document.querySelectorAll('#trasporti-container tbody tr');
+
+    rows.forEach(row => {
+      const tdMap = {
+        id: 0,
+        produttore: 2,
+        cer: 3,
+        stato: 8
+      };
+      const cell = row.children[tdMap[type]];
+      if (!cell) return;
+
+      const text = cell.textContent.toLowerCase();
+      row.style.display = text.includes(value) ? '' : 'none';
+    });
+  }
+
+  fetch('/impianto/richieste-trasporto')
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('trasporti-container');
+      if (!data.length) {
+        container.innerHTML = '<p style="padding:20px;">Nessuna richiesta trovata.</p>';
+        return;
+      }
+
+      const perGiorno = {};
+      data.forEach(t => {
+        if (!perGiorno[t.data_trasporto]) perGiorno[t.data_trasporto] = [];
+        perGiorno[t.data_trasporto].push(t);
+      });
+
+      Object.keys(perGiorno).sort().forEach(data => {
+        const blocco = document.createElement('div');
+        blocco.innerHTML = `
+          <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length} richieste)</div>
+          <div id="box-${data}" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
+                  <th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-${data}"></tbody>
+            </table>
+          </div>`;
+        container.appendChild(blocco);
+
+        const tbody = blocco.querySelector('tbody');
+        perGiorno[data].forEach(r => {
+          const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
+          const id = r.id;
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${r.richiedente}</td>
+            <td>${r.produttore}</td>
+            <td>${r.codice_cer}</td>
+            <td>${r.tipo_automezzo}</td>
+            <td>${r.orario_preferito}</td>
+            <td>${r.numero_referente}</td>
+            <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
+            <td><span class="badge ${statoClass}">${r.stato}</span></td>
+            <td>
+              <select id="stato-${id}">
+                <option value="accettata">Accettata</option>
+                <option value="non accettata">Non Accettata</option>
+                <option value="info richieste">Info Richieste</option>
+              </select>
+              <button onclick="aggiornaStato(${id})">✔️</button>
+            </td>
+            <td>
+              <div class="chat-box">
+                <div class="chat-messages" id="chat-${id}"></div>
+                <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+                <button onclick="inviaMessaggio(${id})">Invia</button>
+                <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
+              </div>
+            </td>`;
+          tbody.appendChild(row);
+
+          caricaChat(id);
+          setInterval(() => caricaChat(id), 2000);
+        });
+      });
+    });
 </script>
 </body>
 </html>

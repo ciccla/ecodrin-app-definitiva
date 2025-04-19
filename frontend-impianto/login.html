@@ -2,66 +2,150 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Login Impianto</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Login Amministratore</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --bg-light: #f1f8e9;
+      --bg-dark: #263238;
+      --text-light: #2e7d32;
+      --text-dark: #ffffff;
+      --accent: #388e3c;
+      --danger: #c62828;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-light);
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background-color: var(--bg-dark);
+      color: var(--text-dark);
+    }
+
+    .login-container {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1em;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2e7d32;
+    }
+
+    .error {
+      margin-top: 15px;
+      color: var(--danger);
+      display: none;
+    }
+
+    .theme-toggle {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      background: none;
+      border: none;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+
+    @media (max-width: 500px) {
+      .login-container {
+        margin: 0 20px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Login Impianto</h1>
-  <form id="loginForm" method="POST">
-    <label for="username">Email:</label>
-    <input type="text" id="username" name="username" required><br><br>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required><br><br>
+  <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
 
-    <button type="submit">Accedi</button>
-  </form>
+  <div class="login-container">
+    <h2>Login Amministratore</h2>
+    <form id="admin-login-form">
+      <input type="text" name="username" placeholder="Email Admin" required />
+      <input type="password" name="password" placeholder="Password" required />
+      <button type="submit">Accedi</button>
+      <div id="error-msg" class="error">Credenziali errate</div>
+    </form>
+  </div>
 
   <script>
-    document.getElementById('loginForm').addEventListener('submit', async function (e) {
+    // Modalità tema chiaro/scuro
+    function toggleTheme() {
+      const mode = document.body.classList.contains('dark') ? 'light' : 'dark';
+      document.body.classList.toggle('dark');
+      localStorage.setItem('theme', mode);
+    }
+
+    (function initTheme() {
+      const saved = localStorage.getItem('theme') || 'light';
+      document.body.classList.add(saved);
+    })();
+
+    // Gestione login
+    const form = document.getElementById('admin-login-form');
+    const errorMsg = document.getElementById('error-msg');
+
+    form.addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const formData = new URLSearchParams();
-      formData.append('username', document.getElementById('username').value);
-      formData.append('password', document.getElementById('password').value);
+      const formData = new FormData(form);
+      const body = new URLSearchParams(formData);
 
-      const response = await fetch('/impianto/login', {
+      const res = await fetch('/impianto/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: formData.toString()
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body
       });
 
-      const text = await response.text();
+      const text = await res.text();
 
-      if (text.includes("Login impianto effettuato con successo")) {
-        alert(text);
-        window.location.href = "/impianto/dashboard.html";
+      if (text.includes('successo')) {
+        const username = formData.get('username');
+        localStorage.setItem('adminUser', username);
+        window.location.href = '/impianto/dashboard.html';
       } else {
-        alert("Credenziali errate o utente non trovato.");
+        errorMsg.style.display = 'block';
+        errorMsg.textContent = text;
       }
     });
   </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

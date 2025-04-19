@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestione Utenti</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f9fbe7;
+      color: #2e7d32;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #c8e6c9;
+      text-align: left;
+    }
+
+    th {
+      background: #dcedc8;
+    }
+
+    .actions button {
+      margin-right: 6px;
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .blocca { background: #f9a825; }
+    .sblocca { background: #388e3c; }
+    .elimina { background: #c62828; }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      color: white;
+    }
+
+    .attivo { background: #388e3c; }
+    .bloccato { background: #c62828; }
+
+    #notify {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 6px;
+      display: none;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🔐 Gestione Utenti</h1>
+  <div id="utenti-container"></div>
+
+  <div id="notify"></div>
+
+  <script>
+    function notify(msg, success = true) {
+      const box = document.getElementById('notify');
+      box.innerText = msg;
+      box.style.background = success ? '#2ecc71' : '#e74c3c';
+      box.style.display = 'block';
+      setTimeout(() => box.style.display = 'none', 4000);
+    }
+
+    function caricaUtenti() {
+      fetch('/admin/utenti')
+        .then(res => res.json())
+        .then(utenti => {
+          const div = document.getElementById('utenti-container');
+          if (!utenti.length) {
+            div.innerHTML = '<p>Nessun utente trovato.</p>';
+            return;
+          }
+
+          let html = `<table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nome utente</th>
+                <th>Email</th>
+                <th>Stato</th>
+                <th>Azioni</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+          utenti.forEach(u => {
+            const statoClass = u.attivo ? 'attivo' : 'bloccato';
+            const statoTesto = u.attivo ? 'Attivo' : 'Bloccato';
+
+            html += `
+              <tr>
+                <td>${u.id}</td>
+                <td>${u.username}</td>
+                <td>${u.email}</td>
+                <td><span class="badge ${statoClass}">${statoTesto}</span></td>
+                <td class="actions">
+                  <button class="blocca" onclick="bloccaUtente(${u.id})">Blocca</button>
+                  <button class="sblocca" onclick="sbloccaUtente(${u.id})">Sblocca</button>
+                  <button class="elimina" onclick="eliminaUtente(${u.id})">Elimina</button>
+                </td>
+              </tr>
+            `;
+          });
+
+          html += `</tbody></table>`;
+          div.innerHTML = html;
+        });
+    }
+
+    function bloccaUtente(id) {
+      fetch('/admin/blocca-utente', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      }).then(res => res.text())
+        .then(msg => {
+          notify(msg);
+          caricaUtenti();
+        });
+    }
+
+    function sbloccaUtente(id) {
+      fetch('/admin/sblocca-utente', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      }).then(res => res.text())
+        .then(msg => {
+          notify(msg);
+          caricaUtenti();
+        });
+    }
+
+    function eliminaUtente(id) {
+      if (!confirm("Sei sicuro di voler eliminare questo utente?")) return;
+      fetch('/admin/elimina-utente', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      }).then(res => res.text())
+        .then(msg => {
+          notify(msg);
+          caricaUtenti();
+        });
+    }
+
+    caricaUtenti();
+  </script>
+
+</body>
+</html>

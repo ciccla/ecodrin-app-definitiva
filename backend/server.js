@@ -41,7 +41,7 @@ app.use('/impianto', express.static(path.join(__dirname, '../frontend-impianto')
 
 // ------------------------ TEST ------------------------
 app.get('/', (req, res) => {
-  res.send('✅ Server attivo');
+  res.send('✅ Server attivo su Ecodrin');
 });
 
 // ------------------------ CLIENTE: REGISTRAZIONE ------------------------
@@ -146,4 +146,239 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
     console.error('❌ Errore inserimento:', err.message);
     res.send('Errore durante l\'inserimento');
   }
+});
+// ------------------------ CLIENTE: RICHIESTE TRASPORTO ------------------------
+app.post('/cliente/richieste-trasporto', async (req, res) => {
+  if (!req.session.utente) return res.status(403).send('Accesso negato');
+  const {
+    richiedente, produttore, codice_cer, tipo_automezzo,
+    data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
+  } = req.body;
+
+  try {
+    await db.query(`
+      INSERT INTO richieste_trasporto 
+      (cliente_id, richiedente, produttore, codice_cer, tipo_automezzo,
+      data_trasporto, orario_preferito, numero_referente, prezzo_pattuito)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    `, [
+      req.session.utente.id, richiedente, produttore, codice_cer, tipo_automezzo,
+      data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
+    ]);
+    res.send('Richiesta trasporto inviata ✅');
+  } catch (err) {
+    console.error(err);
+    res.send('Errore richiesta trasporto');
+  }
+});
+
+app.get('/cliente/richieste-trasporto', async (req, res) => {
+  if (!req.session.utente) return res.status(403).send('Non autorizzato');
+  try {
+    const result = await db.query(
+      'SELECT * FROM richieste_trasporto WHERE cliente_id = $1 ORDER BY data_trasporto DESC',
+      [req.session.utente.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Errore fetch richieste trasporto cliente:', err.message);
+    res.status(500).send('Errore server');
+  }
+});
+
+// ------------------------ ADMIN (IMPIANTO) ------------------------
+app.post('/impianto/login', async (req, res) => {
+  const { username, password } = req.body;
+  if (!username || !password) return res.send('Compila tutti i campi');
+
+  try {
+    const result = await db.query('SELECT * FROM utenti WHERE email = $1 AND ruolo = $2', [username, 'admin']);
+    const user = result.rows[0];
+    if (!user) return res.send('Admin non trovato');
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) return res.send('Password errata');
+
+    req.session.admin = { id: user.id, username: user.username, ruolo: user.ruolo };
+    res.send('Login impianto effettuato con successo ✅');
+  } catch (err) {
+    console.error(err);
+    res.send('Errore login impianto');
+  }
+});
+
+app.get('/impianto/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/impianto/login.html'));
+});
+
+app.get('/impianto/prenotazioni', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  try {
+    const result = await db.query('SELECT * FROM prenotazioni ORDER BY giorno_conferimento DESC');
+    res.json(result.rows);
+  } catch (err) {
+    res.send('Errore nel recupero');
+  }
+});
+
+app.get('/impianto/richieste-trasporto', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Non autorizzato');
+  try {
+    const result = await db.query('SELECT * FROM richieste_trasporto ORDER BY data_trasporto DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Errore nel recupero richieste trasporto:', err.message);
+    res.status(500).send('Errore server');
+  }
+});
+
+app.post('/impianto/cambia-stato', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  const { id, nuovo_stato, richiesta } = req.body;
+
+  try {
+    await db.query('UPDATE prenotazioni SET stato = $1 WHERE id = $2', [nuovo_stato, id]);
+
+    const { rows } = await db.query(`
+      SELECT u.email, p.produttore, p.giorno_conferimento FROM prenotazioni p
+      JOIN utenti u ON p.cliente_id = u.id WHERE p.id = $1
+    `, [id]);
+
+    if (rows.length > 0) {
+      const email = rows[0].email;
+      const testo = `
+Gentile cliente,
+
+La tua prenotazione n°${id} del ${rows[0].giorno_conferimento} è stata aggiornata a: ${nuovo_stato.toUpperCase()}
+${richiesta ? `\nRichiesta dell’impianto:\n${richiesta}` : ''}
+
+Cordiali saluti,
+Impianto`;
+
+      await transporter.sendMail({
+        from: `"Ecodrin" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: `Prenotazione #${id} aggiornata`,
+        text: testo
+      });
+    }
+
+    res.send('Stato aggiornato ✅');
+  } catch (err) {
+    console.error(err);
+    res.send('Errore aggiornamento');
+  }
+});
+
+app.post('/impianto/aggiorna-trasporto', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  const { id, nuovo_stato, nota } = req.body;
+
+  try {
+    await db.query(
+      'UPDATE richieste_trasporto SET stato = $1, nota = $2 WHERE id = $3',
+      [nuovo_stato, nota, id]
+    );
+    res.send('Stato trasporto aggiornato ✅');
+  } catch (err) {
+    console.error('❌ Errore aggiornamento trasporto:', err.message);
+    res.status(500).send('Errore aggiornamento');
+  }
+});
+
+// ------------------------ CHAT PRENOTAZIONI ------------------------
+app.get('/chat/prenotazione/:id', async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM messaggi WHERE prenotazione_id = $1 ORDER BY timestamp ASC',
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Errore messaggi prenotazione:', err.message);
+    res.status(500).send('Errore');
+  }
+});
+
+app.post('/chat/prenotazione', async (req, res) => {
+  const { prenotazione_id, mittente, messaggio } = req.body;
+  if (!prenotazione_id || !mittente || !messaggio) return res.status(400).send('Dati mancanti');
+
+  try {
+    await db.query(
+      'INSERT INTO messaggi (prenotazione_id, mittente, messaggio) VALUES ($1, $2, $3)',
+      [prenotazione_id, mittente, messaggio]
+    );
+    res.send('Messaggio inviato ✅');
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Errore');
+  }
+});
+
+// ------------------------ CHAT TRASPORTI ------------------------
+app.get('/chat/trasporto/:id', async (req, res) => {
+  try {
+    const result = await db.query(
+      'SELECT * FROM messaggi_trasporto WHERE trasporto_id = $1 ORDER BY timestamp ASC',
+      [req.params.id]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).send('Errore');
+  }
+});
+
+app.post('/chat/trasporto', async (req, res) => {
+  const { trasporto_id, mittente, messaggio } = req.body;
+  if (!trasporto_id || !mittente || !messaggio) return res.status(400).send('Dati mancanti');
+
+  try {
+    await db.query(
+      'INSERT INTO messaggi_trasporto (trasporto_id, mittente, messaggio) VALUES ($1, $2, $3)',
+      [trasporto_id, mittente, messaggio]
+    );
+    res.send('Messaggio inviato ✅');
+  } catch (err) {
+    res.status(500).send('Errore');
+  }
+});
+
+// ------------------------ GESTIONE UTENTI ADMIN ------------------------
+app.get('/check-utenti', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  try {
+    const { rows } = await db.query('SELECT id, username, email, ruolo, bloccato FROM utenti');
+    res.json(rows);
+  } catch {
+    res.status(500).send('Errore nel recupero utenti');
+  }
+});
+
+app.post('/admin/blocco-utente', async (req, res) => {
+  const { id, azione } = req.body;
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  try {
+    await db.query('UPDATE utenti SET bloccato = $1 WHERE id = $2', [azione === 'blocca', id]);
+    res.send('Utente aggiornato');
+  } catch {
+    res.status(500).send('Errore aggiornamento');
+  }
+});
+
+app.post('/admin/elimina-utente', async (req, res) => {
+  const { id } = req.body;
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  try {
+    await db.query('DELETE FROM utenti WHERE id = $1', [id]);
+    res.send('Utente eliminato');
+  } catch {
+    res.status(500).send('Errore eliminazione');
+  }
+});
+
+// ------------------------ AVVIO SERVER ------------------------
+app.listen(PORT, () => {
+  console.log(`🚀 Server avviato in ambiente: ${process.env.NODE_ENV || 'sviluppo'}`);
+  console.log(`🌐 In ascolto sulla porta: ${PORT}`);
 });

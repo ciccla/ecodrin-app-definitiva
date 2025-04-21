@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <title>Statistiche - Ecodrin</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.light {
+      background: #f1f8e9;
+      color: #2e7d32;
+    }
+
+    body.dark {
+      background: #263238;
+      color: #ffffff;
+    }
+
+    header {
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo-utente {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-utente img {
+      height: 35px;
+    }
+
+    .logo-utente span {
+      font-weight: bold;
+      font-size: 1em;
+      color: #2e7d32;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-buttons button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #388e3c;
+      color: white;
+      cursor: pointer;
+    }
+
+    .nav-buttons button:hover {
+      background: #2e7d32;
+    }
+
+    .stat-section {
+      padding: 20px;
+    }
+
+    .totali-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .totale {
+      flex: 1;
+      min-width: 180px;
+      padding: 20px;
+      background: #dcedc8;
+      border-radius: 8px;
+      font-size: 1.2em;
+      font-weight: bold;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-container {
+      margin-top: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    canvas {
+      width: 100% !important;
+      max-width: 100%;
+      height: auto !important;
+    }
+  </style>
+</head>
+<body class="light">
+
+<header>
+  <div class="logo-utente">
+    <img src="img/ecodrin.png" alt="Logo Ecodrin" />
+    <span>👤 Impianto</span>
+  </div>
+  <div class="nav-buttons">
+    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+    <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+    <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+    <button onclick="location.href='utenti.html'">👥 Utenti</button>
+    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+    <button onclick="toggleTheme()">🌓</button>
+  </div>
+</header>
+
+<div class="stat-section">
+  <div class="totali-box">
+    <div class="totale">📦 Prenotazioni: <span id="tot-prenotazioni">0</span></div>
+    <div class="totale">🚚 Trasporti: <span id="tot-trasporti">0</span></div>
+    <div class="totale">👥 Utenti: <span id="tot-utenti">0</span></div>
+  </div>
+
+  <div class="chart-container">
+    <h3>📈 Prenotazioni per giorno</h3>
+    <canvas id="prenotazioniGiorno"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h3>📦 Prenotazioni per stato</h3>
+    <canvas id="statoPrenotazioni"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h3>🚚 Trasporti per tipo automezzo</h3>
+    <canvas id="tipoAutomezzo"></canvas>
+  </div>
+
+  <div class="chart-container">
+    <h3>👥 Utenti per ruolo</h3>
+    <canvas id="utentiRuolo"></canvas>
+  </div>
+</div>
+<script>
+  // Tema chiaro/scuro
+  const theme = localStorage.getItem('theme') || 'light';
+  document.body.classList.add(theme);
+
+  function toggleTheme() {
+    const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
+    document.body.classList.remove('light', 'dark');
+    document.body.classList.add(newTheme);
+    localStorage.setItem('theme', newTheme);
+  }
+
+  // Chart refs
+  let chartGiorno, chartStato, chartAutomezzi, chartRuoli;
+
+  function caricaStatistiche() {
+    // Dati fittizi temporanei
+    const prenotazioniGiorno = {
+      labels: ['2025-04-01', '2025-04-05', '2025-04-10', '2025-04-15'],
+      data: [3, 5, 2, 6]
+    };
+
+    const stati = {
+      labels: ['accettata', 'non accettata', 'info richieste', 'in attesa'],
+      data: [12, 5, 3, 4]
+    };
+
+    const trasporti = {
+      labels: ['Furgone', 'Camion', 'Autobotte'],
+      data: [6, 3, 2]
+    };
+
+    const ruoli = {
+      labels: ['cliente', 'admin'],
+      data: [18, 1]
+    };
+
+    // Inserisci i totali
+    document.getElementById('tot-prenotazioni').textContent = stati.data.reduce((a, b) => a + b, 0);
+    document.getElementById('tot-trasporti').textContent = trasporti.data.reduce((a, b) => a + b, 0);
+    document.getElementById('tot-utenti').textContent = ruoli.data.reduce((a, b) => a + b, 0);
+
+    // Inizializza grafici
+    chartGiorno = new Chart(document.getElementById('prenotazioniGiorno'), {
+      type: 'line',
+      data: {
+        labels: prenotazioniGiorno.labels,
+        datasets: [{
+          label: 'Prenotazioni',
+          data: prenotazioniGiorno.data,
+          backgroundColor: '#aed581',
+          borderColor: '#558b2f',
+          tension: 0.3,
+          fill: true
+        }]
+      }
+    });
+
+    chartStato = new Chart(document.getElementById('statoPrenotazioni'), {
+      type: 'doughnut',
+      data: {
+        labels: stati.labels,
+        datasets: [{
+          label: 'Stato Prenotazioni',
+          data: stati.data,
+          backgroundColor: ['#43a047', '#e53935', '#1e88e5', '#fbc02d']
+        }]
+      }
+    });
+
+    chartAutomezzi = new Chart(document.getElementById('tipoAutomezzo'), {
+      type: 'bar',
+      data: {
+        labels: trasporti.labels,
+        datasets: [{
+          label: 'Numero trasporti',
+          data: trasporti.data,
+          backgroundColor: '#81c784'
+        }]
+      }
+    });
+
+    chartRuoli = new Chart(document.getElementById('utentiRuolo'), {
+      type: 'pie',
+      data: {
+        labels: ruoli.labels,
+        datasets: [{
+          label: 'Utenti per ruolo',
+          data: ruoli.data,
+          backgroundColor: ['#66bb6a', '#ff7043']
+        }]
+      }
+    });
+  }
+
+  // In futuro: puoi sostituire caricaStatistiche() con fetch da API reali
+  /*
+  fetch('/stats/dati-completi')
+    .then(res => res.json())
+    .then(data => { ... })
+  */
+
+  caricaStatistiche();
+</script>
+</body>
+</html>

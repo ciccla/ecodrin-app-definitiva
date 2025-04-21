@@ -376,6 +376,69 @@ app.post('/admin/elimina-utente', async (req, res) => {
     res.status(500).send('Errore eliminazione');
   }
 });
+// ------------------------ STATISTICHE ------------------------
+app.get('/stats/prenotazioni-giorno', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT giorno_conferimento AS giorno, COUNT(*) AS totale
+      FROM prenotazioni
+      GROUP BY giorno_conferimento
+      ORDER BY giorno_conferimento
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('❌ Errore /stats/prenotazioni-giorno:', err.message);
+    res.status(500).send('Errore');
+  }
+});
+
+app.get('/stats/stato-prenotazioni', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT COALESCE(stato, 'in attesa') AS stato, COUNT(*) AS totale
+      FROM prenotazioni
+      GROUP BY COALESCE(stato, 'in attesa')
+    `);
+    const output = {};
+    rows.forEach(r => output[r.stato] = parseInt(r.totale));
+    res.json(output);
+  } catch (err) {
+    console.error('❌ Errore /stats/stato-prenotazioni:', err.message);
+    res.status(500).send('Errore');
+  }
+});
+
+app.get('/stats/automezzi', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT tipo_automezzo, COUNT(*) AS totale
+      FROM richieste_trasporto
+      GROUP BY tipo_automezzo
+    `);
+    const output = {};
+    rows.forEach(r => output[r.tipo_automezzo] = parseInt(r.totale));
+    res.json(output);
+  } catch (err) {
+    console.error('❌ Errore /stats/automezzi:', err.message);
+    res.status(500).send('Errore');
+  }
+});
+
+app.get('/stats/utenti-ruolo', async (req, res) => {
+  try {
+    const { rows } = await db.query(`
+      SELECT ruolo, COUNT(*) AS totale
+      FROM utenti
+      GROUP BY ruolo
+    `);
+    const output = {};
+    rows.forEach(r => output[r.ruolo] = parseInt(r.totale));
+    res.json(output);
+  } catch (err) {
+    console.error('❌ Errore /stats/utenti-ruolo:', err.message);
+    res.status(500).send('Errore');
+  }
+});
 
 // ------------------------ AVVIO SERVER ------------------------
 app.listen(PORT, () => {

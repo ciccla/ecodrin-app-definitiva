@@ -2,22 +2,73 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Gestione Utenti</title>
+  <title>Gestione Utenti - Ecodrin</title>
+  <link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
       margin: 0;
-      padding: 20px;
-      background: #f9fbe7;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.light {
+      background: #f1f8e9;
       color: #2e7d32;
     }
 
+    body.dark {
+      background: #263238;
+      color: #ffffff;
+    }
+
+    header {
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .logo-utente {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-utente img {
+      height: 35px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-buttons button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #388e3c;
+      color: white;
+      cursor: pointer;
+    }
+
+    .nav-buttons button:hover {
+      background: #2e7d32;
+    }
+
     h1 {
-      margin-bottom: 20px;
+      padding: 20px;
+      font-size: 1.5em;
     }
 
     table {
-      width: 100%;
+      width: 95%;
+      margin: 0 auto 40px;
       border-collapse: collapse;
       background: white;
       box-shadow: 0 0 5px rgba(0,0,0,0.1);
@@ -43,17 +94,17 @@
     }
 
     .blocca { background: #f9a825; }
-    .sblocca { background: #388e3c; }
+    .sblocca { background: #43a047; }
     .elimina { background: #c62828; }
 
     .badge {
-      padding: 3px 8px;
+      padding: 4px 8px;
       border-radius: 4px;
-      font-size: 0.8em;
+      font-size: 0.85em;
       color: white;
     }
 
-    .attivo { background: #388e3c; }
+    .attivo { background: #2e7d32; }
     .bloccato { background: #c62828; }
 
     #notify {
@@ -71,107 +122,123 @@
     }
   </style>
 </head>
-<body>
+<body class="light">
 
-  <h1>🔐 Gestione Utenti</h1>
-  <div id="utenti-container"></div>
+<header>
+  <div class="logo-utente">
+    <img src="img/ecodrin.png" alt="Logo Ecodrin">
+    <span>👤 Impianto</span>
+  </div>
+  <div class="nav-buttons">
+    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+    <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+    <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+    <button onclick="location.href='utenti.html'">👥 Utenti</button>
+    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+    <button onclick="toggleTheme()">🌓</button>
+  </div>
+</header>
 
-  <div id="notify"></div>
+<h1>🔐 Gestione Utenti</h1>
+<div id="utenti-container"></div>
+<div id="notify"></div>
+<script>
+  // Tema iniziale
+  const theme = localStorage.getItem('theme') || 'light';
+  document.body.classList.add(theme);
 
-  <script>
-    function notify(msg, success = true) {
-      const box = document.getElementById('notify');
-      box.innerText = msg;
-      box.style.background = success ? '#2ecc71' : '#e74c3c';
-      box.style.display = 'block';
-      setTimeout(() => box.style.display = 'none', 4000);
-    }
+  function toggleTheme() {
+    const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
+    document.body.classList.remove('light', 'dark');
+    document.body.classList.add(newTheme);
+    localStorage.setItem('theme', newTheme);
+  }
 
-    function caricaUtenti() {
-      fetch('/admin/utenti')
-        .then(res => res.json())
-        .then(utenti => {
-          const div = document.getElementById('utenti-container');
-          if (!utenti.length) {
-            div.innerHTML = '<p>Nessun utente trovato.</p>';
-            return;
-          }
+  function notify(msg, success = true) {
+    const box = document.getElementById('notify');
+    box.innerText = msg;
+    box.style.background = success ? '#2ecc71' : '#e74c3c';
+    box.style.display = 'block';
+    setTimeout(() => box.style.display = 'none', 4000);
+  }
 
-          let html = `<table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nome utente</th>
-                <th>Email</th>
-                <th>Stato</th>
-                <th>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>`;
+  function caricaUtenti() {
+    fetch('/check-utenti')
+      .then(res => res.json())
+      .then(utenti => {
+        const div = document.getElementById('utenti-container');
+        if (!utenti.length) {
+          div.innerHTML = '<p style="padding:20px;">Nessun utente trovato.</p>';
+          return;
+        }
 
-          utenti.forEach(u => {
-            const statoClass = u.attivo ? 'attivo' : 'bloccato';
-            const statoTesto = u.attivo ? 'Attivo' : 'Bloccato';
+        let html = `<table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Ruolo</th>
+              <th>Stato</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody>`;
 
-            html += `
-              <tr>
-                <td>${u.id}</td>
-                <td>${u.username}</td>
-                <td>${u.email}</td>
-                <td><span class="badge ${statoClass}">${statoTesto}</span></td>
-                <td class="actions">
-                  <button class="blocca" onclick="bloccaUtente(${u.id})">Blocca</button>
-                  <button class="sblocca" onclick="sbloccaUtente(${u.id})">Sblocca</button>
-                  <button class="elimina" onclick="eliminaUtente(${u.id})">Elimina</button>
-                </td>
-              </tr>
-            `;
-          });
+        utenti.forEach(u => {
+          const statoClass = u.bloccato ? 'bloccato' : 'attivo';
+          const statoText = u.bloccato ? 'Bloccato' : 'Attivo';
 
-          html += `</tbody></table>`;
-          div.innerHTML = html;
+          html += `
+            <tr>
+              <td>${u.id}</td>
+              <td>${u.username}</td>
+              <td>${u.email}</td>
+              <td>${u.ruolo}</td>
+              <td><span class="badge ${statoClass}">${statoText}</span></td>
+              <td class="actions">
+                <button class="blocca" onclick="aggiornaStato(${u.id}, 'blocca')">Blocca</button>
+                <button class="sblocca" onclick="aggiornaStato(${u.id}, 'sblocca')">Sblocca</button>
+                <button class="elimina" onclick="eliminaUtente(${u.id})">Elimina</button>
+              </td>
+            </tr>`;
         });
-    }
 
-    function bloccaUtente(id) {
-      fetch('/admin/blocca-utente', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      }).then(res => res.text())
-        .then(msg => {
-          notify(msg);
-          caricaUtenti();
-        });
-    }
+        html += '</tbody></table>';
+        div.innerHTML = html;
+      });
+  }
 
-    function sbloccaUtente(id) {
-      fetch('/admin/sblocca-utente', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      }).then(res => res.text())
-        .then(msg => {
-          notify(msg);
-          caricaUtenti();
-        });
-    }
+  function aggiornaStato(id, azione) {
+    fetch('/admin/blocco-utente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, azione })
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify(msg);
+      caricaUtenti();
+    });
+  }
 
-    function eliminaUtente(id) {
-      if (!confirm("Sei sicuro di voler eliminare questo utente?")) return;
-      fetch('/admin/elimina-utente', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      }).then(res => res.text())
-        .then(msg => {
-          notify(msg);
-          caricaUtenti();
-        });
-    }
+  function eliminaUtente(id) {
+    if (!confirm('Sei sicuro di voler eliminare questo utente?')) return;
+    fetch('/admin/elimina-utente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify(msg);
+      caricaUtenti();
+    });
+  }
 
-    caricaUtenti();
-  </script>
+  // Avvia caricamento all'avvio
+  caricaUtenti();
+</script>
 
 </body>
 </html>

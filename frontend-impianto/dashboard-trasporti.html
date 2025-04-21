@@ -193,17 +193,21 @@
 </head>
 <body class="light">
 
-<header>
-  <div class="logo-utente">
-    <img src="img/ecodrin.png" alt="Logo Ecodrin" />
-    <span>👤 Impianto</span>
-  </div>
-  <div class="nav-buttons">
-    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
-    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
-    <button onclick="toggleTheme()">🌓 Tema</button>
-  </div>
-</header>
+  <header>
+    <div class="logo-utente">
+      <img src="img/ecodrin.png" alt="Logo Ecodrin" />
+      <span>👤 Impianto</span>
+    </div>
+    <div class="nav-buttons">
+      <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+      <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+      <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+      <button onclick="location.href='utenti.html'">👥 Utenti</button>
+      <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+      <button onclick="toggleTheme()">🌓</button>
+    </div>
+  </header>
+  
 <section class="filter-bar">
   <label for="filter-type">Filtro:</label>
   <select id="filter-type">

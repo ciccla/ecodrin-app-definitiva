@@ -32,7 +32,18 @@
       z-index: 100;
     }
 
-    .user-info {
+    .logo-utente {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-utente img {
+      height: 35px;
+      width: auto;
+    }
+
+    .logo-utente span {
       font-weight: bold;
       font-size: 1em;
       color: #2e7d32;
@@ -162,15 +173,21 @@
 </head>
 <body class="light">
 
-<header>
-  <div class="user-info">👤 Utente: Impianto Ecogest</div>
-  <div class="nav-menu">
-    <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
-    <button onclick="location.href='/impianto/logout'">Logout</button>
-    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-  </div>
-</header>
-
+  <header>
+    <div class="logo-utente">
+      <img src="img/ecodrin.png" alt="Logo Ecodrin" />
+      <span>👤 Impianto</span>
+    </div>
+    <div class="nav-buttons">
+      <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+      <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+      <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+      <button onclick="location.href='utenti.html'">👥 Utenti</button>
+      <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+      <button onclick="toggleTheme()">🌓</button>
+    </div>
+  </header>
+  
 <div id="filters">
   <label for="filtroTipo">Filtra per:</label>
   <select id="filtroTipo">
@@ -188,6 +205,7 @@
 <div id="contenuto-prenotazioni"></div>
 <div id="notify"></div>
 <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+
 <script>
   let tema = localStorage.getItem('theme') || 'light';
   document.body.classList.remove('light', 'dark');
@@ -369,5 +387,6 @@
     });
   }
 </script>
+
 </body>
 </html>

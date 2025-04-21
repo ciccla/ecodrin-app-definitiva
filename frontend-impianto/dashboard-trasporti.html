@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <title>Dashboard Trasporti</title>
+  <title>Dashboard Trasporti - Ecodrin</title>
   <link rel="stylesheet" href="style.css" />
   <style>
     body {
@@ -13,13 +13,13 @@
     }
 
     body.light {
-      background: #f9f9f9;
-      color: #1e1e1e;
+      background: #f1f8e9;
+      color: #2e7d32;
     }
 
     body.dark {
-      background: #121212;
-      color: #f1f1f1;
+      background: #263238;
+      color: #ffffff;
     }
 
     header {
@@ -29,7 +29,27 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #e0e0e0;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-utente {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-utente img {
+      height: 35px;
+      width: auto;
+    }
+
+    .logo-utente span {
+      font-weight: bold;
+      font-size: 1em;
+      color: #2e7d32;
     }
 
     .nav-buttons {
@@ -117,7 +137,7 @@
       border: 1px solid #c5e1a5;
       padding: 6px;
       border-radius: 6px;
-      background: #f4f4f4;
+      background: #ffffff;
       margin-top: 5px;
     }
 
@@ -171,18 +191,19 @@
     }
   </style>
 </head>
-
 <body class="light">
 
 <header>
-  <div><strong>Utente:</strong> Impianto</div>
+  <div class="logo-utente">
+    <img src="img/ecodrin.png" alt="Logo Ecodrin" />
+    <span>👤 Impianto</span>
+  </div>
   <div class="nav-buttons">
     <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
     <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
     <button onclick="toggleTheme()">🌓 Tema</button>
   </div>
 </header>
-
 <section class="filter-bar">
   <label for="filter-type">Filtro:</label>
   <select id="filter-type">
@@ -198,6 +219,7 @@
 <div id="trasporti-container"></div>
 <div id="notify"></div>
 <audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+
 <script>
   const notifyBox = document.getElementById('notify');
   const chatsLetti = {};

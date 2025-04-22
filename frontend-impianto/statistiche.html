@@ -3,107 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <title>Statistiche - Ecodrin</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    body.light {
-      background: #f1f8e9;
-      color: #2e7d32;
-    }
-
-    body.dark {
-      background: #263238;
-      color: #ffffff;
-    }
-
-    header {
-      background: #fff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .logo-utente {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-utente img {
-      height: 35px;
-    }
-
-    .logo-utente span {
-      font-weight: bold;
-      font-size: 1em;
-      color: #2e7d32;
-    }
-
-    .nav-buttons {
-      display: flex;
-      gap: 12px;
-    }
-
-    .nav-buttons button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      background: #388e3c;
-      color: white;
-      cursor: pointer;
-    }
-
-    .nav-buttons button:hover {
-      background: #2e7d32;
-    }
-
-    .stat-section {
-      padding: 20px;
-    }
-
-    .totali-box {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .totale {
-      flex: 1;
-      min-width: 180px;
-      padding: 20px;
-      background: #dcedc8;
-      border-radius: 8px;
-      font-size: 1.2em;
-      font-weight: bold;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-
-    .chart-container {
-      margin-top: 20px;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    canvas {
-      width: 100% !important;
-      max-width: 100%;
-      height: auto !important;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="light">
 
@@ -150,7 +52,7 @@
   </div>
 </div>
 <script>
-  // Tema chiaro/scuro
+  // 🌗 Tema chiaro/scuro
   const theme = localStorage.getItem('theme') || 'light';
   document.body.classList.add(theme);
 
@@ -161,11 +63,8 @@
     localStorage.setItem('theme', newTheme);
   }
 
-  // Chart refs
-  let chartGiorno, chartStato, chartAutomezzi, chartRuoli;
-
+  // 📊 Caricamento Statistiche (dati simulati, puoi sostituire con fetch da API)
   function caricaStatistiche() {
-    // Dati fittizi temporanei
     const prenotazioniGiorno = {
       labels: ['2025-04-01', '2025-04-05', '2025-04-10', '2025-04-15'],
       data: [3, 5, 2, 6]
@@ -186,13 +85,13 @@
       data: [18, 1]
     };
 
-    // Inserisci i totali
+    // Totali
     document.getElementById('tot-prenotazioni').textContent = stati.data.reduce((a, b) => a + b, 0);
     document.getElementById('tot-trasporti').textContent = trasporti.data.reduce((a, b) => a + b, 0);
     document.getElementById('tot-utenti').textContent = ruoli.data.reduce((a, b) => a + b, 0);
 
-    // Inizializza grafici
-    chartGiorno = new Chart(document.getElementById('prenotazioniGiorno'), {
+    // Chart.js: prenotazioni per giorno
+    new Chart(document.getElementById('prenotazioniGiorno'), {
       type: 'line',
       data: {
         labels: prenotazioniGiorno.labels,
@@ -207,7 +106,8 @@
       }
     });
 
-    chartStato = new Chart(document.getElementById('statoPrenotazioni'), {
+    // Stato prenotazioni
+    new Chart(document.getElementById('statoPrenotazioni'), {
       type: 'doughnut',
       data: {
         labels: stati.labels,
@@ -219,7 +119,8 @@
       }
     });
 
-    chartAutomezzi = new Chart(document.getElementById('tipoAutomezzo'), {
+    // Tipo automezzo
+    new Chart(document.getElementById('tipoAutomezzo'), {
       type: 'bar',
       data: {
         labels: trasporti.labels,
@@ -231,7 +132,8 @@
       }
     });
 
-    chartRuoli = new Chart(document.getElementById('utentiRuolo'), {
+    // Utenti per ruolo
+    new Chart(document.getElementById('utentiRuolo'), {
       type: 'pie',
       data: {
         labels: ruoli.labels,
@@ -244,14 +146,9 @@
     });
   }
 
-  // In futuro: puoi sostituire caricaStatistiche() con fetch da API reali
-  /*
-  fetch('/stats/dati-completi')
-    .then(res => res.json())
-    .then(data => { ... })
-  */
-
+  // Avvio
   caricaStatistiche();
 </script>
+
 </body>
 </html>

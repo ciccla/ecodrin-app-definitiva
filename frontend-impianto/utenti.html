@@ -1,128 +1,132 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Gestione Utenti - Ecodrin</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      transition: background 0.3s, color 0.3s;
-    }
-
-    body.light {
-      background: #f1f8e9;
-      color: #2e7d32;
-    }
-
-    body.dark {
-      background: #263238;
-      color: #ffffff;
-    }
-
-    header {
-      background: #fff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .logo-utente {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-utente img {
-      height: 35px;
-    }
-
-    .nav-buttons {
-      display: flex;
-      gap: 12px;
-    }
-
-    .nav-buttons button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      background: #388e3c;
-      color: white;
-      cursor: pointer;
-    }
-
-    .nav-buttons button:hover {
-      background: #2e7d32;
-    }
-
-    h1 {
-      padding: 20px;
-      font-size: 1.5em;
-    }
-
-    table {
-      width: 95%;
-      margin: 0 auto 40px;
-      border-collapse: collapse;
-      background: white;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #c8e6c9;
-      text-align: left;
-    }
-
-    th {
-      background: #dcedc8;
-    }
-
-    .actions button {
-      margin-right: 6px;
-      padding: 5px 10px;
-      border: none;
-      border-radius: 4px;
-      color: white;
-      cursor: pointer;
-    }
-
-    .blocca { background: #f9a825; }
-    .sblocca { background: #43a047; }
-    .elimina { background: #c62828; }
-
-    .badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.85em;
-      color: white;
-    }
-
-    .attivo { background: #2e7d32; }
-    .bloccato { background: #c62828; }
-
-    #notify {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #2ecc71;
-      color: white;
-      padding: 12px 18px;
-      border-radius: 6px;
-      display: none;
-      font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 999;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body class="light">
+
+<header>
+  <div class="logo-utente">
+    <img src="img/ecodrin.png" alt="Logo Ecodrin" />
+    <span>👤 Impianto</span>
+  </div>
+  <div class="nav-buttons">
+    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+    <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+    <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+    <button onclick="location.href='utenti.html'">👥 Utenti</button>
+    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+    <button onclick="toggleTheme()">🌓</button>
+  </div>
+</header>
+
+<h1 style="padding: 20px;">🔐 Gestione Utenti</h1>
+
+<div id="utenti-container" style="padding: 0 20px;"></div>
+<div id="notify"></div>
+
+<script>
+  // Tema
+
+  document.body.classList.add(theme);
+
+  function toggleTheme() {
+    const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
+    document.body.classList.remove('light', 'dark');
+    document.body.classList.add(newTheme);
+    localStorage.setItem('theme', newTheme);
+  }
+
+  function notify(msg, success = true) {
+    const box = document.getElementById('notify');
+    box.innerText = msg;
+    box.style.background = success ? '#2ecc71' : '#e74c3c';
+    box.style.display = 'block';
+    setTimeout(() => box.style.display = 'none', 4000);
+  }
+
+  function caricaUtenti() {
+    fetch('/check-utenti')
+      .then(res => res.json())
+      .then(utenti => {
+        const div = document.getElementById('utenti-container');
+        if (!utenti.length) {
+          div.innerHTML = '<p>Nessun utente trovato.</p>';
+          return;
+        }
+
+        let html = `<table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Ruolo</th>
+              <th>Stato</th>
+              <th>Azioni</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+        utenti.forEach(u => {
+          const statoClass = u.bloccato ? 'bloccato' : 'attivo';
+          const statoText = u.bloccato ? 'Bloccato' : 'Attivo';
+
+          html += `
+            <tr>
+              <td>${u.id}</td>
+              <td>${u.username}</td>
+              <td>${u.email}</td>
+              <td>${u.ruolo}</td>
+              <td><span class="badge ${statoClass}">${statoText}</span></td>
+              <td class="actions">
+                <button class="blocca" onclick="aggiornaStato(${u.id}, 'blocca')">Blocca</button>
+                <button class="sblocca" onclick="aggiornaStato(${u.id}, 'sblocca')">Sblocca</button>
+                <button class="elimina" onclick="eliminaUtente(${u.id})">Elimina</button>
+              </td>
+            </tr>`;
+        });
+
+        html += `</tbody></table>`;
+        div.innerHTML = html;
+      });
+  }
+
+  function aggiornaStato(id, azione) {
+    fetch('/admin/blocco-utente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, azione })
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify(msg);
+      caricaUtenti();
+    });
+  }
+
+  function eliminaUtente(id) {
+    if (!confirm('Sei sicuro di voler eliminare questo utente?')) return;
+    fetch('/admin/elimina-utente', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify(msg);
+      caricaUtenti();
+    });
+  }
+
+  caricaUtenti();
+</script>
+
+</body>
+</html>
 
 <header>
   <div class="logo-utente">
@@ -145,9 +149,8 @@
 <script>
   // Tema iniziale
   const theme = localStorage.getItem('theme') || 'light';
-  document.body.classList.add(theme);
-
-  function toggleTheme() {
+    document.body.classList.add(theme);
+    function toggleTheme() {
     const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
     document.body.classList.remove('light', 'dark');
     document.body.classList.add(newTheme);

@@ -1,172 +1,10 @@
-!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
   <title>Dashboard Trasporti - Ecodrin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-</head>
-
-
-    body.light { background: #f1f8e9; color: #2e7d32; }
-    body.dark { background: #263238; color: #ffffff; }
-
-    header {
-      background: #fff;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 20px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .logo-utente {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .logo-utente img {
-      height: 35px;
-      width: auto;
-    }
-
-    .logo-utente span {
-      font-weight: bold;
-      font-size: 1em;
-      color: #2e7d32;
-    }
-
-    .nav-buttons {
-      display: flex;
-      gap: 12px;
-    }
-
-    .nav-buttons button {
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      background: #388e3c;
-      color: white;
-      cursor: pointer;
-    }
-
-    .nav-buttons button:hover { background: #2e7d32; }
-
-    .filter-bar {
-      padding: 15px 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      border-bottom: 1px solid #ccc;
-    }
-
-    .filter-bar select,
-    .filter-bar input {
-      padding: 6px;
-      border-radius: 4px;
-      border: 1px solid #ccc;
-    }
-
-    h2 {
-      padding: 20px 20px 0;
-    }
-
-    .giorno-toggle {
-      cursor: pointer;
-      padding: 12px 20px;
-      margin: 10px 20px 0;
-      background: #c5e1a5;
-      border-radius: 6px;
-      font-weight: bold;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    table {
-      width: calc(100% - 40px);
-      margin: 10px 20px;
-      border-collapse: collapse;
-      background: white;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    th, td {
-      padding: 8px;
-      border: 1px solid #dcedc8;
-    }
-
-    th { background: #dcedc8; }
-
-    .badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75em;
-      color: white;
-    }
-
-    .accettata { background: #2e7d32; }
-    .non-accettata { background: #c62828; }
-    .info-richieste { background: #1565c0; }
-    .in-attesa { background: #f9a825; }
-
-    .chat-box {
-      border: 1px solid #c5e1a5;
-      padding: 6px;
-      border-radius: 6px;
-      background: #ffffff;
-      margin-top: 5px;
-    }
-
-    .chat-messages {
-      max-height: 120px;
-      overflow-y: auto;
-      margin-bottom: 5px;
-    }
-
-    .chat-bubble {
-      max-width: 70%;
-      padding: 6px 10px;
-      margin: 3px 0;
-      border-radius: 12px;
-      font-size: 0.85em;
-      display: inline-block;
-      clear: both;
-    }
-
-    .bubble-left { background: #d0f0ef; float: left; }
-    .bubble-right { background: #c8e6c9; float: right; }
-
-    .badge-unread {
-      background: red;
-      color: white;
-      padding: 2px 6px;
-      border-radius: 12px;
-      font-size: 0.75em;
-      margin-left: 6px;
-    }
-
-    #notify {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #2ecc71;
-      color: white;
-      padding: 12px 18px;
-      border-radius: 6px;
-      display: none;
-      font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      z-index: 999;
-    }
-  </style>
 </head>
 <body class="light">
 
@@ -184,6 +22,7 @@
     <button onclick="toggleTheme()">🌓</button>
   </div>
 </header>
+
 <section class="filter-bar">
   <label for="filter-type">Filtro:</label>
   <select id="filter-type">
@@ -199,7 +38,6 @@
 <div id="trasporti-container"></div>
 <div id="notify"></div>
 <audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
-
 <script>
   const notifyBox = document.getElementById('notify');
   const chatsLetti = {};
@@ -212,10 +50,9 @@
   }
 
   function toggleTheme() {
-    const body = document.body;
-    const theme = body.classList.contains('dark') ? 'light' : 'dark';
-    body.classList.remove('dark', 'light');
-    body.classList.add(theme);
+    const theme = document.body.classList.contains('light') ? 'dark' : 'light';
+    document.body.classList.remove('light', 'dark');
+    document.body.classList.add(theme);
     localStorage.setItem('theme', theme);
   }
 
@@ -232,7 +69,7 @@
   }
 
   function caricaChat(id) {
-    fetch('/chat/trasporto/' + id)
+    fetch(`/chat/trasporto/${id}`)
       .then(res => res.json())
       .then(msgs => {
         const box = document.getElementById(`chat-${id}`);

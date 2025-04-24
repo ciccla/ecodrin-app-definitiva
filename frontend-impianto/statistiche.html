@@ -51,8 +51,9 @@
     <canvas id="utentiRuolo"></canvas>
   </div>
 </div>
+
 <script>
-  // 🌗 Tema chiaro/scuro
+  // Tema chiaro/scuro
   const theme = localStorage.getItem('theme') || 'light';
   document.body.classList.add(theme);
 
@@ -63,7 +64,7 @@
     localStorage.setItem('theme', newTheme);
   }
 
-  // 📊 Caricamento Statistiche (dati simulati, puoi sostituire con fetch da API)
+  // Caricamento Statistiche (dati demo)
   function caricaStatistiche() {
     const prenotazioniGiorno = {
       labels: ['2025-04-01', '2025-04-05', '2025-04-10', '2025-04-15'],
@@ -85,12 +86,11 @@
       data: [18, 1]
     };
 
-    // Totali
     document.getElementById('tot-prenotazioni').textContent = stati.data.reduce((a, b) => a + b, 0);
     document.getElementById('tot-trasporti').textContent = trasporti.data.reduce((a, b) => a + b, 0);
     document.getElementById('tot-utenti').textContent = ruoli.data.reduce((a, b) => a + b, 0);
 
-    // Chart.js: prenotazioni per giorno
+    // Grafico Prenotazioni Giorno
     new Chart(document.getElementById('prenotazioniGiorno'), {
       type: 'line',
       data: {
@@ -106,7 +106,7 @@
       }
     });
 
-    // Stato prenotazioni
+    // Grafico Stato Prenotazioni
     new Chart(document.getElementById('statoPrenotazioni'), {
       type: 'doughnut',
       data: {
@@ -119,7 +119,7 @@
       }
     });
 
-    // Tipo automezzo
+    // Grafico Tipo Automezzo
     new Chart(document.getElementById('tipoAutomezzo'), {
       type: 'bar',
       data: {
@@ -132,7 +132,7 @@
       }
     });
 
-    // Utenti per ruolo
+    // Grafico Utenti Ruolo
     new Chart(document.getElementById('utentiRuolo'), {
       type: 'pie',
       data: {
@@ -146,7 +146,6 @@
     });
   }
 
-  // Avvio
   caricaStatistiche();
 </script>
 

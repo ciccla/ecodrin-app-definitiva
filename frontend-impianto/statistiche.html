@@ -64,86 +64,95 @@
     localStorage.setItem('theme', newTheme);
   }
 
-  // Caricamento Statistiche (dati demo)
+  // Caricamento Statistiche reali
   function caricaStatistiche() {
-    const prenotazioniGiorno = {
-      labels: ['2025-04-01', '2025-04-05', '2025-04-10', '2025-04-15'],
-      data: [3, 5, 2, 6]
-    };
+    fetch('/stats/dati-completi')
+      .then(res => res.json())
+      .then(data => {
+        const prenotazioniPerGiorno = {};
+        const statiPrenotazioni = {};
+        const tipiAutomezzo = {};
+        const ruoliUtenti = {};
 
-    const stati = {
-      labels: ['accettata', 'non accettata', 'info richieste', 'in attesa'],
-      data: [12, 5, 3, 4]
-    };
+        data.prenotazioni.forEach(p => {
+          const giorno = p.giorno_conferimento;
+          const stato = p.stato || 'in attesa';
+          prenotazioniPerGiorno[giorno] = (prenotazioniPerGiorno[giorno] || 0) + 1;
+          statiPrenotazioni[stato] = (statiPrenotazioni[stato] || 0) + 1;
+        });
 
-    const trasporti = {
-      labels: ['Furgone', 'Camion', 'Autobotte'],
-      data: [6, 3, 2]
-    };
+        data.trasporti.forEach(t => {
+          tipiAutomezzo[t.tipo_automezzo] = (tipiAutomezzo[t.tipo_automezzo] || 0) + 1;
+        });
 
-    const ruoli = {
-      labels: ['cliente', 'admin'],
-      data: [18, 1]
-    };
+        data.utenti.forEach(u => {
+          ruoliUtenti[u.ruolo] = (ruoliUtenti[u.ruolo] || 0) + 1;
+        });
 
-    document.getElementById('tot-prenotazioni').textContent = stati.data.reduce((a, b) => a + b, 0);
-    document.getElementById('tot-trasporti').textContent = trasporti.data.reduce((a, b) => a + b, 0);
-    document.getElementById('tot-utenti').textContent = ruoli.data.reduce((a, b) => a + b, 0);
+        // Totali
+        const totPrenotazioni = Object.values(statiPrenotazioni).reduce((a, b) => a + b, 0);
+        const totTrasporti = Object.values(tipiAutomezzo).reduce((a, b) => a + b, 0);
+        const totUtenti = Object.values(ruoliUtenti).reduce((a, b) => a + b, 0);
 
-    // Grafico Prenotazioni Giorno
-    new Chart(document.getElementById('prenotazioniGiorno'), {
-      type: 'line',
-      data: {
-        labels: prenotazioniGiorno.labels,
-        datasets: [{
-          label: 'Prenotazioni',
-          data: prenotazioniGiorno.data,
-          backgroundColor: '#aed581',
-          borderColor: '#558b2f',
-          tension: 0.3,
-          fill: true
-        }]
-      }
-    });
+        document.getElementById('tot-prenotazioni').textContent = totPrenotazioni;
+        document.getElementById('tot-trasporti').textContent = totTrasporti;
+        document.getElementById('tot-utenti').textContent = totUtenti;
 
-    // Grafico Stato Prenotazioni
-    new Chart(document.getElementById('statoPrenotazioni'), {
-      type: 'doughnut',
-      data: {
-        labels: stati.labels,
-        datasets: [{
-          label: 'Stato Prenotazioni',
-          data: stati.data,
-          backgroundColor: ['#43a047', '#e53935', '#1e88e5', '#fbc02d']
-        }]
-      }
-    });
+        // Grafico Prenotazioni Giorno
+        new Chart(document.getElementById('prenotazioniGiorno'), {
+          type: 'line',
+          data: {
+            labels: Object.keys(prenotazioniPerGiorno),
+            datasets: [{
+              label: 'Prenotazioni',
+              data: Object.values(prenotazioniPerGiorno),
+              backgroundColor: '#aed581',
+              borderColor: '#558b2f',
+              tension: 0.3,
+              fill: true
+            }]
+          }
+        });
 
-    // Grafico Tipo Automezzo
-    new Chart(document.getElementById('tipoAutomezzo'), {
-      type: 'bar',
-      data: {
-        labels: trasporti.labels,
-        datasets: [{
-          label: 'Numero trasporti',
-          data: trasporti.data,
-          backgroundColor: '#81c784'
-        }]
-      }
-    });
+        // Grafico Stato Prenotazioni
+        new Chart(document.getElementById('statoPrenotazioni'), {
+          type: 'doughnut',
+          data: {
+            labels: Object.keys(statiPrenotazioni),
+            datasets: [{
+              label: 'Stato Prenotazioni',
+              data: Object.values(statiPrenotazioni),
+              backgroundColor: ['#43a047', '#e53935', '#1e88e5', '#fbc02d']
+            }]
+          }
+        });
 
-    // Grafico Utenti Ruolo
-    new Chart(document.getElementById('utentiRuolo'), {
-      type: 'pie',
-      data: {
-        labels: ruoli.labels,
-        datasets: [{
-          label: 'Utenti per ruolo',
-          data: ruoli.data,
-          backgroundColor: ['#66bb6a', '#ff7043']
-        }]
-      }
-    });
+        // Grafico Tipo Automezzo
+        new Chart(document.getElementById('tipoAutomezzo'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(tipiAutomezzo),
+            datasets: [{
+              label: 'Numero trasporti',
+              data: Object.values(tipiAutomezzo),
+              backgroundColor: '#81c784'
+            }]
+          }
+        });
+
+        // Grafico Utenti Ruolo
+        new Chart(document.getElementById('utentiRuolo'), {
+          type: 'pie',
+          data: {
+            labels: Object.keys(ruoliUtenti),
+            datasets: [{
+              label: 'Utenti per ruolo',
+              data: Object.values(ruoliUtenti),
+              backgroundColor: ['#66bb6a', '#ff7043']
+            }]
+          }
+        });
+      });
   }
 
   caricaStatistiche();

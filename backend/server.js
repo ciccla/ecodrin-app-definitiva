@@ -439,6 +439,24 @@ app.get('/stats/utenti-ruolo', async (req, res) => {
     res.status(500).send('Errore');
   }
 });
+// ------------------------ STATISTICHE COMPLETE ------------------------
+app.get('/stats/dati-completi', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  try {
+    const utenti = await db.query('SELECT ruolo FROM utenti');
+    const prenotazioni = await db.query('SELECT stato, giorno_conferimento FROM prenotazioni');
+    const trasporti = await db.query('SELECT tipo_automezzo FROM richieste_trasporto');
+
+    res.json({
+      utenti: utenti.rows,
+      prenotazioni: prenotazioni.rows,
+      trasporti: trasporti.rows
+    });
+  } catch (err) {
+    console.error('❌ Errore /stats/dati-completi:', err.message);
+    res.status(500).send('Errore nel caricamento statistiche');
+  }
+});
 
 // ------------------------ AVVIO SERVER ------------------------
 app.listen(PORT, () => {

@@ -270,7 +270,7 @@ Impianto`;
   }
 });
 
-app.post('/impianto/aggiorna-trasporto', async (req, res) => {
+aapp.post('/impianto/aggiorna-trasporto', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');
   const { id, nuovo_stato, nota } = req.body;
 
@@ -279,12 +279,46 @@ app.post('/impianto/aggiorna-trasporto', async (req, res) => {
       'UPDATE richieste_trasporto SET stato = $1, nota = $2 WHERE id = $3',
       [nuovo_stato, nota, id]
     );
-    res.send('Stato trasporto aggiornato ✅');
+
+    // Usa la logica della prenotazione per invio email
+    const { rows } = await db.query(`
+      SELECT u.email, r.data_trasporto 
+      FROM richieste_trasporto r
+      JOIN utenti u ON r.cliente_id = u.id 
+      WHERE r.id = $1
+    `, [id]);
+
+    if (rows.length > 0) {
+      const email = rows[0].email;
+      const dataTrasporto = rows[0].data_trasporto;
+
+      const testo = `
+Gentile cliente,
+
+La tua richiesta di trasporto n°${id} del ${dataTrasporto} è stata aggiornata a: ${nuovo_stato.toUpperCase()}
+${nota ? `\nNota dell’impianto:\n${nota}` : ''}
+
+Cordiali saluti,
+Impianto`;
+
+      await transporter.sendMail({
+        from: `"Ecodrin" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: `Richiesta Trasporto #${id} aggiornata`,
+        text: testo
+      });
+
+      console.log(`📧 Email trasporto inviata a: ${email}`);
+    }
+
+    res.send('Stato trasporto aggiornato e email inviata ✅');
   } catch (err) {
     console.error('❌ Errore aggiornamento trasporto:', err.message);
     res.status(500).send('Errore aggiornamento');
   }
 });
+
+
 
 // ------------------------ CHAT PRENOTAZIONI ------------------------
 app.get('/chat/prenotazione/:id', async (req, res) => {

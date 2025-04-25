@@ -98,15 +98,22 @@
   }
 
   function aggiornaStato(id) {
-    const stato = document.getElementById(`stato-${id}`).value;
+  const stato = document.getElementById(`stato-${id}`).value;
 
-    fetch('/impianto/aggiorna-trasporto', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, nuovo_stato: stato, nota: '' })
-    }).then(res => res.text())
-      .then(msg => notify(msg));
-  }
+  fetch('/impianto/aggiorna-trasporto', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, nuovo_stato: stato, nota: '' })
+  }).then(res => res.text())
+    .then(msg => {
+      notify(msg);
+
+      // 🔥 Aggiorna il badge stato nella tabella senza ricaricare
+      const badge = document.querySelector(`#stato-badge-${id}`);
+      badge.className = 'badge ' + stato.replace(/\s/g, '-');
+      badge.textContent = stato;
+    });
+}
 
   function applyFilter() {
     const type = document.getElementById('filter-type').value;

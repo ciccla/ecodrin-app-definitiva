@@ -10,93 +10,66 @@
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: var(--bg-light);
-      color: var(--text-light);
+      background: #f1f8e9;
+      color: #2e7d32;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
     }
 
-    body.dark {
-      background: var(--bg-dark);
-      color: var(--text-dark);
-    }
-
     .login-box {
       background: white;
       padding: 30px 40px;
       border-radius: 12px;
-      box-shadow: var(--shadow);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       max-width: 400px;
       width: 100%;
       text-align: center;
-      position: relative;
-    }
-
-    body.dark .login-box {
-      background: #37474f;
     }
 
     .login-box h2 {
       margin-bottom: 20px;
       font-size: 1.6em;
-      color: inherit;
+      color: #2e7d32;
     }
 
     .login-box input {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
-      border: 1px solid var(--input-border);
+      border: 1px solid #c8e6c9;
       border-radius: 6px;
       font-size: 1em;
-    }
-
-    body.dark .login-box input {
-      background: var(--input-bg-dark);
-      border-color: var(--input-border-dark);
-      color: var(--text-dark);
     }
 
     .login-box button {
       width: 100%;
       padding: 12px;
-      background: var(--accent);
+      background: #2e7d32;
       color: white;
       border: none;
       border-radius: 6px;
       font-size: 1em;
       cursor: pointer;
+      font-weight: bold;
     }
 
     .login-box button:hover {
-      background: var(--accent-dark);
-    }
-
-    .theme-toggle {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: none;
-      border: none;
-      font-size: 1.5em;
-      cursor: pointer;
-      color: inherit;
+      background: #1b5e20;
     }
 
     .error {
-      color: var(--danger);
+      color: #c62828;
       margin-top: 10px;
       font-size: 0.9em;
       display: none;
     }
   </style>
 </head>
-<body class="light">
+<body>
 
   <div class="login-box">
-    <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
     <h2>Login Admin</h2>
     <form id="admin-login-form">
       <input type="text" name="username" placeholder="Email Admin" required />
@@ -107,17 +80,6 @@
   </div>
 
   <script>
-    // Tema
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    document.body.classList.add(savedTheme);
-
-    function toggleTheme() {
-      const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
-      document.body.classList.remove('light', 'dark');
-      document.body.classList.add(newTheme);
-      localStorage.setItem('theme', newTheme);
-    }
-
     // Login
     const form = document.getElementById('admin-login-form');
     const errorMsg = document.getElementById('error-msg');

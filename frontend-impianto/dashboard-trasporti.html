@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="light">
+<body>
 
 <header>
   <div class="logo-utente">
@@ -19,7 +19,6 @@
     <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
     <button onclick="location.href='utenti.html'">👥 Utenti</button>
     <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
-    <button onclick="toggleTheme()">🌓</button>
   </div>
 </header>
 
@@ -38,6 +37,7 @@
 <div id="trasporti-container"></div>
 <div id="notify"></div>
 <audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+
 <script>
   const notifyBox = document.getElementById('notify');
   const chatsLetti = {};
@@ -48,20 +48,6 @@
     notifyBox.style.display = 'block';
     setTimeout(() => notifyBox.style.display = 'none', 4000);
   }
-
-  function toggleTheme() {
-    const theme = document.body.classList.contains('light') ? 'dark' : 'light';
-    document.body.classList.remove('light', 'dark');
-    document.body.classList.add(theme);
-    localStorage.setItem('theme', theme);
-  }
-
-  function initTheme() {
-    const saved = localStorage.getItem('theme') || 'light';
-    document.body.classList.add(saved);
-  }
-
-  initTheme();
 
   function toggleGiorno(data) {
     const box = document.getElementById(`box-${data}`);

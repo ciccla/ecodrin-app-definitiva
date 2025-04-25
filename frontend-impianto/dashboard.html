@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="light">
+<body>
 
 <header>
   <div class="logo-utente">
@@ -19,7 +19,6 @@
     <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
     <button onclick="location.href='utenti.html'">👥 Utenti</button>
     <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
-    <button onclick="toggleTheme()">🌓</button>
   </div>
 </header>
 
@@ -42,17 +41,6 @@
 <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 
 <script>
-  // Tema chiaro/scuro
-  let tema = localStorage.getItem('theme') || 'light';
-  document.body.classList.add(tema);
-
-  function toggleTheme() {
-    tema = tema === 'light' ? 'dark' : 'light';
-    document.body.classList.toggle('light');
-    document.body.classList.toggle('dark');
-    localStorage.setItem('theme', tema);
-  }
-
   function notify(msg, success = true) {
     const n = document.getElementById('notify');
     n.innerText = msg;
@@ -79,7 +67,6 @@
     });
   }
 
-  // Caricamento prenotazioni
   let chatsLetti = {};
   const contenitore = document.getElementById('contenuto-prenotazioni');
 

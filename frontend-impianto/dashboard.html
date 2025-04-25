@@ -117,7 +117,7 @@
             <td>${p.caratteristiche_pericolo || '-'}</td>
             <td>${p.quantita}</td>
             <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
-            <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
+            <td><span id="badge-${id}" class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
             <td>
               <select id="stato-${id}">
                 <option value="accettata">Accettata</option>
@@ -182,27 +182,25 @@
       document.getElementById(`unread-${id}`).style.display = 'none';
     });
   }
-function aggiornaStato(id, data, orario, email) {
-  const stato = document.getElementById(`stato-${id}`).value;
-  fetch('/impianto/cambia-stato', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, nuovo_stato: stato })
-  })
-  .then(res => res.text())
-  .then(msg => {
-    notify("Prenotazione aggiornata");
-    inviaEmail(email, id, data, orario, stato);
 
-    // 🔥 Aggiorna direttamente lo stato sulla pagina
-    const badge = document.querySelector(`.prenotazione-riga td span.badge.${stato.replace(/\s/g, '-')}`);
-    if (badge) {
+  function aggiornaStato(id, data, orario, email) {
+    const stato = document.getElementById(`stato-${id}`).value;
+    fetch('/impianto/cambia-stato', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato: stato })
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify("Prenotazione aggiornata");
+      inviaEmail(email, id, data, orario, stato);
+
+      // 🔥 Aggiorna visivamente il badge subito
+      const badge = document.getElementById(`badge-${id}`);
       badge.className = 'badge ' + stato.replace(/\s/g, '-');
       badge.textContent = stato;
-    }
-  });
-}
-
+    });
+  }
 
   function inviaEmail(email, id, data, orario, stato) {
     fetch('/notifiche/email', {

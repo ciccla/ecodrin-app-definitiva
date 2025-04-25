@@ -98,22 +98,22 @@
   }
 
   function aggiornaStato(id) {
-  const stato = document.getElementById(`stato-${id}`).value;
+    const stato = document.getElementById(`stato-${id}`).value;
 
-  fetch('/impianto/aggiorna-trasporto', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, nuovo_stato: stato, nota: '' })
-  }).then(res => res.text())
-    .then(msg => {
-      notify(msg);
+    fetch('/impianto/aggiorna-trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato: stato, nota: '' })
+    }).then(res => res.text())
+      .then(msg => {
+        notify(msg);
 
-      // 🔥 Aggiorna il badge stato nella tabella senza ricaricare
-      const badge = document.querySelector(`#stato-badge-${id}`);
-      badge.className = 'badge ' + stato.replace(/\s/g, '-');
-      badge.textContent = stato;
-    });
-}
+        // 🔥 Aggiorna visivamente il badge senza ricaricare
+        const badge = document.getElementById(`stato-badge-${id}`);
+        badge.className = 'badge ' + stato.replace(/\s/g, '-');
+        badge.textContent = stato;
+      });
+  }
 
   function applyFilter() {
     const type = document.getElementById('filter-type').value;
@@ -176,7 +176,7 @@
             <td>${r.orario_preferito}</td>
             <td>${r.numero_referente}</td>
             <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
-            <td><span class="badge ${statoClass}">${r.stato}</span></td>
+            <td><span id="stato-badge-${id}" class="badge ${statoClass}">${r.stato}</span></td>
             <td>
               <select id="stato-${id}">
                 <option value="accettata">Accettata</option>

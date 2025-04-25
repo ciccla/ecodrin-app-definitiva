@@ -270,7 +270,7 @@ Impianto`;
   }
 });
 
-aapp.post('/impianto/aggiorna-trasporto', async (req, res) => {
+app.post('/impianto/aggiorna-trasporto', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');
   const { id, nuovo_stato, nota } = req.body;
 

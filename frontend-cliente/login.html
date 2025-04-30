@@ -14,7 +14,6 @@
       height: 100vh;
       margin: 0;
     }
-
     .login-container {
       background-color: #ffffff;
       padding: 30px;
@@ -23,20 +22,17 @@
       width: 100%;
       max-width: 400px;
     }
-
     h1 {
       text-align: center;
       margin-bottom: 25px;
       color: #2e7d32;
     }
-
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
       color: #33691e;
     }
-
     input[type="text"],
     input[type="password"] {
       width: 100%;
@@ -46,7 +42,6 @@
       border-radius: 5px;
       font-size: 14px;
     }
-
     button {
       width: 100%;
       padding: 10px;
@@ -59,27 +54,22 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-
     button:hover {
       background-color: #27642b;
     }
-
     .register-link {
       text-align: center;
       margin-top: 15px;
       font-size: 14px;
     }
-
     .register-link a {
       color: #2e7d32;
       text-decoration: none;
       font-weight: bold;
     }
-
     .register-link a:hover {
       text-decoration: underline;
     }
-
     @media (max-width: 480px) {
       .login-container {
         padding: 20px;
@@ -89,23 +79,23 @@
 </head>
 <body>
 
-  <div class="login-container">
-    <h1>Login Cliente</h1>
+<div class="login-container">
+  <h1>Login Cliente</h1>
 
-    <form action="/cliente/login" method="POST">
-      <label for="username">Email o Username</label>
-      <input type="text" id="username" name="username" required>
+  <form action="/cliente/login" method="POST" id="login-form">
+    <label for="username">Email o Username</label>
+    <input type="text" id="username" name="username" required>
 
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" required>
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required>
 
-      <button type="submit">Accedi</button>
-    </form>
+    <button type="submit">Accedi</button>
+  </form>
 
-    <div class="register-link">
-      Non hai un account? <a href="register.html">Registrati</a>
-    </div>
+  <div class="register-link">
+    Non hai un account? <a href="register.html">Registrati</a>
   </div>
+</div>
 
 </body>
 </html>

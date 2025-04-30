@@ -29,6 +29,7 @@
     <option value="produttore">Produttore</option>
     <option value="cer">Codice CER</option>
     <option value="stato">Stato</option>
+    <option value="tipo_trasporto">Tipo Trasporto</option>
   </select>
   <input type="text" id="filter-value" placeholder="Valore da cercare..." oninput="applyFilter()" />
 </section>
@@ -107,21 +108,25 @@
     }).then(res => res.text())
       .then(msg => {
         notify(msg);
-
-        // 🔥 Aggiorna visivamente il badge senza ricaricare
         const badge = document.getElementById(`stato-badge-${id}`);
         badge.className = 'badge ' + stato.replace(/\s/g, '-');
         badge.textContent = stato;
       });
   }
-
   function applyFilter() {
     const type = document.getElementById('filter-type').value;
     const value = document.getElementById('filter-value').value.toLowerCase();
     const rows = document.querySelectorAll('#trasporti-container tbody tr');
 
+    const tdMap = {
+      id: 0,
+      produttore: 2,
+      cer: 3,
+      stato: 9,
+      tipo_trasporto: 5
+    };
+
     rows.forEach(row => {
-      const tdMap = { id: 0, produttore: 2, cer: 3, stato: 8 };
       const cell = row.children[tdMap[type]];
       if (!cell) return;
       const text = cell.textContent.toLowerCase();
@@ -153,7 +158,7 @@
               <thead>
                 <tr>
                   <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
-                  <th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                  <th>Tipo Trasporto</th><th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
                 </tr>
               </thead>
               <tbody id="tbody-${data}"></tbody>
@@ -173,6 +178,7 @@
             <td>${r.produttore}</td>
             <td>${r.codice_cer}</td>
             <td>${r.tipo_automezzo}</td>
+            <td>${r.tipo_trasporto || '-'}</td>
             <td>${r.orario_preferito}</td>
             <td>${r.numero_referente}</td>
             <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>

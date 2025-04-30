@@ -2,181 +2,55 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard Cliente</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: #f1f8e9;
-      color: #2e7d32;
-      margin: 0;
-      padding: 20px;
-    }
-
-    h1, h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    a {
-      color: #2e7d32;
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .actions {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      border-radius: 6px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      margin-bottom: 40px;
-    }
-
-    th, td {
-      padding: 10px;
-      border: 1px solid #c8e6c9;
-      font-size: 14px;
-    }
-
-    th {
-      background: #dcedc8;
-    }
-
-    .badge {
-      padding: 5px 10px;
-      border-radius: 4px;
-      color: #fff;
-      font-size: 0.8em;
-      text-transform: uppercase;
-      font-weight: bold;
-    }
-
-    .accettata { background: #2e7d32; }
-    .non-accettata { background: #c62828; }
-    .info-richieste { background: #1565c0; }
-    .in-attesa { background: #f9a825; }
-
-    .chat-box {
-      border: 1px solid #c5e1a5;
-      padding: 8px;
-      border-radius: 6px;
-      background: #ffffff;
-      margin-top: 8px;
-    }
-
-    .chat-messages {
-      max-height: 130px;
-      overflow-y: auto;
-      margin-bottom: 5px;
-    }
-
-    .chat-bubble {
-      max-width: 80%;
-      padding: 6px 10px;
-      margin: 4px 0;
-      border-radius: 12px;
-      font-size: 0.85em;
-      display: inline-block;
-      clear: both;
-      position: relative;
-    }
-
-    .bubble-left {
-      background: #e0f2f1;
-      float: left;
-    }
-
-    .bubble-right {
-      background: #c8e6c9;
-      float: right;
-    }
-
-    .bubble-time {
-      display: block;
-      font-size: 10px;
-      color: #666;
-      margin-top: 2px;
-    }
-
-    .chat-input, .chat-file {
-      margin-top: 6px;
-      width: calc(100% - 80px);
-      font-size: 0.9em;
-    }
-
-    button {
-      background: #2e7d32;
-      color: white;
-      padding: 6px 12px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    #notify {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #2e7d32;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 6px;
-      display: none;
-      font-weight: bold;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    }
-  </style>
+  <title>Dashboard Cliente - Ecodrin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Dashboard Cliente</h1>
+<header>
+  <div class="logo-utente">
+    <img src="img/ecodrin.png" alt="Logo Ecodrin" />
+    <span>👤 Cliente</span>
+  </div>
+  <div class="nav-buttons">
+    <button onclick="location.href='dashboard.html'">🏠 Dashboard</button>
+    <button onclick="location.href='prenotazione.html'">➕ Prenotazione</button>
+    <button onclick="location.href='trasporto.html'">🚚 Trasporto</button>
+    <button onclick="location.href='/cliente/logout'">🔒 Logout</button>
+  </div>
+</header>
 
-<div class="actions">
-  <a href="prenotazione.html">➕ Nuova Prenotazione</a> |
-  <a href="trasporto.html">🚚 Richiedi Trasporto</a> |
-  <a href="/cliente/logout">🔒 Logout</a>
-</div>
+<h1 style="text-align:center; margin: 20px 0;">Le tue Prenotazioni</h1>
 
-<h2>Le tue Prenotazioni</h2>
-<div id="prenotazioni"></div>
+<div id="prenotazioni" style="padding: 0 20px;"></div>
+
+<h1 style="text-align:center; margin: 40px 0 20px;">Le tue Richieste di Trasporto</h1>
+
+<div id="trasporti" style="padding: 0 20px;"></div>
 
 <div id="notify"></div>
 
-<!-- Audio per notifiche -->
 <audio id="notification-sound" src="https://notificationsounds.com/storage/sounds/file-sounds-1153-pristine.mp3" preload="auto"></audio>
 
 <script>
-function notify(msg, success = true) {
-  const n = document.getElementById('notify');
-  n.innerText = msg;
-  n.style.background = success ? '#2e7d32' : '#c62828';
-  n.style.display = 'block';
-  setTimeout(() => n.style.display = 'none', 4000);
-}
+  const notifyBox = document.getElementById('notify');
+  const notificationSound = document.getElementById('notification-sound');
+  let messaggiLetti = {};
 
-function playSound() {
-  const sound = document.getElementById('notification-sound');
-  if (sound) sound.play();
-}
+  function notify(msg, success = true) {
+    notifyBox.innerText = msg;
+    notifyBox.style.background = success ? '#2e7d32' : '#c62828';
+    notifyBox.style.display = 'block';
+    setTimeout(() => notifyBox.style.display = 'none', 4000);
+  }
+
+  function playNotificationSound() {
+    if (notificationSound) notificationSound.play();
+  }
 </script>
 <script>
-  const notifyEl = document.getElementById('notify');
-  const notifySound = document.getElementById('notify-sound');
-  let messaggiLetti = {};
-  
-  function notify(msg, success = true) {
-    notifyEl.innerText = msg;
-    notifyEl.style.background = success ? '#2e7d32' : '#c62828';
-    notifyEl.style.display = 'block';
-    setTimeout(() => notifyEl.style.display = 'none', 4000);
-  }
-  
-  // ------------------------ PRENOTAZIONI ------------------------
+  // -------------------- Prenotazioni --------------------
   fetch('/cliente/prenotazioni')
     .then(res => res.json())
     .then(data => {
@@ -204,10 +78,7 @@ function playSound() {
             <div class="chat-box">
               <div class="chat-messages" id="chat-messages-${p.id}"></div>
               <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggioPrenotazione(${p.id})">
-              <label class="upload-label" for="file-upload-${p.id}">📎</label>
-              <input type="file" id="file-upload-${p.id}" onchange="uploadFile(${p.id}, 'prenotazione')">
               <button onclick="inviaMessaggioPrenotazione(${p.id})">Invia</button>
-              <span class="badge-unread" id="unread-${p.id}" style="display:none;">NUOVO</span>
             </div>
           </td>
         </tr>`;
@@ -223,24 +94,15 @@ function playSound() {
       .then(res => res.json())
       .then(msgs => {
         const container = document.getElementById(`chat-messages-${id}`);
-        const unreadBadge = document.getElementById(`unread-${id}`);
-        const nuovi = msgs.filter(m => m.mittente === 'admin').length;
+        if (!container) return;
   
-        if (messaggiLetti[id] !== undefined && nuovi > messaggiLetti[id]) {
-          unreadBadge.style.display = 'inline-block';
-          notifySound.play();
-        }
-  
-        messaggiLetti[id] = nuovi;
         container.innerHTML = '';
         msgs.forEach(m => {
           const bubble = document.createElement('div');
-          const timestamp = new Date(m.timestamp).toLocaleString();
           bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-          bubble.innerHTML = `<div>${m.messaggio}</div><span class="timestamp">${timestamp}</span>`;
+          bubble.innerText = m.messaggio;
           container.appendChild(bubble);
         });
-  
         container.scrollTop = container.scrollHeight;
       });
   }
@@ -256,40 +118,16 @@ function playSound() {
     }).then(() => {
       input.value = '';
       caricaChat('prenotazione', id);
-      document.getElementById(`unread-${id}`).style.display = 'none';
     });
   }
   
-  function uploadFile(id, tipo) {
-    const input = document.getElementById(`file-upload-${id}`);
-    const file = input.files[0];
-    if (!file) return;
-  
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result;
-      const fileName = file.name;
-      const messaggio = `📎 <a href="${base64}" target="_blank">${fileName}</a>`;
-      fetch(`/chat/${tipo}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          [`${tipo}_id`]: id,
-          mittente: 'cliente',
-          messaggio
-        })
-      }).then(() => caricaChat(tipo, id));
-    };
-    reader.readAsDataURL(file);
-  }
-  
-  // ------------------------ TRASPORTO ------------------------
+  // -------------------- Trasporti --------------------
   fetch('/cliente/richieste-trasporto')
     .then(res => res.json())
     .then(data => {
       const div = document.getElementById('trasporti');
       if (!data.length) {
-        div.innerHTML = '<p style="text-align:center;">Nessuna richiesta trovata.</p>';
+        div.innerHTML = '<p style="text-align:center;">Nessuna richiesta di trasporto trovata.</p>';
         return;
       }
   
@@ -313,12 +151,8 @@ function playSound() {
           <td>
             <div class="chat-box">
               <div class="chat-messages" id="chat-messages-trasporto-${t.id}"></div>
-              <input type="text" class="chat-input" id="msg-input-trasporto-${t.id}" placeholder="Scrivi..." 
-                onkeydown="if(event.key==='Enter') inviaMessaggioTrasporto(${t.id})">
-              <label class="upload-label" for="file-upload-trasporto-${t.id}">📎</label>
-              <input type="file" id="file-upload-trasporto-${t.id}" onchange="uploadFileTrasporto(${t.id})">
+              <input type="text" class="chat-input" id="msg-input-trasporto-${t.id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggioTrasporto(${t.id})">
               <button onclick="inviaMessaggioTrasporto(${t.id})">Invia</button>
-              <span class="badge-unread" id="unread-trasporto-${t.id}" style="display:none;">NUOVO</span>
             </div>
           </td>
         </tr>`;
@@ -330,28 +164,19 @@ function playSound() {
     });
   
   function caricaChatTrasporto(id) {
-    fetch('/chat/trasporto/' + id)
+    fetch(`/chat/trasporto/${id}`)
       .then(res => res.json())
       .then(msgs => {
         const container = document.getElementById(`chat-messages-trasporto-${id}`);
-        const unreadBadge = document.getElementById(`unread-trasporto-${id}`);
-        const nuovi = msgs.filter(m => m.mittente === 'admin').length;
+        if (!container) return;
   
-        if (messaggiLetti['t-' + id] !== undefined && nuovi > messaggiLetti['t-' + id]) {
-          unreadBadge.style.display = 'inline-block';
-          notifySound.play();
-        }
-  
-        messaggiLetti['t-' + id] = nuovi;
         container.innerHTML = '';
         msgs.forEach(m => {
           const bubble = document.createElement('div');
-          const timestamp = new Date(m.timestamp).toLocaleString();
           bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-          bubble.innerHTML = `<div>${m.messaggio}</div><span class="timestamp">${timestamp}</span>`;
+          bubble.innerText = m.messaggio;
           container.appendChild(bubble);
         });
-  
         container.scrollTop = container.scrollHeight;
       });
   }
@@ -360,7 +185,6 @@ function playSound() {
     const input = document.getElementById(`msg-input-trasporto-${id}`);
     const testo = input.value.trim();
     if (!testo) return;
-  
     fetch('/chat/trasporto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -368,51 +192,22 @@ function playSound() {
     }).then(() => {
       input.value = '';
       caricaChatTrasporto(id);
-      document.getElementById(`unread-trasporto-${id}`).style.display = 'none';
     });
   }
   
-  function uploadFileTrasporto(id) {
-    const input = document.getElementById(`file-upload-trasporto-${id}`);
-    const file = input.files[0];
-    if (!file) return;
-  
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64 = reader.result;
-      const fileName = file.name;
-      const messaggio = `📎 <a href="${base64}" target="_blank">${fileName}</a>`;
-      fetch('/chat/trasporto', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          trasporto_id: id,
-          mittente: 'cliente',
-          messaggio
-        })
-      }).then(() => caricaChatTrasporto(id));
-    };
-    reader.readAsDataURL(file);
-  }
   setInterval(() => {
-  // Polling per tutte le prenotazioni
-  document.querySelectorAll('[id^="chat-messages-"]').forEach(box => {
-    const id = box.id.replace('chat-messages-', '');
-    if (!isNaN(id)) {
-      caricaChat('prenotazione', parseInt(id));
-    }
-  });
-
-  // Polling per tutti i trasporti
-  document.querySelectorAll('[id^="chat-messages-trasporto-"]').forEach(box => {
-    const id = box.id.replace('chat-messages-trasporto-', '');
-    if (!isNaN(id)) {
-      caricaChatTrasporto(parseInt(id));
-    }
-  });
-}, 2000); // ogni 2 secondi
-
+    document.querySelectorAll('[id^="chat-messages-"]').forEach(box => {
+      const id = box.id.replace('chat-messages-', '');
+      if (!isNaN(id)) caricaChat('prenotazione', parseInt(id));
+    });
+    document.querySelectorAll('[id^="chat-messages-trasporto-"]').forEach(box => {
+      const id = box.id.replace('chat-messages-trasporto-', '');
+      if (!isNaN(id)) caricaChatTrasporto(parseInt(id));
+    });
+  }, 2000); // Refresh chat ogni 2 secondi
+  
   </script>
+  
   </body>
   </html>
   

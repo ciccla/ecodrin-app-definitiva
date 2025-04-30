@@ -6,8 +6,8 @@
   <link rel="stylesheet" href="style.css">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #e8f5e9;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f1f8e9;
       color: #2e7d32;
       margin: 0;
       padding: 20px;
@@ -19,52 +19,73 @@
 
     form {
       background: #ffffff;
-      padding: 20px;
-      border-radius: 5px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-      max-width: 600px;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      max-width: 650px;
+      margin-bottom: 30px;
     }
 
     label {
       display: block;
-      margin-top: 10px;
+      margin-top: 15px;
       font-weight: bold;
     }
 
     input, select, textarea {
       width: 100%;
-      padding: 8px;
+      padding: 10px;
       margin-top: 5px;
       border: 1px solid #c8e6c9;
-      border-radius: 4px;
-      box-sizing: border-box;
+      border-radius: 5px;
+      font-size: 14px;
     }
 
-    select[multiple] {
-      height: 100px;
+    .caratteristiche-pericolo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    .caratteristiche-pericolo label {
+      font-weight: normal;
     }
 
     button {
-      background: #388e3c;
+      background: #2e7d32;
       color: white;
-      padding: 8px 15px;
+      padding: 10px 15px;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
+      margin-top: 20px;
+      font-size: 16px;
       cursor: pointer;
-      margin-top: 15px;
     }
 
     button:hover {
-      background: #2e7d32;
+      background: #27642b;
     }
 
     .notifica {
       margin-top: 20px;
-      padding: 10px;
-      background-color: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
+      padding: 12px;
+      font-weight: bold;
       border-radius: 5px;
+    }
+
+    .link-dashboard {
+      display: inline-block;
+      background: #388e3c;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      text-decoration: none;
+      margin-bottom: 20px;
+    }
+
+    #altroImballo {
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -72,38 +93,26 @@
 
   <h1>Inserisci Prenotazione</h1>
 
-  <p><a href="/cliente/dashboard.html" style="display: inline-block; background: #388e3c; color: white; padding: 8px 12px; border-radius: 4px; text-decoration: none; margin-bottom: 15px;">⬅ Torna alla Dashboard</a></p>
+  <a href="/cliente/dashboard.html" class="link-dashboard">⬅ Torna alla Dashboard</a>
 
   <form id="prenotazioneForm" enctype="multipart/form-data">
+    <label for="ragione_sociale">Ragione Sociale</label>
+    <input type="text" name="ragione_sociale" id="ragione_sociale" required>
 
-    <label>Ragione Sociale</label>
-    <input type="text" name="ragione_sociale" required>
+    <label for="produttore">Produttore</label>
+    <input type="text" name="produttore" id="produttore" required>
 
-    <label>Produttore</label>
-    <input type="text" name="produttore" required>
-
-    <label>Codice CER</label>
-    <input type="text" name="codice_cer" required>
+    <label for="codice_cer">Codice CER</label>
+    <input type="text" name="codice_cer" id="codice_cer" required>
 
     <label>Caratteristiche di Pericolo</label>
-    <div class="caratteristiche-pericolo" style="display: flex; flex-wrap: wrap; gap: 5px;">
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP1"> HP1</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP2"> HP2</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP3"> HP3</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP4"> HP4</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP5"> HP5</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP6"> HP6</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP7"> HP7</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP8"> HP8</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP9"> HP9</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP10"> HP10</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP11"> HP11</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP12"> HP12</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP13"> HP13</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP14"> HP14</label>
+    <div class="caratteristiche-pericolo">
+      ${['HP1','HP2','HP3','HP4','HP5','HP6','HP7','HP8','HP9','HP10','HP11','HP12','HP13','HP14'].map(hp => `
+        <label><input type="checkbox" name="caratteristiche_pericolo" value="${hp}"> ${hp}</label>
+      `).join('')}
     </div>
 
-    <label>Tipo di Imballo</label>
+    <label for="tipo_imballo">Tipo di Imballo</label>
     <select name="tipo_imballo" id="tipo_imballo" onchange="checkAltro()" required>
       <option value="">Seleziona</option>
       <option value="Sfuso">Sfuso</option>
@@ -114,13 +123,13 @@
       <option value="Altro">Altro</option>
     </select>
 
-    <div id="altroImballo" style="display:none;">
-      <label>Specificare Altro</label>
-      <input type="text" name="tipo_imballo_altro">
+    <div id="altroImballo" style="display: none;">
+      <label for="tipo_imballo_altro">Specificare Altro</label>
+      <input type="text" name="tipo_imballo_altro" id="tipo_imballo_altro">
     </div>
 
-    <label>Stato Fisico</label>
-    <select name="stato_fisico" required>
+    <label for="stato_fisico">Stato Fisico</label>
+    <select name="stato_fisico" id="stato_fisico" required>
       <option value="">Seleziona</option>
       <option value="SP">SP (in polvere o polverulento)</option>
       <option value="S">S (solido)</option>
@@ -129,53 +138,50 @@
       <option value="L">L (liquido)</option>
     </select>
 
-    <label>Quantità (in KG)</label>
-    <input type="number" name="quantita" required>
+    <label for="quantita">Quantità (in KG)</label>
+    <input type="number" name="quantita" id="quantita" required>
 
-    <label>Data Conferimento</label>
-    <input type="date" name="giorno_conferimento" required>
+    <label for="giorno_conferimento">Data Conferimento</label>
+    <input type="date" name="giorno_conferimento" id="giorno_conferimento" required>
 
-    <label>Certificato Analitico (PDF o immagine)</label>
-    <input type="file" name="certificato_analitico" accept=".pdf,image/*">
+    <label for="certificato_analitico">Certificato Analitico (PDF o immagine)</label>
+    <input type="file" name="certificato_analitico" id="certificato_analitico" accept=".pdf,image/*">
 
     <button type="submit">Invia Prenotazione</button>
 
-    <div id="notifica" class="notifica" style="display: none;"></div>
+    <div id="notifica" class="notifica" style="display:none;"></div>
   </form>
 
   <script>
     function checkAltro() {
-      const select = document.getElementById('tipo_imballo');
-      document.getElementById('altroImballo').style.display = select.value === 'Altro' ? 'block' : 'none';
+      const val = document.getElementById('tipo_imballo').value;
+      document.getElementById('altroImballo').style.display = val === 'Altro' ? 'block' : 'none';
     }
 
     document.getElementById('prenotazioneForm').addEventListener('submit', async function (e) {
       e.preventDefault();
-
-      const form = this;
-      const formData = new FormData(form);
+      const formData = new FormData(this);
       const notifica = document.getElementById('notifica');
 
-      const response = await fetch('/cliente/prenotazione', {
+      const res = await fetch('/cliente/prenotazione', {
         method: 'POST',
         body: formData
       });
 
-      const result = await response.text();
+      const msg = await res.text();
       notifica.style.display = 'block';
-      notifica.textContent = result;
+      notifica.textContent = msg;
 
-      if (result.includes("✅")) {
+      if (msg.includes("✅")) {
         notifica.style.backgroundColor = '#d4edda';
         notifica.style.color = '#155724';
-        form.reset();
-        document.getElementById('altroImballo').style.display = 'none';
+        this.reset();
+        checkAltro();
       } else {
         notifica.style.backgroundColor = '#f8d7da';
         notifica.style.color = '#721c24';
       }
 
-      // Rimuovi notifica dopo 4 secondi
       setTimeout(() => notifica.style.display = 'none', 4000);
     });
   </script>

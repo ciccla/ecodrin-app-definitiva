@@ -116,11 +116,24 @@
         <option>Cisterna</option>
       </select>
 
+      <label>Tipo di Trasporto</label>
+      <select name="tipo_trasporto" required>
+        <option value="">Seleziona</option>
+        <option value="Cambio Cassa">Cambio Cassa</option>
+        <option value="Ritiro Definitivo">Ritiro Definitivo</option>
+      </select>
+
       <label>Data del Trasporto</label>
       <input type="date" name="data_trasporto" required>
 
-      <label>Orario Preferito</label>
-      <input type="time" name="orario_preferito" required>
+      <label>Fascia Oraria Preferita</label>
+      <select name="orario_preferito" required>
+        <option value="">Seleziona una fascia</option>
+        <option value="08:30-10:30">08:30 - 10:30</option>
+        <option value="10:30-12:30">10:30 - 12:30</option>
+        <option value="14:30-16:30">14:30 - 16:30</option>
+        <option value="16:30-18:30">16:30 - 18:30</option>
+      </select>
 
       <label>Numero di Referente</label>
       <input type="tel" name="numero_referente" required>

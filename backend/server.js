@@ -150,25 +150,28 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
 // ------------------------ CLIENTE: RICHIESTE TRASPORTO ------------------------
 app.post('/cliente/richieste-trasporto', async (req, res) => {
   if (!req.session.utente) return res.status(403).send('Accesso negato');
+
   const {
     richiedente, produttore, codice_cer, tipo_automezzo,
+    tipo_trasporto, // <-- aggiunto
     data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
   } = req.body;
 
   try {
     await db.query(`
       INSERT INTO richieste_trasporto 
-      (cliente_id, richiedente, produttore, codice_cer, tipo_automezzo,
-      data_trasporto, orario_preferito, numero_referente, prezzo_pattuito)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+        (cliente_id, richiedente, produttore, codice_cer, tipo_automezzo, tipo_trasporto,
+         data_trasporto, orario_preferito, numero_referente, prezzo_pattuito)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
     `, [
-      req.session.utente.id, richiedente, produttore, codice_cer, tipo_automezzo,
+      req.session.utente.id, richiedente, produttore, codice_cer, tipo_automezzo, tipo_trasporto,
       data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
     ]);
+    
     res.send('Richiesta trasporto inviata ✅');
   } catch (err) {
-    console.error(err);
-    res.send('Errore richiesta trasporto');
+    console.error('❌ Errore richiesta trasporto:', err.message);
+    res.status(500).send('Errore richiesta trasporto');
   }
 });
 

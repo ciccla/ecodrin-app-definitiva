@@ -41,7 +41,7 @@ app.use('/impianto', express.static(path.join(__dirname, '../frontend-impianto')
 
 // ------------------------ TEST ------------------------
 app.get('/', (req, res) => {
-  res.send('✅ Server attivo su Ecodrin');
+  res.redirect('/cliente/login.html');
 });
 
 // ------------------------ CLIENTE: REGISTRAZIONE ------------------------

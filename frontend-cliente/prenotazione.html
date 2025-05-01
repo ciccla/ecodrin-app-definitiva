@@ -107,10 +107,22 @@
 
     <label>Caratteristiche di Pericolo</label>
     <div class="caratteristiche-pericolo">
-      ${['HP1','HP2','HP3','HP4','HP5','HP6','HP7','HP8','HP9','HP10','HP11','HP12','HP13','HP14'].map(hp => `
-        <label><input type="checkbox" name="caratteristiche_pericolo" value="${hp}"> ${hp}</label>
-      `).join('')}
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP1"> HP1</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP2"> HP2</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP3"> HP3</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP4"> HP4</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP5"> HP5</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP6"> HP6</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP7"> HP7</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP8"> HP8</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP9"> HP9</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP10"> HP10</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP11"> HP11</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP12"> HP12</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP13"> HP13</label>
+      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP14"> HP14</label>
     </div>
+    
 
     <label for="tipo_imballo">Tipo di Imballo</label>
     <select name="tipo_imballo" id="tipo_imballo" onchange="checkAltro()" required>

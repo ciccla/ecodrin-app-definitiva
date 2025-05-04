@@ -6,6 +6,12 @@ const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
+// 🔧 Crea la cartella "uploads" se non esiste
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
 const nodemailer = require('nodemailer');
 const db = require('./db');
 
@@ -38,6 +44,7 @@ app.use(session({
 // ------------------------ STATIC ------------------------
 app.use('/cliente', express.static(path.join(__dirname, '../frontend-cliente')));
 app.use('/impianto', express.static(path.join(__dirname, '../frontend-impianto')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // ------------------------ TEST ------------------------
 app.get('/', (req, res) => {
@@ -95,6 +102,11 @@ app.post('/cliente/login', async (req, res) => {
 // ------------------------ CLIENTE: LOGOUT ------------------------
 app.get('/cliente/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/cliente/login.html'));
+});
+// ------------------------ CLIENTE: INFO ACCOUNT ------------------------
+app.get('/cliente/info', (req, res) => {
+  if (!req.session.utente) return res.status(401).json({ error: 'Non autenticato' });
+  res.json({ username: req.session.utente.username });
 });
 
 // ------------------------ CLIENTE: PRENOTAZIONI ------------------------
@@ -492,6 +504,30 @@ app.get('/stats/dati-completi', async (req, res) => {
   } catch (err) {
     console.error('❌ Errore /stats/dati-completi:', err.message);
     res.status(500).send('Errore nel caricamento statistiche');
+  }
+});
+// ------------------------ DOWNLOAD CERTIFICATO PER ADMIN ------------------------
+app.get('/impianto/download-certificato/:filename', (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Non autorizzato');
+
+  const filePath = path.join(__dirname, 'uploads', req.params.filename);
+
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('File non trovato');
+  }
+});
+// ------------------------ DOWNLOAD CERTIFICATO PER CLIENTE ------------------------
+app.get('/cliente/download-certificato/:filename', (req, res) => {
+  if (!req.session.utente) return res.status(403).send('Non autorizzato');
+
+  const filePath = path.join(__dirname, 'uploads', req.params.filename);
+
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('File non trovato');
   }
 });
 

@@ -1,213 +1,248 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Dashboard Cliente - Ecodrin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Dashboard Trasporti - Ecodrin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <header>
   <div class="logo-utente">
-    <img src="img/ecodrin.png" alt="Logo Ecodrin" />
-    <span>👤 Cliente</span>
+    <img src="/public/img/ecodrin.png" alt="Logo Ecodrin" />
+    <span id="nome-utente">👤</span>
   </div>
   <div class="nav-buttons">
-    <button onclick="location.href='dashboard.html'">🏠 Dashboard</button>
-    <button onclick="location.href='prenotazione.html'">➕ Prenotazione</button>
-    <button onclick="location.href='trasporto.html'">🚚 Trasporto</button>
-    <button onclick="location.href='/cliente/logout'">🔒 Logout</button>
+    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+    <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+    <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+    <button onclick="location.href='utenti.html'">👥 Utenti</button>
+    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
   </div>
 </header>
 
-<h1 style="text-align:center; margin: 20px 0;">Le tue Prenotazioni</h1>
+<section class="filter-bar">
+  <label for="filter-type">Filtro:</label>
+  <select id="filter-type">
+    <option value="id">ID</option>
+    <option value="produttore">Produttore</option>
+    <option value="cer">Codice CER</option>
+    <option value="stato">Stato</option>
+    <option value="tipo_trasporto">Tipo Trasporto</option>
+  </select>
+  <input type="text" id="filter-value" placeholder="Valore da cercare..." oninput="applyFilter()" />
+</section>
 
-<div id="prenotazioni" style="padding: 0 20px;"></div>
-
-<h1 style="text-align:center; margin: 40px 0 20px;">Le tue Richieste di Trasporto</h1>
-
-<div id="trasporti" style="padding: 0 20px;"></div>
-
+<h2>Richieste di Trasporto</h2>
+<div id="trasporti-container"></div>
 <div id="notify"></div>
-
-<audio id="notification-sound" src="https://notificationsounds.com/storage/sounds/file-sounds-1153-pristine.mp3" preload="auto"></audio>
-
+<audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 <script>
   const notifyBox = document.getElementById('notify');
-  const notificationSound = document.getElementById('notification-sound');
-  let messaggiLetti = {};
+  const suono = document.getElementById('suonoNotifica');
+  const chatsLetti = {};
 
   function notify(msg, success = true) {
     notifyBox.innerText = msg;
-    notifyBox.style.background = success ? '#2e7d32' : '#c62828';
+    notifyBox.style.background = success ? '#2ecc71' : '#e74c3c';
     notifyBox.style.display = 'block';
     setTimeout(() => notifyBox.style.display = 'none', 4000);
   }
 
-  function playNotificationSound() {
-    if (notificationSound) notificationSound.play();
+  function playNotificaAudio() {
+    if (suono) suono.play();
   }
-</script>
-<script>
-  // -------------------- Prenotazioni --------------------
-  fetch('/cliente/prenotazioni')
-    .then(res => res.json())
-    .then(data => {
-      const div = document.getElementById('prenotazioni');
-      if (!data.length) {
-        div.innerHTML = '<p style="text-align:center;">Nessuna prenotazione trovata.</p>';
-        return;
-      }
-  
-      let html = `<table><thead><tr>
-        <th>ID</th><th>Produttore</th><th>Codice CER</th><th>Quantità</th><th>Data</th><th>Certificato</th><th>Stato</th><th>Chat</th>
-      </tr></thead><tbody>`;
-  
-      data.forEach(p => {
-        const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-        html += `<tr>
-          <td>${p.id}</td>
-          <td>${p.produttore}</td>
-          <td>${p.codice_cer}</td>
-          <td>${p.quantita}</td>
-          <td>${p.giorno_conferimento}</td>
-          <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
-          <td><span class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-          <td>
-            <div class="chat-box">
-              <div class="chat-messages" id="chat-messages-${p.id}"></div>
-              <input type="text" class="chat-input" id="msg-input-${p.id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggioPrenotazione(${p.id})">
-              <button onclick="inviaMessaggioPrenotazione(${p.id})">Invia</button>
-            </div>
-          </td>
-        </tr>`;
-        setTimeout(() => caricaChat('prenotazione', p.id), 0);
+
+  function mostraNotifica(titolo, messaggio, tag = '') {
+    if (Notification.permission === 'granted') {
+      new Notification(titolo, {
+        body: messaggio,
+        icon: '/impianto/img/ecodrin.png',
+        tag,
+        renotify: false
       });
-  
-      html += '</tbody></table>';
-      div.innerHTML = html;
-    });
-  
-  function caricaChat(tipo, id) {
-    fetch(`/chat/${tipo}/${id}`)
-      .then(res => res.json())
-      .then(msgs => {
-        const container = document.getElementById(`chat-messages-${id}`);
-        if (!container) return;
-  
-        container.innerHTML = '';
-        msgs.forEach(m => {
-          const bubble = document.createElement('div');
-          bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-          bubble.innerText = m.messaggio;
-          container.appendChild(bubble);
-        });
-        container.scrollTop = container.scrollHeight;
-      });
+    }
   }
-  
-  function inviaMessaggioPrenotazione(id) {
-    const input = document.getElementById(`msg-input-${id}`);
-    const testo = input.value.trim();
-    if (!testo) return;
-    fetch('/chat/prenotazione', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prenotazione_id: id, mittente: 'cliente', messaggio: testo })
-    }).then(() => {
-      input.value = '';
-      caricaChat('prenotazione', id);
+
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission().then(p => {
+      if (p !== 'granted') console.warn('🔕 Notifiche disabilitate');
     });
   }
-  
-  // -------------------- Trasporti --------------------
-  fetch('/cliente/richieste-trasporto')
-    .then(res => res.json())
-    .then(data => {
-      const div = document.getElementById('trasporti');
-      if (!data.length) {
-        div.innerHTML = '<p style="text-align:center;">Nessuna richiesta di trasporto trovata.</p>';
-        return;
-      }
-  
-      let html = `<table><thead><tr>
-        <th>ID</th><th>Produttore</th><th>Codice CER</th><th>Automezzo</th>
-        <th>Data</th><th>Orario</th><th>Referente</th><th>Prezzo</th><th>Stato</th><th>Chat</th>
-      </tr></thead><tbody>`;
-  
-      data.forEach(t => {
-        const statoClass = (t.stato || 'in attesa').replace(/\s/g, '-');
-        html += `<tr>
-          <td>${t.id}</td>
-          <td>${t.produttore}</td>
-          <td>${t.codice_cer}</td>
-          <td>${t.tipo_automezzo}</td>
-          <td>${t.data_trasporto}</td>
-          <td>${t.orario_preferito}</td>
-          <td>${t.numero_referente}</td>
-          <td>${parseFloat(t.prezzo_pattuito).toFixed(2)} €</td>
-          <td><span class="badge ${statoClass}">${t.stato}</span></td>
-          <td>
-            <div class="chat-box">
-              <div class="chat-messages" id="chat-messages-trasporto-${t.id}"></div>
-              <input type="text" class="chat-input" id="msg-input-trasporto-${t.id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggioTrasporto(${t.id})">
-              <button onclick="inviaMessaggioTrasporto(${t.id})">Invia</button>
-            </div>
-          </td>
-        </tr>`;
-        setTimeout(() => caricaChatTrasporto(t.id), 0);
-      });
-  
-      html += '</tbody></table>';
-      div.innerHTML = html;
-    });
-  
-  function caricaChatTrasporto(id) {
+
+  function toggleGiorno(data) {
+    const box = document.getElementById(`box-${data}`);
+    box.classList.toggle('hidden');
+  }
+
+  function caricaChat(id) {
     fetch(`/chat/trasporto/${id}`)
       .then(res => res.json())
       .then(msgs => {
-        const container = document.getElementById(`chat-messages-trasporto-${id}`);
-        if (!container) return;
-  
-        container.innerHTML = '';
+        const box = document.getElementById(`chat-${id}`);
+        const unread = document.getElementById(`unread-${id}`);
+        const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
+
+        if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
+          unread.style.display = 'inline-block';
+          playNotificaAudio();
+          mostraNotifica(`Nuovo messaggio`, `Hai un nuovo messaggio in Trasporto #${id}`, `chat-trasporto-${id}`);
+        }
+
+        chatsLetti[id] = nuovi;
+
+        box.innerHTML = '';
         msgs.forEach(m => {
           const bubble = document.createElement('div');
           bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-          bubble.innerText = m.messaggio;
-          container.appendChild(bubble);
+          bubble.textContent = m.messaggio;
+          box.appendChild(bubble);
         });
-        container.scrollTop = container.scrollHeight;
+
+        box.scrollTop = box.scrollHeight;
       });
   }
-  
-  function inviaMessaggioTrasporto(id) {
-    const input = document.getElementById(`msg-input-trasporto-${id}`);
+
+  function inviaMessaggio(id) {
+    const input = document.getElementById(`msg-${id}`);
     const testo = input.value.trim();
     if (!testo) return;
+
     fetch('/chat/trasporto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ trasporto_id: id, mittente: 'cliente', messaggio: testo })
+      body: JSON.stringify({ trasporto_id: id, mittente: 'admin', messaggio: testo })
     }).then(() => {
       input.value = '';
-      caricaChatTrasporto(id);
+      caricaChat(id);
+      document.getElementById(`unread-${id}`).style.display = 'none';
     });
   }
-  
+
+  function aggiornaStato(id) {
+    const stato = document.getElementById(`stato-${id}`).value;
+
+    fetch('/impianto/aggiorna-trasporto', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato: stato, nota: '' })
+    }).then(res => res.text())
+      .then(msg => {
+        notify(msg);
+        const badge = document.getElementById(`stato-badge-${id}`);
+        badge.className = 'badge ' + stato.replace(/\s/g, '-');
+        badge.textContent = stato;
+      });
+  }
+
+  function applyFilter() {
+    const type = document.getElementById('filter-type').value;
+    const value = document.getElementById('filter-value').value.toLowerCase();
+    const rows = document.querySelectorAll('#trasporti-container tbody tr');
+
+    const tdMap = {
+      id: 0,
+      produttore: 2,
+      cer: 3,
+      stato: 9,
+      tipo_trasporto: 5
+    };
+
+    rows.forEach(row => {
+      const cell = row.children[tdMap[type]];
+      if (!cell) return;
+      const text = cell.textContent.toLowerCase();
+      row.style.display = text.includes(value) ? '' : 'none';
+    });
+  }
+
+  fetch('/impianto/richieste-trasporto')
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById('trasporti-container');
+      if (!data.length) {
+        container.innerHTML = '<p style="padding:20px;">Nessuna richiesta trovata.</p>';
+        return;
+      }
+
+      const perGiorno = {};
+      data.forEach(t => {
+        if (!perGiorno[t.data_trasporto]) perGiorno[t.data_trasporto] = [];
+        perGiorno[t.data_trasporto].push(t);
+      });
+
+      Object.keys(perGiorno).sort().forEach(data => {
+        const blocco = document.createElement('div');
+        blocco.innerHTML = `
+          <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length} richieste)</div>
+          <div id="box-${data}" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
+                  <th>Tipo Trasporto</th><th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-${data}"></tbody>
+            </table>
+          </div>`;
+        container.appendChild(blocco);
+
+        const tbody = blocco.querySelector('tbody');
+        perGiorno[data].forEach(r => {
+          const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
+          const id = r.id;
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${r.richiedente}</td>
+            <td>${r.produttore}</td>
+            <td>${r.codice_cer}</td>
+            <td>${r.tipo_automezzo}</td>
+            <td>${r.tipo_trasporto || '-'}</td>
+            <td>${r.orario_preferito}</td>
+            <td>${r.numero_referente}</td>
+            <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
+            <td><span id="stato-badge-${id}" class="badge ${statoClass}">${r.stato}</span></td>
+            <td>
+              <select id="stato-${id}">
+                <option value="accettata">Accettata</option>
+                <option value="non accettata">Non Accettata</option>
+                <option value="info richieste">Info Richieste</option>
+              </select>
+              <button onclick="aggiornaStato(${id})">✔️</button>
+            </td>
+            <td>
+              <div class="chat-box">
+                <div class="chat-messages" id="chat-${id}"></div>
+                <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+                <button onclick="inviaMessaggio(${id})">Invia</button>
+                <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
+              </div>
+            </td>`;
+          tbody.appendChild(row);
+
+          caricaChat(id);
+        });
+      });
+    });
+
+  // Polling chat ogni 2 secondi
   setInterval(() => {
-    document.querySelectorAll('[id^="chat-messages-"]').forEach(box => {
-      const id = box.id.replace('chat-messages-', '');
-      if (!isNaN(id)) caricaChat('prenotazione', parseInt(id));
-    });
-    document.querySelectorAll('[id^="chat-messages-trasporto-"]').forEach(box => {
-      const id = box.id.replace('chat-messages-trasporto-', '');
-      if (!isNaN(id)) caricaChatTrasporto(parseInt(id));
-    });
-  }, 2000); // Refresh chat ogni 2 secondi
-  
-  </script>
-  
-  </body>
-  </html>
-  
+    Object.keys(chatsLetti).forEach(id => caricaChat(id));
+  }, 2000);
+  // Recupera e mostra il nome utente cliente
+fetch('/cliente/info')
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById('nome-utente').innerText = `👤 ${data.username}`;
+  })
+  .catch(() => {
+    document.getElementById('nome-utente').innerText = '👤 Cliente';
+  });
+
+</script>
+</body>
+</html>

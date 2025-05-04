@@ -44,7 +44,7 @@ app.use(session({
 // ------------------------ STATIC ------------------------
 app.use('/cliente', express.static(path.join(__dirname, '../frontend-cliente')));
 app.use('/impianto', express.static(path.join(__dirname, '../frontend-impianto')));
-app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ------------------------ TEST ------------------------
 app.get('/', (req, res) => {

@@ -105,7 +105,7 @@
       <input type="text" name="codice_cer" required>
 
       <label>Tipo di Automezzo</label>
-      <select name="tipo_automezzo" required>
+      <select name="tipo_automezzo" id="tipo_automezzo" required onchange="controllaAutomezzo()">
         <option value="">Seleziona</option>
         <option>Furgone</option>
         <option>Eurocargo 100 con cassa scarrabile</option>
@@ -113,16 +113,21 @@
         <option>Motrice con cassa scarrabile</option>
         <option>Motrice con ragno</option>
         <option>Bilico</option>
-        <option>Cisterna</option>
+        <option>Cisterna 5mc</option>
+        <option>Cisterna 15mc</option>
+        <option>Cisterna 30mc</option>
       </select>
 
       <label>Tipo di Trasporto</label>
-      <select name="tipo_trasporto" required>
+      <select name="tipo_trasporto" id="tipo_trasporto" disabled required>
         <option value="">Seleziona</option>
         <option value="Cambio Cassa">Cambio Cassa</option>
         <option value="Ritiro Definitivo">Ritiro Definitivo</option>
       </select>
 
+      <small id="avviso-trasporto" style="color: #d32f2f; display: none;">
+        Il tipo di trasporto è disponibile solo per automezzi con cassa scarrabile.
+      </small>
       <label>Data del Trasporto</label>
       <input type="date" name="data_trasporto" required>
 
@@ -146,6 +151,26 @@
   </div>
 
   <script>
+    function controllaAutomezzo() {
+      const tipoAutomezzo = document.getElementById('tipo_automezzo').value;
+      const tipoTrasporto = document.getElementById('tipo_trasporto');
+      const avviso = document.getElementById('avviso-trasporto');
+
+      const sbloccati = [
+        'Eurocargo 100 con cassa scarrabile',
+        'Motrice con cassa scarrabile'
+      ];
+
+      if (sbloccati.includes(tipoAutomezzo)) {
+        tipoTrasporto.disabled = false;
+        avviso.style.display = 'none';
+      } else {
+        tipoTrasporto.disabled = true;
+        tipoTrasporto.value = '';
+        avviso.style.display = 'block';
+      }
+    }
+
     document.getElementById('trasportoForm').addEventListener('submit', function (e) {
       e.preventDefault();
       const form = e.target;
@@ -161,7 +186,7 @@
         window.location.href = "dashboard.html";
       })
       .catch(err => {
-        alert('Errore durante l\'invio della richiesta');
+        alert("Errore durante l'invio della richiesta");
         console.error(err);
       });
     });

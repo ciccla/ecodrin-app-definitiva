@@ -184,3 +184,17 @@ button:hover {
 .hidden {
   display: none;
 }
+.nav-buttons button {
+  font-weight: bold;
+  background-color: #66bb6a;
+  color: white;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.nav-buttons button:hover {
+  background-color: #558b2f;
+}

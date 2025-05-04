@@ -8,18 +8,21 @@
 </head>
 <body>
 
-<header>
-  <div class="logo-utente">
-    <img src="img/ecodrin.png" alt="Logo Ecodrin" />
-    <span id="nome-utente">👤 Cliente</span>
-  </div>
-  <div class="nav-buttons">
-    <button onclick="location.href='dashboard.html'">📦 Prenotazioni</button>
-    <button onclick="location.href='prenotazione.html'">➕ Nuova Prenotazione</button>
-    <button onclick="location.href='trasporto.html'">➕ Nuovo Trasporto</button>
-    <button onclick="location.href='/cliente/logout'">🔒 Logout</button>
+<<header style="background: white; padding: 10px 20px; border-bottom: 1px solid #dcedc8;">
+  <div style="display: flex; align-items: center; justify-content: space-between;">
+    <div class="logo-utente" style="display: flex; align-items: center; gap: 10px;">
+      <img src="img/ecodrin.png" alt="Logo Ecodrin" style="height: 40px;" />
+      <span id="nome-utente" style="font-weight: bold; color: var(--accent);">👤 Cliente</span>
+    </div>
+    <div class="nav-buttons" style="display: flex; gap: 10px;">
+      <button onclick="location.href='dashboard.html'">📦 Prenotazioni</button>
+      <button onclick="location.href='prenotazione.html'">➕ Nuova Prenotazione</button>
+      <button onclick="location.href='trasporto.html'">➕ Nuovo Trasporto</button>
+      <button onclick="location.href='/cliente/logout'">🔒 Logout</button>
+    </div>
   </div>
 </header>
+
 
 <section class="filter-bar">
   <label for="filtroTipo">Filtra per:</label>

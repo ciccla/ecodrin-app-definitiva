@@ -127,119 +127,148 @@
     });
   }
 
-  // ----- FETCH PRENOTAZIONI
+  // ----- PRENOTAZIONI
   fetch('/cliente/prenotazioni')
     .then(res => res.json())
     .then(data => {
-      const contenitore = document.getElementById('contenuto-prenotazioni');
+      const container = document.getElementById('contenuto-prenotazioni');
       if (!data.length) {
-        contenitore.innerHTML = '<p>Nessuna prenotazione.</p>';
+        container.innerHTML = '<p>Nessuna prenotazione trovata.</p>';
         return;
       }
 
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>ID</th><th>Ragione Sociale</th><th>Produttore</th><th>CER</th><th>Pericolo</th><th>Quantità</th>
-            <th>Certificato</th><th>Stato</th><th>Chat</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      contenitore.appendChild(table);
-      const tbody = table.querySelector('tbody');
-
+      const perData = {};
       data.forEach(p => {
-        const id = p.id;
-        const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+        if (!perData[p.giorno_conferimento]) perData[p.giorno_conferimento] = [];
+        perData[p.giorno_conferimento].push(p);
+      });
 
-        const riga = document.createElement('tr');
-        riga.classList.add('prenotazione-riga');
-        riga.dataset.stato = p.stato || 'in attesa';
-        riga.dataset.produttore = p.produttore;
-        riga.dataset.cer = p.codice_cer;
+      Object.keys(perData).sort().forEach(dataKey => {
+        const blocco = document.createElement('div');
+        blocco.innerHTML = `
+          <div class="giorno-toggle" onclick="document.getElementById('pren-${dataKey}').classList.toggle('hidden')">
+            📅 ${dataKey} (${perData[dataKey].length} prenotazioni)
+          </div>
+          <div id="pren-${dataKey}" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Data</th><th>Ragione Sociale</th><th>Produttore</th><th>CER</th><th>Pericolo</th><th>Quantità</th>
+                  <th>Certificato</th><th>Stato</th><th>Chat</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>`;
+        container.appendChild(blocco);
 
-        riga.innerHTML = `
-          <td>${id}</td>
-          <td>${p.ragione_sociale}</td>
-          <td>${p.produttore}</td>
-          <td>${p.codice_cer}</td>
-          <td>${p.caratteristiche_pericolo || '-'}</td>
-          <td>${p.quantita}</td>
-          <td>${p.certificato_analitico ? `<a href="/uploads/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
-          <td><span class="badge ${statoClass}">${p.stato}</span></td>
-          <td>
-            <div class="chat-box">
-              <div class="chat-messages" id="chat-prenotazione-${id}"></div>
-              <input type="text" class="chat-input" id="msg-prenotazione-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id}, 'prenotazione')">
-              <button onclick="inviaMessaggio(${id}, 'prenotazione')">Invia</button>
-              <span class="badge-unread" id="unread-prenotazione-${id}" style="display:none;">NUOVO</span>
-            </div>
-          </td>`;
-        tbody.appendChild(riga);
-        creaChat(id, 'prenotazione');
+        const tbody = blocco.querySelector('tbody');
+        perData[dataKey].forEach(p => {
+          const id = p.id;
+          const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+
+          const row = document.createElement('tr');
+          row.classList.add('prenotazione-riga');
+          row.dataset.stato = p.stato || 'in attesa';
+          row.dataset.produttore = p.produttore;
+          row.dataset.cer = p.codice_cer;
+
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${p.giorno_conferimento}</td>
+            <td>${p.ragione_sociale}</td>
+            <td>${p.produttore}</td>
+            <td>${p.codice_cer}</td>
+            <td>${p.caratteristiche_pericolo || '-'}</td>
+            <td>${p.quantita}</td>
+            <td>${p.certificato_analitico ? `<a href="/uploads/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
+            <td><span class="badge ${statoClass}">${p.stato}</span></td>
+            <td>
+              <div class="chat-box">
+                <div class="chat-messages" id="chat-prenotazione-${id}"></div>
+                <input type="text" class="chat-input" id="msg-prenotazione-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id}, 'prenotazione')">
+                <button onclick="inviaMessaggio(${id}, 'prenotazione')">Invia</button>
+                <span class="badge-unread" id="unread-prenotazione-${id}" style="display:none;">NUOVO</span>
+              </div>
+            </td>`;
+          tbody.appendChild(row);
+          creaChat(id, 'prenotazione');
+        });
       });
     });
 
-  // ----- FETCH TRASPORTI
+  // ----- TRASPORTI
   fetch('/cliente/richieste-trasporto')
     .then(res => res.json())
     .then(data => {
-      const contenitore = document.getElementById('contenuto-trasporti');
+      const container = document.getElementById('contenuto-trasporti');
       if (!data.length) {
-        contenitore.innerHTML = '<p>Nessuna richiesta trasporto.</p>';
+        container.innerHTML = '<p>Nessuna richiesta trasporto trovata.</p>';
         return;
       }
 
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
-            <th>Tipo Trasporto</th><th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Chat</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      contenitore.appendChild(table);
-      const tbody = table.querySelector('tbody');
-
+      const perData = {};
       data.forEach(t => {
-        const id = t.id;
-        const statoClass = (t.stato || 'in attesa').replace(/\s/g, '-');
+        if (!perData[t.data_trasporto]) perData[t.data_trasporto] = [];
+        perData[t.data_trasporto].push(t);
+      });
 
-        const riga = document.createElement('tr');
-        riga.classList.add('trasporto-riga');
-        riga.dataset.stato = t.stato || 'in attesa';
-        riga.dataset.produttore = t.produttore;
-        riga.dataset.cer = t.codice_cer;
+      Object.keys(perData).sort().forEach(dataKey => {
+        const blocco = document.createElement('div');
+        blocco.innerHTML = `
+          <div class="giorno-toggle" onclick="document.getElementById('tras-${dataKey}').classList.toggle('hidden')">
+            📅 ${dataKey} (${perData[dataKey].length} trasporti)
+          </div>
+          <div id="tras-${dataKey}" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Data</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
+                  <th>Tipo Trasporto</th><th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Chat</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>`;
+        container.appendChild(blocco);
 
-        riga.innerHTML = `
-          <td>${id}</td>
-          <td>${t.richiedente}</td>
-          <td>${t.produttore}</td>
-          <td>${t.codice_cer}</td>
-          <td>${t.tipo_automezzo}</td>
-          <td>${t.tipo_trasporto || '-'}</td>
-          <td>${t.orario_preferito}</td>
-          <td>${t.numero_referente}</td>
-          <td>${parseFloat(t.prezzo_pattuito).toFixed(2)} €</td>
-          <td><span class="badge ${statoClass}">${t.stato}</span></td>
-          <td>
-            <div class="chat-box">
-              <div class="chat-messages" id="chat-trasporto-${id}"></div>
-              <input type="text" class="chat-input" id="msg-trasporto-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id}, 'trasporto')">
-              <button onclick="inviaMessaggio(${id}, 'trasporto')">Invia</button>
-              <span class="badge-unread" id="unread-trasporto-${id}" style="display:none;">NUOVO</span>
-            </div>
-          </td>`;
-        tbody.appendChild(riga);
-        creaChat(id, 'trasporto');
+        const tbody = blocco.querySelector('tbody');
+        perData[dataKey].forEach(t => {
+          const id = t.id;
+          const statoClass = (t.stato || 'in attesa').replace(/\s/g, '-');
+
+          const row = document.createElement('tr');
+          row.classList.add('trasporto-riga');
+          row.dataset.stato = t.stato || 'in attesa';
+          row.dataset.produttore = t.produttore;
+          row.dataset.cer = t.codice_cer;
+
+          row.innerHTML = `
+            <td>${id}</td>
+            <td>${t.data_trasporto}</td>
+            <td>${t.produttore}</td>
+            <td>${t.codice_cer}</td>
+            <td>${t.tipo_automezzo}</td>
+            <td>${t.tipo_trasporto || '-'}</td>
+            <td>${t.orario_preferito}</td>
+            <td>${t.numero_referente}</td>
+            <td>${parseFloat(t.prezzo_pattuito).toFixed(2)} €</td>
+            <td><span class="badge ${statoClass}">${t.stato}</span></td>
+            <td>
+              <div class="chat-box">
+                <div class="chat-messages" id="chat-trasporto-${id}"></div>
+                <input type="text" class="chat-input" id="msg-trasporto-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id}, 'trasporto')">
+                <button onclick="inviaMessaggio(${id}, 'trasporto')">Invia</button>
+                <span class="badge-unread" id="unread-trasporto-${id}" style="display:none;">NUOVO</span>
+              </div>
+            </td>`;
+          tbody.appendChild(row);
+          creaChat(id, 'trasporto');
+        });
       });
     });
 
-  // Polling chat ogni 3 sec
+  // Polling chat
   setInterval(() => {
     Object.keys(chatsLetti).forEach(key => {
       const [tipo, id] = key.split('-');
@@ -247,6 +276,5 @@
     });
   }, 3000);
 </script>
-
 </body>
 </html>

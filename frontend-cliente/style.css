@@ -198,3 +198,12 @@ button:hover {
 .nav-buttons button:hover {
   background-color: #558b2f;
 }
+.footer {
+  text-align: center;
+  padding: 20px;
+  background: #f1f1f1;
+  color: #555;
+  font-size: 0.9em;
+  margin-top: 40px;
+  border-top: 1px solid #ccc;
+}

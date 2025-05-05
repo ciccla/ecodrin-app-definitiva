@@ -5,10 +5,13 @@
   <title>Dashboard Trasporti - Ecodrin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Piccole aggiunte locali se servono */
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
 
-<!-- Header simile a quello cliente -->
 <header>
   <div class="logo-utente">
     <img src="/img/logo.png" alt="Logo Ecodrin" />
@@ -23,11 +26,11 @@
   </div>
 </header>
 
-<!-- Filtro di ricerca -->
 <section class="filter-bar">
   <label for="filter-type">Filtro:</label>
   <select id="filter-type">
     <option value="id">ID</option>
+    <option value="richiedente">Richiedente</option>
     <option value="produttore">Produttore</option>
     <option value="cer">Codice CER</option>
     <option value="stato">Stato</option>
@@ -36,7 +39,7 @@
   <input type="text" id="filter-value" placeholder="Valore da cercare..." oninput="applyFilter()" />
 </section>
 
-<h2>Richieste di Trasporto</h2>
+<h2 style="padding: 0 20px;">Richieste di Trasporto</h2>
 <div id="trasporti-container"></div>
 <div id="notify"></div>
 <audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
@@ -53,8 +56,7 @@
   }
 
   function toggleGiorno(data) {
-    const box = document.getElementById(`box-${data}`);
-    box.classList.toggle('hidden');
+    document.getElementById(`box-${data}`).classList.toggle('hidden');
   }
 
   function caricaChat(id) {
@@ -69,7 +71,6 @@
           unread.style.display = 'inline-block';
           document.getElementById('suonoNotifica').play();
         }
-
         chatsLetti[id] = nuovi;
 
         box.innerHTML = '';
@@ -79,7 +80,6 @@
           bubble.textContent = m.messaggio;
           box.appendChild(bubble);
         });
-
         box.scrollTop = box.scrollHeight;
       });
   }
@@ -102,42 +102,32 @@
 
   function aggiornaStato(id) {
     const stato = document.getElementById(`stato-${id}`).value;
-
     fetch('/impianto/aggiorna-trasporto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, nuovo_stato: stato, nota: '' })
-    }).then(res => res.text())
-      .then(msg => {
-        notify(msg);
-        const badge = document.getElementById(`stato-badge-${id}`);
-        badge.className = 'badge ' + stato.replace(/\s/g, '-');
-        badge.textContent = stato;
-      });
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify(msg);
+      const badge = document.getElementById(`stato-badge-${id}`);
+      badge.className = 'badge ' + stato.replace(/\s/g, '-');
+      badge.textContent = stato;
+    });
   }
 
   function applyFilter() {
     const type = document.getElementById('filter-type').value;
     const value = document.getElementById('filter-value').value.toLowerCase();
-    const rows = document.querySelectorAll('#trasporti-container tbody tr');
-
-    const tdMap = {
-      id: 0,
-      produttore: 2,
-      cer: 3,
-      stato: 9,
-      tipo_trasporto: 5
-    };
-
-    rows.forEach(row => {
+    document.querySelectorAll('#trasporti-container tbody tr').forEach(row => {
+      const tdMap = { id:0, richiedente:1, produttore:2, cer:3, stato:9, tipo_trasporto:5 };
       const cell = row.children[tdMap[type]];
-      if (!cell) return;
-      const text = cell.textContent.toLowerCase();
-      row.style.display = text.includes(value) ? '' : 'none';
+      row.style.display = cell && cell.textContent.toLowerCase().includes(value) ? '' : 'none';
     });
   }
 
-  fetch('/impianto/richieste-trasporto')
+  // **Fetch corretto** qui
+  fetch('/impianto/trasporti')
     .then(res => res.json())
     .then(data => {
       const container = document.getElementById('trasporti-container');
@@ -147,21 +137,25 @@
       }
 
       const perGiorno = {};
-      data.forEach(t => {
-        if (!perGiorno[t.data_trasporto]) perGiorno[t.data_trasporto] = [];
-        perGiorno[t.data_trasporto].push(t);
+      data.forEach(r => {
+        perGiorno[r.data_trasporto] = perGiorno[r.data_trasporto] || [];
+        perGiorno[r.data_trasporto].push(r);
       });
 
       Object.keys(perGiorno).sort().forEach(data => {
         const blocco = document.createElement('div');
-        blocco.innerHTML = ` 
-          <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length} richieste)</div>
+        blocco.className = 'utenti-container';
+        blocco.innerHTML = `
+          <div class="giorno-toggle" onclick="toggleGiorno('${data}')">
+            📅 ${data} (${perGiorno[data].length})
+          </div>
           <div id="box-${data}" class="hidden">
             <table>
               <thead>
                 <tr>
-                  <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th><th>Automezzo</th>
-                  <th>Tipo Trasporto</th><th>Orario</th><th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                  <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th>
+                  <th>Automezzo</th><th>Tipo Trasporto</th><th>Orario</th>
+                  <th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
                 </tr>
               </thead>
               <tbody id="tbody-${data}"></tbody>
@@ -171,47 +165,49 @@
 
         const tbody = blocco.querySelector('tbody');
         perGiorno[data].forEach(r => {
-          const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
-          const id = r.id;
-
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${id}</td>
-            <td>${r.richiedente}</td>
-            <td>${r.produttore}</td>
-            <td>${r.codice_cer}</td>
-            <td>${r.tipo_automezzo}</td>
-            <td>${r.tipo_trasporto || '-'}</td>
-            <td>${r.orario_preferito}</td>
-            <td>${r.numero_referente}</td>
-            <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
-            <td><span id="stato-badge-${id}" class="badge ${statoClass}">${r.stato}</span></td>
-            <td>
-              <select id="stato-${id}">
-                <option value="accettata">Accettata</option>
-                <option value="non accettata">Non Accettata</option>
-                <option value="in attesa">in attesa</option>
-              </select>
-              <button onclick="aggiornaStato(${id})">✔️</button>
-            </td>
-            <td>
-              <div class="chat-box">
-                <div class="chat-messages" id="chat-${id}"></div>
-                <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
-                <button onclick="inviaMessaggio(${id})">Invia</button>
-                <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
-              </div>
-            </td>`;
-          tbody.appendChild(row);
-
-          caricaChat(id);
-          setInterval(() => caricaChat(id), 2000);
+          const statoClass = (r.stato||'in attesa').replace(/\s/g,'-');
+          tbody.insertAdjacentHTML('beforeend', `
+            <tr>
+              <td>${r.id}</td>
+              <td>${r.richiedente}</td>
+              <td>${r.produttore}</td>
+              <td>${r.codice_cer}</td>
+              <td>${r.tipo_automezzo}</td>
+              <td>${r.tipo_trasporto||'-'}</td>
+              <td>${r.orario_preferito}</td>
+              <td>${r.numero_referente}</td>
+              <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
+              <td><span id="stato-badge-${r.id}" class="badge ${statoClass}">${r.stato}</span></td>
+              <td>
+                <select id="stato-${r.id}">
+                  <option value="accettata">Accettata</option>
+                  <option value="non accettata">Non Accettata</option>
+                  <option value="in attesa">In attesa</option>
+                </select>
+                <button onclick="aggiornaStato(${r.id})">✔️</button>
+              </td>
+              <td>
+                <div class="chat-box">
+                  <div class="chat-messages" id="chat-${r.id}"></div>
+                  <input type="text" class="chat-input" id="msg-${r.id}"
+                         placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${r.id})">
+                  <button onclick="inviaMessaggio(${r.id})">Invia</button>
+                  <span class="badge-unread hidden" id="unread-${r.id}">NUOVO</span>
+                </div>
+              </td>
+            </tr>`);
+          caricaChat(r.id);
+          setInterval(() => caricaChat(r.id), 2000);
         });
       });
+    })
+    .catch(err => {
+      console.error('Errore caricamento trasporti:', err);
+      notify('Errore caricamento trasporti', false);
     });
 </script>
 
-<footer class="footer">
+<footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
   © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
 </footer>
 

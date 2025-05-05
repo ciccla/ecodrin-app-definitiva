@@ -432,11 +432,6 @@ app.post('/admin/elimina-utente', async (req, res) => {
 });
 
 // ────────────────────────────────────────────────────────────
-// Infine, lascia qui la chiamata ad app.listen:
-app.listen(PORT, () => {
-  console.log(`🚀 Server avviato sulla porta ${PORT}`);
-});
-
 
 app.listen(PORT, () => {
   console.log(`🚀 Server avviato in ambiente: ${process.env.NODE_ENV || 'sviluppo'}`);

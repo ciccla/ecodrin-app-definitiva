@@ -12,13 +12,7 @@ const db = require('./db');
 // 🔧 Crea la cartella "uploads" se non esiste
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-// 👉 Funzione per creare notifiche lato admin
-async function aggiungiNotifica(tipo, riferimento_id, messaggio) {
-  await db.query(`
-    INSERT INTO notifiche_admin (tipo, riferimento_id, messaggio)
-    VALUES ($1, $2, $3)
-  `, [tipo, riferimento_id, messaggio]);
-}
+
 // ------------------------ CONFIGURAZIONE SERVER ------------------------
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -153,8 +147,6 @@ app.post('/cliente/prenotazione', multer({ dest: uploadDir }).single('certificat
       caratteristiche, imballo_finale, stato_fisico,
       certificato, quantita, giorno_conferimento
     ]);
-    await aggiungiNotifica('prenotazione', null, `Nuova prenotazione da ${produttore}`);
-
     res.send('Prenotazione inserita correttamente ✅');
   } catch (err) {
     console.error('❌ Errore inserimento:', err.message);
@@ -182,8 +174,6 @@ app.post('/cliente/richieste-trasporto', async (req, res) => {
       tipo_automezzo, tipo_trasporto, data_trasporto,
       orario_preferito, numero_referente, prezzo_pattuito
     ]);
-    await aggiungiNotifica('trasporto', null, `Nuova richiesta trasporto da ${produttore}`);
-
     res.send('Richiesta trasporto inviata ✅');
   } catch (err) {
     console.error('❌ Errore richiesta trasporto:', err.message);
@@ -264,7 +254,10 @@ app.get('/cliente/notifiche-messaggi', async (req, res) => {
 app.post('/impianto/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.send('Compila tutti i campi');
-
+  app.get('/impianto/logout', (req, res) => {
+    req.session.destroy(() => res.redirect('/impianto/login.html'));
+  });
+  
   try {
     const result = await db.query(
       'SELECT * FROM utenti WHERE email = $1 AND ruolo = $2',
@@ -519,19 +512,50 @@ app.get('/stats/dati-completi', async (req, res) => {
     res.status(500).send('Errore nel caricamento statistiche');
   }
 });
-// ------------------------ NOTIFICHE ADMIN ------------------------
-app.get('/notifiche/admin', async (req, res) => {
-  if (!req.session.admin) return res.status(403).send('Non autorizzato');
+// ------------------------ POLLING MESSAGGI ADMIN ------------------------
+app.get('/notifiche/admin-chat', async (req, res) => {
+  if (!req.session.admin) return res.status(403).json({ error: 'Non autorizzato' });
+
   try {
-    const { rows } = await db.query(`
-      SELECT * FROM notifiche_admin 
-      ORDER BY timestamp DESC 
-      LIMIT 20
+    const pren = await db.query(`
+      SELECT prenotazione_id AS id, COUNT(*) AS tot
+      FROM messaggi
+      WHERE mittente = 'cliente'
+      GROUP BY prenotazione_id
     `);
-    res.json(rows);
+
+    const tras = await db.query(`
+      SELECT trasporto_id AS id, COUNT(*) AS tot
+      FROM messaggi_trasporto
+      WHERE mittente = 'cliente'
+      GROUP BY trasporto_id
+    `);
+
+    res.json({
+      prenotazioni: pren.rows,
+      trasporti: tras.rows
+    });
   } catch (err) {
-    console.error('❌ Errore fetch notifiche admin:', err.message);
+    console.error('❌ Errore polling messaggi admin:', err.message);
     res.status(500).send('Errore');
+  }
+});
+// 🔔 Polling notifiche per admin – nuove chat trasporto
+app.get('/notifiche/admin-chat-trasporti', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Non autorizzato');
+
+  try {
+    const tras = await db.query(`
+      SELECT trasporto_id AS id, COUNT(*) AS tot
+      FROM messaggi_trasporto
+      WHERE mittente = 'cliente'
+      GROUP BY trasporto_id
+    `);
+
+    res.json({ trasporti: tras.rows });
+  } catch (err) {
+    console.error('❌ Errore polling chat trasporto admin:', err.message);
+    res.status(500).send('Errore server');
   }
 });
 

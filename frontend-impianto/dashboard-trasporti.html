@@ -220,6 +220,30 @@
         });
       });
     });
+    // 🔔 Notifiche admin via polling per nuove chat trasporto
+const messaggiLettiTrasporti = {};
+
+setInterval(() => {
+  fetch('/notifiche/admin-chat-trasporti')
+    .then(res => res.json())
+    .then(data => {
+      data.trasporti.forEach(t => {
+        const id = t.id;
+        const nuovi = t.tot;
+
+        if (messaggiLettiTrasporti[id] !== undefined && nuovi > messaggiLettiTrasporti[id]) {
+          const badge = document.getElementById(`unread-${id}`);
+          if (badge) badge.style.display = 'inline-block';
+          document.getElementById('suonoNotifica').play();
+          browserNotify("📨 Nuovo messaggio (Trasporto)", `Trasporto #${id} ha un nuovo messaggio dal cliente`);
+        }
+
+        messaggiLettiTrasporti[id] = nuovi;
+      });
+    })
+    .catch(err => console.error('Errore polling chat trasporti:', err));
+}, 4000);
+
 </script>
 
 <footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">

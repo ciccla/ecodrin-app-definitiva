@@ -1,10 +1,10 @@
 <!DOCTYPE html>
+
 <html lang="it">
 <head>
   <meta charset="UTF-8">
   <title>Dashboard Prenotazioni - Impianto</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- punta al file CSS comune -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
       <span>👤 Impianto</span>
     </div>
     <div class="nav-buttons">
-      <button class="active" onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+      <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
       <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
       <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
       <button onclick="location.href='utenti.html'">👥 Utenti</button>
@@ -23,195 +23,205 @@
     </div>
   </header>
 
-  <section class="filter-bar">
-    <label for="filtroTipo">Filtra per:</label>
-    <select id="filtroTipo">
-      <option value="">Tutti</option>
-      <option value="accettata">Accettate</option>
-      <option value="non accettata">Non accettate</option>
-      <option value="in attesa">In attesa</option>
-      <option value="produttore">Produttore</option>
-      <option value="cer">Codice CER</option>
-    </select>
-    <input type="text" id="filtroValore" placeholder="Valore da cercare..." oninput="applicaFiltro()">
-  </section>
-
-  <div class="main-content">
-    <h1>🏠 Prenotazioni</h1>
+  <main>
+    <section class="filter-bar">
+      <label for="filtroTipo">Filtra per:</label>
+      <select id="filtroTipo">
+        <option value="">Tutti</option>
+        <option value="accettata">Accettate</option>
+        <option value="non accettata">Non Accettate</option>
+        <option value="in attesa">In attesa</option>
+        <option value="produttore">Produttore</option>
+        <option value="cer">Codice CER</option>
+      </select>
+      <input type="text" id="filtroValore" placeholder="Valore filtro">
+      <button onclick="applicaFiltro()">Filtra</button>
+    </section>
+  
     <div id="contenuto-prenotazioni"></div>
     <div id="notify"></div>
-    <audio id="notifica-audio"
-           src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3"
-           preload="auto"></audio>
-  </div>
+    <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+  </main>
+<script>
+  function notify(msg, success = true) {
+    const n = document.getElementById('notify');
+    n.innerText = msg;
+    n.style.background = success ? '#2ecc71' : '#e74c3c';
+    n.style.display = 'block';
+    setTimeout(() => n.style.display = 'none', 4000);
+  }
 
-  <div class="logo-footer">
-    <img src="/img/logo.png" alt="Logo Ecodrin">
-  </div>
+  function applicaFiltro() {
+    const tipo = document.getElementById('filtroTipo').value;
+    const valore = document.getElementById('filtroValore').value.toLowerCase();
+    document.querySelectorAll('.prenotazione-riga').forEach(row => {
+      const stato = row.dataset.stato;
+      const produttore = row.dataset.produttore;
+      const cer = row.dataset.cer;
+      if (!tipo || 
+          (tipo === stato && stato.includes(valore)) || 
+          (tipo === 'produttore' && produttore.toLowerCase().includes(valore)) || 
+          (tipo === 'cer' && cer.toLowerCase().includes(valore))) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
 
-  <footer class="footer">
-    © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
-  </footer>
+  let chatsLetti = {};
+  const contenitore = document.getElementById('contenuto-prenotazioni');
 
-  <script>
-    const notifyBox = document.getElementById('notify');
-    let chatsLetti = {};
-
-    function notify(msg, success = true) {
-      notifyBox.innerText = msg;
-      notifyBox.style.background = success ? '#2ecc71' : '#e74c3c';
-      notifyBox.style.display = 'block';
-      setTimeout(() => notifyBox.style.display = 'none', 4000);
-    }
-
-    function applicaFiltro() {
-      const tipo = document.getElementById('filtroTipo').value;
-      const val = document.getElementById('filtroValore').value.toLowerCase();
-      document.querySelectorAll('#contenuto-prenotazioni tbody tr').forEach(r => {
-        const map = { accettata:7, 'non accettata':7, 'in attesa':7, produttore:2, cer:3 };
-        const idx = map[tipo] ?? null;
-        let text = '';
-        if (idx !== null) text = r.children[idx].textContent.toLowerCase();
-        if (!tipo || text.includes(val)) r.style.display = '';
-        else r.style.display = 'none';
+  fetch('/impianto/prenotazioni')
+    .then(res => res.json())
+    .then(data => {
+      const perGiorno = {};
+      data.forEach(p => {
+        if (!perGiorno[p.giorno_conferimento]) perGiorno[p.giorno_conferimento] = [];
+        perGiorno[p.giorno_conferimento].push(p);
       });
-    }
 
-    function toggleGiorno(day) {
-      document.getElementById(`box-${day}`).classList.toggle('hidden');
-    }
+      Object.keys(perGiorno).sort().forEach(giorno => {
+        const box = document.createElement('div');
+        box.innerHTML = 
+          <div class="giorno-toggle" onclick="document.getElementById('giorno-${giorno}').classList.toggle('hidden')">
+            📅 ${giorno} (${perGiorno[giorno].length} prenotazioni)
+          </div>
+          <div id="giorno-${giorno}" class="hidden">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th><th>Cliente</th><th>Produttore</th><th>CER</th><th>Pericolo</th><th>Quantità</th>
+                  <th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-${giorno}"></tbody>
+            </table>
+          </div>;
+        contenitore.appendChild(box);
 
-    function caricaChat(id) {
-      fetch(`/chat/prenotazione/${id}`)
-        .then(r => r.json())
-        .then(msgs => {
-          const box = document.getElementById(`chat-${id}`);
-          const unread = document.getElementById(`unread-${id}`);
-          const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
-          if (chatsLetti[id] != null && nuovi > chatsLetti[id]) {
-            unread.style.display = 'inline-block';
-            document.getElementById('notifica-audio').play();
-          }
-          chatsLetti[id] = nuovi;
-          box.innerHTML = '';
-          msgs.forEach(m => {
-            const b = document.createElement('div');
-            b.className = 'chat-bubble ' + (m.mittente==='admin'?'bubble-left':'bubble-right');
-            b.textContent = m.messaggio;
-            box.appendChild(b);
-          });
-          box.scrollTop = box.scrollHeight;
+        const tbody = box.querySelector('tbody');
+        perGiorno[giorno].forEach(p => {
+          const id = p.id;
+          const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+
+          const riga = document.createElement('tr');
+          riga.classList.add('prenotazione-riga');
+          riga.dataset.stato = p.stato || 'in attesa';
+          riga.dataset.produttore = p.produttore;
+          riga.dataset.cer = p.codice_cer;
+
+          riga.innerHTML = 
+            <td>${id}</td>
+            <td>${p.ragione_sociale}</td>
+            <td>${p.produttore}</td>
+            <td>${p.codice_cer}</td>
+            <td>${p.caratteristiche_pericolo || '-'}</td>
+            <td>${p.quantita}</td>
+            <td>${p.certificato_analitico ? <a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a> : '-'}</td>
+            <td><span id="badge-${id}" class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
+            <td>
+              <select id="stato-${id}">
+                <option value="accettata">Accettata</option>
+                <option value="non accettata">Non Accettata</option>
+                <option value="in attesa">in attesa</option>
+              </select>
+              <button onclick="aggiornaStato(${id}, '${p.giorno_conferimento}', '${p.orario_preferito}', '${p.email_cliente}')">✔️</button>
+            </td>
+            <td>
+              <div class="chat-box">
+                <div class="chat-messages" id="chat-${id}"></div>
+                <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+                <button onclick="inviaMessaggio(${id})">Invia</button>
+                <span class="badge-unread" id="unread-${id}" style="display:none;">NUOVO</span>
+              </div>
+            </td>;
+          tbody.appendChild(riga);
+
+          caricaChat(id);
+          setInterval(() => caricaChat(id), 2000);
         });
-    }
-
-    function inviaMessaggio(id) {
-      const inp = document.getElementById(`msg-${id}`);
-      if (!inp.value.trim()) return;
-      fetch('/chat/prenotazione', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ prenotazione_id: id, mittente:'admin', messaggio: inp.value })
-      }).then(()=>{
-        inp.value = '';
-        document.getElementById(`unread-${id}`).style.display='none';
-        caricaChat(id);
       });
-    }
+    });
 
-    function aggiornaStato(id, giorno, orario, email) {
-      const st = document.getElementById(`stato-${id}`).value;
-      fetch('/impianto/cambia-stato',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ id, nuovo_stato: st })
-      })
-      .then(r=>r.text()).then(_=>{
-        notify('Prenotazione aggiornata');
-        // aggiorna badge
-        const badge = document.getElementById(`badge-${id}`);
-        badge.className = 'badge ' + st.replace(/\s/g,'-');
-        badge.textContent = st;
-      });
-    }
+  function caricaChat(id) {
+    fetch('/chat/prenotazione/' + id)
+      .then(res => res.json())
+      .then(msgs => {
+        const box = document.getElementById(chat-${id});
+        const unread = document.getElementById(unread-${id});
+        const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
 
-    // Caricamento prenotazioni
-    fetch('/impianto/prenotazioni')
-      .then(r=>r.json())
-      .then(data => {
-        const cont = document.getElementById('contenuto-prenotazioni');
-        if(!data.length) {
-          cont.innerHTML = '<p style="padding:20px;">Nessuna prenotazione.</p>';
-          return;
+        if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
+          unread.style.display = 'inline-block';
+          document.getElementById('notifica-audio').play();
         }
-        const perG = {};
-        data.forEach(p => {
-          perG[p.giorno_conferimento] = perG[p.giorno_conferimento] || [];
-          perG[p.giorno_conferimento].push(p);
-        });
-        Object.keys(perG).sort().forEach(day => {
-          const div = document.createElement('div');
-          div.className = 'giorno-bolla';
-          div.innerHTML = `
-            <div class="giorno-toggle" onclick="toggleGiorno('${day}')">
-              📅 ${day} (${perG[day].length})
-            </div>
-            <div id="box-${day}" class="hidden">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th><th>Cliente</th><th>Produttore</th>
-                    <th>CER</th><th>Pericolo</th><th>Quantità</th>
-                    <th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
-                  </tr>
-                </thead>
-                <tbody id="tb-${day}"></tbody>
-              </table>
-            </div>`;
-          cont.appendChild(div);
 
-          const tb = div.querySelector('tbody');
-          perG[day].forEach(p => {
-            const sc = (p.stato||'in attesa').replace(/\s/g,'-');
-            tb.insertAdjacentHTML('beforeend', `
-              <tr>
-                <td>${p.id}</td>
-                <td>${p.ragione_sociale}</td>
-                <td>${p.produttore}</td>
-                <td>${p.codice_cer}</td>
-                <td>${p.caratteristiche_pericolo||'-'}</td>
-                <td>${p.quantita}</td>
-                <td>${p.certificato_analitico
-                  ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>`
-                  : '-'}
-                </td>
-                <td><span id="badge-${p.id}" class="badge ${sc}">${p.stato||'in attesa'}</span></td>
-                <td>
-                  <select id="stato-${p.id}">
-                    <option value="accettata">Accettata</option>
-                    <option value="non accettata">Non accettata</option>
-                    <option value="in attesa">In attesa</option>
-                  </select>
-                  <button onclick="aggiornaStato(${p.id},'${day}','${p.orario_preferito}','${p.email_cliente}')">✔️</button>
-                </td>
-                <td>
-                  <div class="chat-box">
-                    <div class="chat-messages" id="chat-${p.id}"></div>
-                    <input type="text" class="chat-input" id="msg-${p.id}"
-                           placeholder="Scrivi..." onkeydown="if(event.key==='Enter') inviaMessaggio(${p.id})">
-                    <button onclick="inviaMessaggio(${p.id})">Invia</button>
-                    <span class="badge-unread hidden" id="unread-${p.id}">NUOVO</span>
-                  </div>
-                </td>
-              </tr>`);
-            caricaChat(p.id);
-            setInterval(()=>caricaChat(p.id),2000);
-          });
+        chatsLetti[id] = nuovi;
+
+        box.innerHTML = '';
+        msgs.forEach(m => {
+          const bubble = document.createElement('div');
+          bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+          bubble.textContent = m.messaggio;
+          box.appendChild(bubble);
         });
-      })
-      .catch(e=>{
-        console.error(e);
-        notify('Errore caricamento prenotazioni',false);
+        box.scrollTop = box.scrollHeight;
       });
-  </script>
+  }
+
+  function inviaMessaggio(id) {
+    const input = document.getElementById(msg-${id});
+    const testo = input.value.trim();
+    if (!testo) return;
+    fetch('/chat/prenotazione', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prenotazione_id: id, mittente: 'admin', messaggio: testo })
+    }).then(() => {
+      input.value = '';
+      caricaChat(id);
+      document.getElementById(unread-${id}).style.display = 'none';
+    });
+  }
+
+  function aggiornaStato(id, data, orario, email) {
+    const stato = document.getElementById(stato-${id}).value;
+    fetch('/impianto/cambia-stato', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nuovo_stato: stato })
+    })
+    .then(res => res.text())
+    .then(msg => {
+      notify("Prenotazione aggiornata");
+      inviaEmail(email, id, data, orario, stato);
+
+      // 🔥 Aggiorna visivamente il badge subito
+      const badge = document.getElementById(badge-${id});
+      badge.className = 'badge ' + stato.replace(/\s/g, '-');
+      badge.textContent = stato;
+    });
+  }
+
+  function inviaEmail(email, id, data, orario, stato) {
+    fetch('/notifiche/email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: email,
+        subject: Aggiornamento richiesta ID ${id},
+        text: La tua prenotazione con ID ${id} prevista per il ${data} alle ${orario} è stata aggiornata a: ${stato}.
+      })
+    });
+  }
+</script>
+
+<footer class="footer">
+  © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
+</footer>
+
+
 </body>
-</html>
+
+</html> 

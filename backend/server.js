@@ -558,6 +558,28 @@ app.get('/notifiche/admin-chat-trasporti', async (req, res) => {
     res.status(500).send('Errore server');
   }
 });
+const bcrypt = require('bcrypt');
+
+app.get('/setup/admin', async (req, res) => {
+  const nuovoUsername = 'admin';
+  const nuovaEmail = 'admin@ecodrinsrl.it';
+  const nuovaPassword = 'D13g0.2025!'; // Cambia qui la password
+
+  const hash = await bcrypt.hash(nuovaPassword, 10);
+
+  try {
+    await db.query(`
+      UPDATE utenti
+      SET username = $1, email = $2, password = $3
+      WHERE ruolo = 'admin'
+    `, [nuovoUsername, nuovaEmail, hash]);
+
+    res.send('✅ Credenziali admin aggiornate con successo');
+  } catch (err) {
+    console.error('❌ Errore aggiornamento admin:', err.message);
+    res.status(500).send('Errore aggiornamento');
+  }
+});
 
 // ------------------------ AVVIO SERVER ------------------------
 app.listen(PORT, () => {

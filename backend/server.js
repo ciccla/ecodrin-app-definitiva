@@ -382,6 +382,61 @@ app.get('/impianto/trasporti', async (req, res) => {
     res.status(500).send('Errore');
   }
 });
+// … tutte le altre route admin (login, cambia-stato, aggiorna-trasporto, chat, ecc.)
+
+// ────────────────────────────────────────────────────────────
+// 1) Endpoint per caricare gli utenti (solo SELECT)
+// Mettilo subito dopo gli altri GET per l’admin, ad es. dopo `/notifiche/admin-chat`
+app.get('/check-utenti', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  try {
+    const { rows } = await db.query(`
+      SELECT id, username, email, ruolo, COALESCE(bloccato, false) AS bloccato
+      FROM utenti
+      ORDER BY id
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('❌ Errore caricamento utenti:', err.message);
+    res.status(500).send('Errore caricamento utenti');
+  }
+});
+
+// ────────────────────────────────────────────────────────────
+// 2) Endpoint per bloccare/sbloccare un utente
+app.post('/admin/blocco-utente', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  const { id, azione } = req.body;             // 'blocca' o 'sblocca'
+  try {
+    const valore = azione === 'blocca';
+    await db.query('UPDATE utenti SET bloccato = $1 WHERE id = $2', [valore, id]);
+    res.send(valore ? 'Utente bloccato' : 'Utente sbloccato');
+  } catch (err) {
+    console.error('❌ Errore blocco/sblocco utente:', err.message);
+    res.status(500).send('Errore in gestione utente');
+  }
+});
+
+// ────────────────────────────────────────────────────────────
+// 3) Endpoint per eliminare un utente
+app.post('/admin/elimina-utente', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+  const { id } = req.body;
+  try {
+    await db.query('DELETE FROM utenti WHERE id = $1', [id]);
+    res.send('Utente eliminato');
+  } catch (err) {
+    console.error('❌ Errore eliminazione utente:', err.message);
+    res.status(500).send('Errore eliminazione utente');
+  }
+});
+
+// ────────────────────────────────────────────────────────────
+// Infine, lascia qui la chiamata ad app.listen:
+app.listen(PORT, () => {
+  console.log(`🚀 Server avviato sulla porta ${PORT}`);
+});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server avviato in ambiente: ${process.env.NODE_ENV || 'sviluppo'}`);

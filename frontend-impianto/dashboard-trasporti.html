@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
   <title>Dashboard Trasporti - Ecodrin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
 
+<!-- Header simile a quello cliente -->
 <header>
   <div class="logo-utente">
     <img src="/img/logo.png" alt="Logo Ecodrin" />
@@ -23,6 +23,7 @@
   </div>
 </header>
 
+<!-- Filtro di ricerca -->
 <section class="filter-bar">
   <label for="filter-type">Filtro:</label>
   <select id="filter-type">
@@ -114,6 +115,7 @@
         badge.textContent = stato;
       });
   }
+
   function applyFilter() {
     const type = document.getElementById('filter-type').value;
     const value = document.getElementById('filter-value').value.toLowerCase();
@@ -152,7 +154,7 @@
 
       Object.keys(perGiorno).sort().forEach(data => {
         const blocco = document.createElement('div');
-        blocco.innerHTML = `
+        blocco.innerHTML = ` 
           <div class="giorno-toggle" onclick="toggleGiorno('${data}')">📅 ${data} (${perGiorno[data].length} richieste)</div>
           <div id="box-${data}" class="hidden">
             <table>
@@ -189,6 +191,7 @@
                 <option value="accettata">Accettata</option>
                 <option value="non accettata">Non Accettata</option>
                 <option value="in attesa">in attesa</option>
+              </select>
               <button onclick="aggiornaStato(${id})">✔️</button>
             </td>
             <td>
@@ -208,7 +211,7 @@
     });
 </script>
 
-<footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
+<footer class="footer">
   © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
 </footer>
 

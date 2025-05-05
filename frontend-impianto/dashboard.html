@@ -9,38 +9,39 @@
 </head>
 <body>
 
-<header>
-  <div class="logo-utente">
-    <img src="/img/logo.png" alt="Logo Ecodrin" />
-    <span>👤 Impianto</span>
-  </div>
-  <div class="nav-buttons">
-    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
-    <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
-    <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
-    <button onclick="location.href='utenti.html'">👥 Utenti</button>
-    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
-  </div>
-</header>
+  <header>
+    <div class="logo-utente">
+      <img src="/img/logo.png" alt="Logo Ecodrin">
+      <span>👤 Impianto</span>
+    </div>
+    <div class="nav-buttons">
+      <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+      <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+      <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+      <button onclick="location.href='utenti.html'">👥 Utenti</button>
+      <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+    </div>
+  </header>
 
-<section class="filter-bar">
-  <label for="filtroTipo">Filtra per:</label>
-  <select id="filtroTipo">
-    <option value="">Tutti</option>
-    <option value="accettata">Accettate</option>
-    <option value="non accettata">Non Accettate</option>
-    <option value="in attesa">In attesa</option>
-    <option value="produttore">Produttore</option>
-    <option value="cer">Codice CER</option>
-  </select>
-  <input type="text" id="filtroValore" placeholder="Valore filtro">
-  <button onclick="applicaFiltro()">Filtra</button>
-</section>
-
-<div id="contenuto-prenotazioni"></div>
-<div id="notify"></div>
-<audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
-
+  <main>
+    <section class="filter-bar">
+      <label for="filtroTipo">Filtra per:</label>
+      <select id="filtroTipo">
+        <option value="">Tutti</option>
+        <option value="accettata">Accettate</option>
+        <option value="non accettata">Non Accettate</option>
+        <option value="in attesa">In attesa</option>
+        <option value="produttore">Produttore</option>
+        <option value="cer">Codice CER</option>
+      </select>
+      <input type="text" id="filtroValore" placeholder="Valore filtro">
+      <button onclick="applicaFiltro()">Filtra</button>
+    </section>
+  
+    <div id="contenuto-prenotazioni"></div>
+    <div id="notify"></div>
+    <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+  </main>
 <script>
   function notify(msg, success = true) {
     const n = document.getElementById('notify');
@@ -216,11 +217,12 @@
   }
 </script>
 
-<footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
+<footer class="footer">
   © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
 </footer>
 
-</body >
+
+</body>
 
 </html> 
 

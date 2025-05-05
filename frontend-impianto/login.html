@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <title>Login Amministratore - Ecodrin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
   <style>
     html, body {
       height: 100%;
       margin: 0;
       padding: 0;
       font-family: 'Segoe UI', sans-serif;
-      background: #f1f8e9;
+      background-color: #f1f8e9;
       color: #2e7d32;
       display: flex;
       flex-direction: column;
@@ -22,47 +21,56 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-direction: column;
     }
 
-    .login-box {
-      background: white;
-      padding: 30px 40px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      max-width: 400px;
+    .login-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       width: 100%;
-      text-align: center;
+      max-width: 400px;
     }
 
-    .login-box h2 {
-      margin-bottom: 20px;
-      font-size: 1.6em;
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
       color: #2e7d32;
     }
 
-    .login-box input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 1px solid #c8e6c9;
-      border-radius: 6px;
-      font-size: 1em;
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+      color: #33691e;
     }
 
-    .login-box button {
+    input[type="text"],
+    input[type="password"] {
       width: 100%;
-      padding: 12px;
-      background: #2e7d32;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #c8e6c9;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #2e7d32;
       color: white;
       border: none;
-      border-radius: 6px;
-      font-size: 1em;
+      border-radius: 5px;
+      font-size: 16px;
+      margin-top: 20px;
       cursor: pointer;
-      font-weight: bold;
+      transition: background 0.3s;
     }
 
-    .login-box button:hover {
-      background: #1b5e20;
+    button:hover {
+      background-color: #27642b;
     }
 
     .error {
@@ -91,16 +99,27 @@
       font-size: 0.9em;
       border-top: 1px solid #ccc;
     }
+
+    @media (max-width: 480px) {
+      .login-container {
+        padding: 20px;
+      }
+    }
   </style>
 </head>
 <body>
 
   <div class="main-content">
-    <div class="login-box">
-      <h2>Login Admin</h2>
+    <div class="login-container">
+      <h1>Login Amministratore</h1>
+
       <form id="admin-login-form">
-        <input type="text" name="username" placeholder="Email Admin" required />
-        <input type="password" name="password" placeholder="Password" required />
+        <label for="username">Email Admin</label>
+        <input type="text" id="username" name="username" required>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+
         <button type="submit">Accedi</button>
         <div id="error-msg" class="error">Credenziali errate</div>
       </form>

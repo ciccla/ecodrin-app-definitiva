@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    /* Generale */
     .chart-container {
       margin-top: 30px;
       background: white;
@@ -21,8 +22,53 @@
 
     canvas {
       width: 100% !important;
-      height: 400px !important;
+      height: 500px !important; /* Aumentato per maggiore visibilità */
     }
+
+    /* Sezione Statistiche */
+    .stat-section {
+      padding: 20px;
+    }
+
+    .totali-box {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .totale {
+      flex: 1;
+      min-width: 180px;
+      padding: 20px;
+      background: #dcedc8;
+      border-radius: 8px;
+      font-size: 1.2em;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+    }
+
+    /* Grafici */
+    .chart-container h3 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #2e7d32;
+      font-size: 1.5em;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f1f1f1;
+      color: #555;
+      font-size: 0.9em;
+      border-top: 1px solid #ccc;
+      margin-top: 40px;
+    }
+
   </style>
 </head>
 <body>
@@ -163,7 +209,8 @@
 
   caricaStatistiche();
 </script>
-<footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
+
+<footer>
   © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
 </footer>
 

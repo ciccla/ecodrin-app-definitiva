@@ -558,7 +558,6 @@ app.get('/notifiche/admin-chat-trasporti', async (req, res) => {
     res.status(500).send('Errore server');
   }
 });
-const bcrypt = require('bcrypt');
 
 app.get('/setup/admin', async (req, res) => {
   const nuovoUsername = 'admin';

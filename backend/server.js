@@ -254,10 +254,7 @@ app.get('/cliente/notifiche-messaggi', async (req, res) => {
 app.post('/impianto/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.send('Compila tutti i campi');
-  app.get('/impianto/logout', (req, res) => {
-    req.session.destroy(() => res.redirect('/impianto/login.html'));
-  });
-  
+
   try {
     const result = await db.query(
       'SELECT * FROM utenti WHERE email = $1 AND ruolo = $2',
@@ -269,12 +266,18 @@ app.post('/impianto/login', async (req, res) => {
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) return res.send('Password errata');
 
+    // ✅ Salva sessione
     req.session.admin = { id: user.id, username: user.username, ruolo: user.ruolo };
-    res.send('Login impianto effettuato con successo ✅');
+    console.log('✅ Sessione admin attiva:', req.session.admin);
+
+    // ✅ Reindirizza alla dashboard
+    res.redirect('/impianto/dashboard.html');
   } catch (err) {
+    console.error('❌ Errore login impianto:', err.message);
     res.send('Errore login impianto');
   }
 });
+
 
 app.post('/impianto/cambia-stato', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');

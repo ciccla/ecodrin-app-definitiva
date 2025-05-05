@@ -9,3 +9,42 @@ node_modules/
 
 # Ignora log vari
 *.log
+# Librerie di Node.js
+node_modules/
+
+# Variabili di ambiente
+.env
+.env.local
+.env.*.local
+
+# Log di sistema
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database locali o file temporanei
+*.sqlite
+*.sqlite3
+*.db
+*.bak
+
+# File temporanei ed editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Upload generati dinamicamente
+/uploads/
+
+# Output di test o build (se presente)
+dist/
+build/
+coverage/
+
+# Backup
+*.gz
+*.zip
+*.tar

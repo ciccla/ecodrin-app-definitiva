@@ -4,16 +4,25 @@
   <meta charset="UTF-8">
   <title>Login Cliente</title>
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', sans-serif;
       background-color: #f1f8e9;
       color: #2e7d32;
       display: flex;
+      flex-direction: column;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      flex-direction: column;
     }
+
     .login-container {
       background-color: #ffffff;
       padding: 30px;
@@ -22,17 +31,20 @@
       width: 100%;
       max-width: 400px;
     }
+
     h1 {
       text-align: center;
       margin-bottom: 25px;
       color: #2e7d32;
     }
+
     label {
       display: block;
       margin-top: 15px;
       font-weight: bold;
       color: #33691e;
     }
+
     input[type="text"],
     input[type="password"] {
       width: 100%;
@@ -42,6 +54,7 @@
       border-radius: 5px;
       font-size: 14px;
     }
+
     button {
       width: 100%;
       padding: 10px;
@@ -54,22 +67,47 @@
       cursor: pointer;
       transition: background 0.3s;
     }
+
     button:hover {
       background-color: #27642b;
     }
+
     .register-link {
       text-align: center;
       margin-top: 15px;
       font-size: 14px;
     }
+
     .register-link a {
       color: #2e7d32;
       text-decoration: none;
       font-weight: bold;
     }
+
     .register-link a:hover {
       text-decoration: underline;
     }
+
+    .logo-footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .logo-footer img {
+      max-width: 150px;
+      height: auto;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f1f1f1;
+      color: #555;
+      font-size: 0.9em;
+      border-top: 1px solid #ccc;
+    }
+
     @media (max-width: 480px) {
       .login-container {
         padding: 20px;
@@ -79,30 +117,33 @@
 </head>
 <body>
 
-<div class="login-container">
-  <h1>Login Cliente</h1>
+  <div class="main-content">
+    <div class="login-container">
+      <h1>Login Cliente</h1>
 
-  <form action="/cliente/login" method="POST" id="login-form">
-    <label for="username">Username</label>
-    <input type="text" id="username" name="username" required>
+      <form action="/cliente/login" method="POST" id="login-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
 
-    <label for="password">Password</label>
-    <input type="password" id="password" name="password" required>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
 
-    <button type="submit">Accedi</button>
-  </form>
+        <button type="submit">Accedi</button>
+      </form>
 
-  <div class="register-link">
-    Non hai un account? <a href="register.html">Registrati</a>
+      <div class="register-link">
+        Non hai un account? <a href="register.html">Registrati</a>
+      </div>
+    </div>
   </div>
-</div>
-<div class="logo-footer">
-  <img src="/img/logo.png" alt="Logo Ecodrin">
-</div>
 
-<footer>
-  © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
-</footer>
+  <div class="logo-footer">
+    <img src="/img/logo.png" alt="Logo Ecodrin">
+  </div>
+
+  <footer>
+    © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
+  </footer>
 
 </body>
 </html>

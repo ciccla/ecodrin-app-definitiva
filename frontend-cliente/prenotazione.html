@@ -5,11 +5,21 @@
   <title>Nuova Prenotazione</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background: #f1f8e9;
       color: #2e7d32;
-      margin: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 20px;
     }
 
@@ -23,7 +33,7 @@
       border-radius: 10px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       max-width: 650px;
-      margin-bottom: 30px;
+      width: 100%;
     }
 
     label {
@@ -87,83 +97,97 @@
     #altroImballo {
       margin-top: 10px;
     }
+
+    .logo-footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .logo-footer img {
+      max-width: 150px;
+      height: auto;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f1f1f1;
+      color: #555;
+      font-size: 0.9em;
+      border-top: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Inserisci Prenotazione</h1>
+  <div class="main-content">
+    <h1>Inserisci Prenotazione</h1>
 
-  <a href="/cliente/dashboard.html" class="link-dashboard">⬅ Torna alla Dashboard</a>
+    <a href="/cliente/dashboard.html" class="link-dashboard">⬅ Torna alla Dashboard</a>
 
-  <form id="prenotazioneForm" enctype="multipart/form-data">
-    <label for="ragione_sociale">Ragione Sociale</label>
-    <input type="text" name="ragione_sociale" id="ragione_sociale" required>
+    <form id="prenotazioneForm" enctype="multipart/form-data">
+      <label for="ragione_sociale">Ragione Sociale</label>
+      <input type="text" name="ragione_sociale" id="ragione_sociale" required>
 
-    <label for="produttore">Produttore</label>
-    <input type="text" name="produttore" id="produttore" required>
+      <label for="produttore">Produttore</label>
+      <input type="text" name="produttore" id="produttore" required>
 
-    <label for="codice_cer">Codice CER</label>
-    <input type="text" name="codice_cer" id="codice_cer" required>
+      <label for="codice_cer">Codice CER</label>
+      <input type="text" name="codice_cer" id="codice_cer" required>
 
-    <label>Caratteristiche di Pericolo</label>
-    <div class="caratteristiche-pericolo">
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP1"> HP1</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP2"> HP2</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP3"> HP3</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP4"> HP4</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP5"> HP5</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP6"> HP6</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP7"> HP7</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP8"> HP8</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP9"> HP9</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP10"> HP10</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP11"> HP11</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP12"> HP12</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP13"> HP13</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP14"> HP14</label>
-      <label><input type="checkbox" name="caratteristiche_pericolo" value="HP15"> HP15</label>
-    </div>
-    
+      <label>Caratteristiche di Pericolo</label>
+      <div class="caratteristiche-pericolo">
+        <!-- Checkbox da HP1 a HP15 -->
+        ${[...Array(15)].map((_, i) => `<label><input type="checkbox" name="caratteristiche_pericolo" value="HP${i + 1}"> HP${i + 1}</label>`).join('')}
+      </div>
 
-    <label for="tipo_imballo">Tipo di Imballo</label>
-    <select name="tipo_imballo" id="tipo_imballo" onchange="checkAltro()" required>
-      <option value="">Seleziona</option>
-      <option value="Sfuso">Sfuso</option>
-      <option value="Cisternetta">Cisternetta</option>
-      <option value="Big Bags">Big Bags</option>
-      <option value="Pallet">Pallet</option>
-      <option value="Fusti">Fusti</option>
-      <option value="Altro">Altro</option>
-    </select>
+      <label for="tipo_imballo">Tipo di Imballo</label>
+      <select name="tipo_imballo" id="tipo_imballo" onchange="checkAltro()" required>
+        <option value="">Seleziona</option>
+        <option value="Sfuso">Sfuso</option>
+        <option value="Cisternetta">Cisternetta</option>
+        <option value="Big Bags">Big Bags</option>
+        <option value="Pallet">Pallet</option>
+        <option value="Fusti">Fusti</option>
+        <option value="Altro">Altro</option>
+      </select>
 
-    <div id="altroImballo" style="display: none;">
-      <label for="tipo_imballo_altro">Specificare Altro</label>
-      <input type="text" name="tipo_imballo_altro" id="tipo_imballo_altro">
-    </div>
+      <div id="altroImballo" style="display: none;">
+        <label for="tipo_imballo_altro">Specificare Altro</label>
+        <input type="text" name="tipo_imballo_altro" id="tipo_imballo_altro">
+      </div>
 
-    <label for="stato_fisico">Stato Fisico</label>
-    <select name="stato_fisico" id="stato_fisico" required>
-      <option value="">Seleziona</option>
-      <option value="SP">SP (in polvere o polverulento)</option>
-      <option value="S">S (solido)</option>
-      <option value="VS">VS (vischioso/sciropposo)</option>
-      <option value="FP">FP (fangoso)</option>
-      <option value="L">L (liquido)</option>
-    </select>
+      <label for="stato_fisico">Stato Fisico</label>
+      <select name="stato_fisico" id="stato_fisico" required>
+        <option value="">Seleziona</option>
+        <option value="SP">SP (in polvere o polverulento)</option>
+        <option value="S">S (solido)</option>
+        <option value="VS">VS (vischioso/sciropposo)</option>
+        <option value="FP">FP (fangoso)</option>
+        <option value="L">L (liquido)</option>
+      </select>
 
-    <label for="quantita">Quantità (in KG)</label>
-    <input type="number" name="quantita" id="quantita" required>
+      <label for="quantita">Quantità (in KG)</label>
+      <input type="number" name="quantita" id="quantita" required>
 
-    <label for="giorno_conferimento">Data Conferimento</label>
-    <input type="date" name="giorno_conferimento" id="giorno_conferimento" required>
+      <label for="giorno_conferimento">Data Conferimento</label>
+      <input type="date" name="giorno_conferimento" id="giorno_conferimento" required>
 
-    <label for="certificato_analitico">Certificato Analitico (PDF o immagine)</label>
-    <input type="file" name="certificato_analitico" id="certificato_analitico" accept=".pdf,image/*">
+      <label for="certificato_analitico">Certificato Analitico (PDF o immagine)</label>
+      <input type="file" name="certificato_analitico" id="certificato_analitico" accept=".pdf,image/*">
 
-    <button type="submit">Invia Prenotazione</button>
+      <button type="submit">Invia Prenotazione</button>
+      <div id="notifica" class="notifica" style="display:none;"></div>
+    </form>
+  </div>
 
-    <div id="notifica" class="notifica" style="display:none;"></div>
-  </form>
+  <div class="logo-footer">
+    <img src="/img/logo.png" alt="Logo Ecodrin">
+  </div>
+
+  <footer>
+    © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
+  </footer>
 
   <script>
     function checkAltro() {
@@ -198,14 +222,5 @@
       setTimeout(() => notifica.style.display = 'none', 4000);
     });
   </script>
-
-<div class="logo-footer">
-  <img src="/img/logo.png" alt="Logo Ecodrin">
-</div>
-
-<footer>
-  © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
-</footer>
-
 </body>
 </html>

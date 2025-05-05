@@ -3,17 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Richiesta Trasporto</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background-color: #f1f8e9;
       color: #2e7d32;
       display: flex;
+      flex-direction: column;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
       padding: 40px 20px;
-      min-height: 100vh;
-      margin: 0;
     }
 
     .form-container {
@@ -78,6 +85,31 @@
       text-decoration: underline;
     }
 
+    .logo-footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .logo-footer img {
+      max-width: 150px;
+      height: auto;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f1f1f1;
+      color: #555;
+      font-size: 0.9em;
+      border-top: 1px solid #ccc;
+    }
+
+    #avviso-trasporto {
+      color: #c62828;
+      font-size: 0.9em;
+      margin-top: 8px;
+    }
+
     @media (max-width: 500px) {
       .form-container {
         padding: 20px;
@@ -87,68 +119,79 @@
 </head>
 <body>
 
-  <div class="form-container">
-    <h1>Richiesta Trasporto</h1>
+  <div class="main-content">
+    <div class="form-container">
+      <h1>Richiesta Trasporto</h1>
 
-    <div class="back-link">
-      <a href="dashboard.html">⬅ Torna alla Dashboard</a>
+      <div class="back-link">
+        <a href="dashboard.html">⬅ Torna alla Dashboard</a>
+      </div>
+
+      <form id="trasportoForm">
+        <label>Richiedente</label>
+        <input type="text" name="richiedente" required>
+
+        <label>Produttore</label>
+        <input type="text" name="produttore" required>
+
+        <label>Codice CER</label>
+        <input type="text" name="codice_cer" required>
+
+        <label>Tipo di Automezzo</label>
+        <select name="tipo_automezzo" id="tipo_automezzo" required onchange="controllaAutomezzo()">
+          <option value="">Seleziona</option>
+          <option>Furgone</option>
+          <option>Eurocargo 100 con cassa scarrabile</option>
+          <option>Eurocargo 100 con ragno</option>
+          <option>Motrice con cassa scarrabile</option>
+          <option>Motrice con ragno</option>
+          <option>Bilico</option>
+          <option>Cisterna 5mc</option>
+          <option>Cisterna 15mc</option>
+          <option>Cisterna 30mc</option>
+        </select>
+
+        <label>Tipo di Trasporto</label>
+        <select name="tipo_trasporto" id="tipo_trasporto" disabled required>
+          <option value="">Seleziona</option>
+          <option value="Cambio Cassa">Cambio Cassa</option>
+          <option value="Ritiro Definitivo">Ritiro Definitivo</option>
+        </select>
+
+        <small id="avviso-trasporto" style="display: none;">
+          Il tipo di trasporto è disponibile solo per automezzi con cassa scarrabile.
+        </small>
+
+        <label>Data del Trasporto</label>
+        <input type="date" name="data_trasporto" required>
+
+        <label>Fascia Oraria Preferita</label>
+        <select name="orario_preferito" required>
+          <option value="">Seleziona una fascia</option>
+          <option value="08:30-10:30">08:30 - 10:30</option>
+          <option value="10:30-12:30">10:30 - 12:30</option>
+          <option value="14:30-16:30">14:30 - 16:30</option>
+          <option value="16:30-18:30">16:30 - 18:30</option>
+        </select>
+
+        <label>Numero di Referente</label>
+        <input type="tel" name="numero_referente" required>
+
+        <label>Prezzo Pattuito (€)</label>
+        <input type="number" name="prezzo_pattuito" step="0.01" required>
+
+        <button type="submit">Invia Richiesta</button>
+      </form>
     </div>
-
-    <form id="trasportoForm">
-      <label>Richiedente</label>
-      <input type="text" name="richiedente" required>
-
-      <label>Produttore</label>
-      <input type="text" name="produttore" required>
-
-      <label>Codice CER</label>
-      <input type="text" name="codice_cer" required>
-
-      <label>Tipo di Automezzo</label>
-      <select name="tipo_automezzo" id="tipo_automezzo" required onchange="controllaAutomezzo()">
-        <option value="">Seleziona</option>
-        <option>Furgone</option>
-        <option>Eurocargo 100 con cassa scarrabile</option>
-        <option>Eurocargo 100 con ragno</option>
-        <option>Motrice con cassa scarrabile</option>
-        <option>Motrice con ragno</option>
-        <option>Bilico</option>
-        <option>Cisterna 5mc</option>
-        <option>Cisterna 15mc</option>
-        <option>Cisterna 30mc</option>
-      </select>
-
-      <label>Tipo di Trasporto</label>
-      <select name="tipo_trasporto" id="tipo_trasporto" disabled required>
-        <option value="">Seleziona</option>
-        <option value="Cambio Cassa">Cambio Cassa</option>
-        <option value="Ritiro Definitivo">Ritiro Definitivo</option>
-      </select>
-
-      <small id="avviso-trasporto" style="color: #d32f2f; display: none;">
-        Il tipo di trasporto è disponibile solo per automezzi con cassa scarrabile.
-      </small>
-      <label>Data del Trasporto</label>
-      <input type="date" name="data_trasporto" required>
-
-      <label>Fascia Oraria Preferita</label>
-      <select name="orario_preferito" required>
-        <option value="">Seleziona una fascia</option>
-        <option value="08:30-10:30">08:30 - 10:30</option>
-        <option value="10:30-12:30">10:30 - 12:30</option>
-        <option value="14:30-16:30">14:30 - 16:30</option>
-        <option value="16:30-18:30">16:30 - 18:30</option>
-      </select>
-
-      <label>Numero di Referente</label>
-      <input type="tel" name="numero_referente" required>
-
-      <label>Prezzo Pattuito (€)</label>
-      <input type="number" name="prezzo_pattuito" step="0.01" required>
-
-      <button type="submit">Invia Richiesta</button>
-    </form>
   </div>
+
+  <div class="logo-footer">
+    <img src="/img/logo.png" alt="Logo Ecodrin">
+  </div>
+
+  <footer>
+    © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
+  </footer>
 
   <script>
     function controllaAutomezzo() {
@@ -191,13 +234,6 @@
       });
     });
   </script>
-<div class="logo-footer">
-  <img src="/img/logo.png" alt="Logo Ecodrin">
-</div>
-
-<footer>
-  © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
-</footer>
 
 </body>
 </html>

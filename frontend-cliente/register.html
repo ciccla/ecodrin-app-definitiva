@@ -3,16 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <title>Registrazione Cliente</title>
+  <link rel="stylesheet" href="style.css">
   <style>
-    body {
+    html, body {
+      height: 100%;
+      margin: 0;
       font-family: 'Segoe UI', sans-serif;
       background-color: #f1f8e9;
       color: #2e7d32;
       display: flex;
+      flex-direction: column;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      padding: 30px 20px;
     }
 
     .register-container {
@@ -81,6 +89,25 @@
       text-decoration: underline;
     }
 
+    .logo-footer {
+      text-align: center;
+      margin-top: 30px;
+    }
+
+    .logo-footer img {
+      max-width: 150px;
+      height: auto;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #f1f1f1;
+      color: #555;
+      font-size: 0.9em;
+      border-top: 1px solid #ccc;
+    }
+
     @media (max-width: 480px) {
       .register-container {
         padding: 20px;
@@ -90,34 +117,36 @@
 </head>
 <body>
 
-  <div class="register-container">
-    <h1>Registrazione Cliente</h1>
+  <div class="main-content">
+    <div class="register-container">
+      <h1>Registrazione Cliente</h1>
 
-    <form action="/cliente/register" method="POST">
-      <label for="email">Email</label>
-      <input type="email" name="email" id="email" required>
+      <form action="/cliente/register" method="POST">
+        <label for="email">Email</label>
+        <input type="email" name="email" id="email" required>
 
-      <label for="username">Username</label>
-      <input type="text" name="username" id="username" required>
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" required>
 
-      <label for="password">Password</label>
-      <input type="password" name="password" id="password" required>
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required>
 
-      <button type="submit">Registrati</button>
-    </form>
+        <button type="submit">Registrati</button>
+      </form>
 
-    <div class="login-link">
-      Hai già un account? <a href="login.html">Accedi</a>
+      <div class="login-link">
+        Hai già un account? <a href="login.html">Accedi</a>
+      </div>
     </div>
   </div>
- 
+
   <div class="logo-footer">
     <img src="/img/logo.png" alt="Logo Ecodrin">
   </div>
-  
+
   <footer>
     © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
   </footer>
-  
+
 </body>
 </html>

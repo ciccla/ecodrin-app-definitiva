@@ -13,9 +13,11 @@ body {
   font-family: 'Segoe UI', sans-serif;
   background-color: var(--bg-main);
   color: var(--text-main);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Header */
 header {
   background: #fff;
   display: flex;
@@ -64,7 +66,6 @@ header {
   background: var(--accent);
 }
 
-/* Filtri */
 .filter-bar {
   padding: 15px 20px;
   display: flex;
@@ -80,7 +81,7 @@ header {
   border-radius: 4px;
   border: 1px solid var(--input-border);
 }
-/* Tabelle */
+
 table {
   width: 95%;
   margin: 20px auto;
@@ -114,8 +115,6 @@ th {
 .in-attesa { background: #f9a825; }
 .attivo { background: #2e7d32; }
 .bloccato { background: #c62828; }
-
-/* Chat Box */
 .chat-box {
   border: 1px solid #c5e1a5;
   padding: 6px;
@@ -152,7 +151,6 @@ th {
   margin-left: 6px;
 }
 
-/* Bolle Giorno */
 .giorno-bolla {
   background: #e8f5e9;
   margin: 20px auto;
@@ -182,7 +180,6 @@ th {
   display: none;
 }
 
-/* Notifiche */
 #notify {
   position: fixed;
   bottom: 20px;
@@ -197,7 +194,6 @@ th {
   z-index: 999;
 }
 
-/* Statistiche */
 .stat-section {
   padding: 20px;
 }
@@ -238,22 +234,22 @@ canvas {
   max-width: 100%;
   height: auto !important;
 }
+
+.logo-footer {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.logo-footer img {
+  max-width: 150px;
+  height: auto;
+}
+
 .footer {
   text-align: center;
   padding: 20px;
   background: #f1f1f1;
   color: #555;
   font-size: 0.9em;
-  margin-top: 40px;
   border-top: 1px solid #ccc;
-}
-.logo-footer {
-  text-align: center;
-  margin-top: 50px;
-}
-
-.logo-footer img {
-  max-width: 180px;
-  height: auto;
-  margin-bottom: 10px;
 }

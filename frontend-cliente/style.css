@@ -8,12 +8,23 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-body {
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', sans-serif;
   background-color: var(--bg-light);
   color: var(--text-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
 }
 
 h1, h2 {
@@ -32,6 +43,7 @@ a {
   margin-bottom: 20px;
 }
 
+/* Tabelle */
 table {
   width: 95%;
   margin: 20px auto;
@@ -53,6 +65,7 @@ th {
   font-weight: bold;
 }
 
+/* Badge Stato */
 .badge {
   padding: 5px 10px;
   border-radius: 4px;
@@ -67,6 +80,7 @@ th {
 .info-richieste { background: #1565c0; }
 .in-attesa { background: #f9a825; }
 
+/* Chat */
 .chat-box {
   border: 1px solid #c5e1a5;
   padding: 6px;
@@ -94,13 +108,15 @@ th {
 .bubble-left { background: #e0f2f1; float: left; }
 .bubble-right { background: #c8e6c9; float: right; }
 
+/* Form */
 input[type="text"], 
 input[type="file"],
 input[type="email"],
 input[type="password"],
 input[type="number"],
 input[type="date"],
-input[type="time"] {
+input[type="time"],
+select {
   padding: 6px;
   border: 1px solid var(--input-border);
   border-radius: 4px;
@@ -108,16 +124,7 @@ input[type="time"] {
   font-size: 14px;
   margin-top: 4px;
   box-sizing: border-box;
-}
-
-select {
-  padding: 6px;
-  border: 1px solid var(--input-border);
-  border-radius: 4px;
-  font-size: 14px;
   background-color: white;
-  width: 100%;
-  margin-top: 4px;
 }
 
 button {
@@ -134,6 +141,7 @@ button:hover {
   background: var(--accent-dark);
 }
 
+/* Notifiche */
 #notify {
   position: fixed;
   bottom: 20px;
@@ -148,13 +156,6 @@ button:hover {
   z-index: 999;
 }
 
-.timestamp {
-  display: block;
-  font-size: 10px;
-  color: #666;
-  margin-top: 2px;
-}
-
 .badge-unread {
   background: red;
   color: white;
@@ -163,6 +164,8 @@ button:hover {
   font-size: 0.75em;
   margin-left: 6px;
 }
+
+/* Toggle Giorni */
 .giorno-toggle {
   cursor: pointer;
   background: #dcedc8;
@@ -181,9 +184,26 @@ button:hover {
   background: #c5e1a5;
 }
 
+.giorno-bolla {
+  background: #e8f5e9;
+  margin: 20px auto;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  max-width: 900px;
+}
+
+.giorno-bolla h3 {
+  margin-top: 0;
+  color: #2e7d32;
+  font-size: 1.2em;
+}
+
 .hidden {
   display: none;
 }
+
+/* Bottoni navigazione */
 .nav-buttons button {
   font-weight: bold;
   background-color: #66bb6a;
@@ -198,22 +218,25 @@ button:hover {
 .nav-buttons button:hover {
   background-color: #558b2f;
 }
+
+/* Logo Footer */
+.logo-footer {
+  text-align: center;
+  margin-top: 30px;
+}
+
+.logo-footer img {
+  max-width: 150px;
+  height: auto;
+}
+
+/* Footer */
 .footer {
   text-align: center;
   padding: 20px;
   background: #f1f1f1;
   color: #555;
   font-size: 0.9em;
-  margin-top: 40px;
   border-top: 1px solid #ccc;
-}
-.logo-footer {
-  text-align: center;
-  margin-top: 50px;
-}
-
-.logo-footer img {
-  max-width: 180px;
-  height: auto;
-  margin-bottom: 10px;
+  margin-top: auto;
 }

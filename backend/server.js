@@ -350,6 +350,38 @@ app.get('/notifiche/admin-chat', async (req, res) => {
     res.status(500).send('Errore');
   }
 });
+app.get('/impianto/prenotazioni', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+
+  try {
+    const result = await db.query(`
+      SELECT p.*, u.email AS email_cliente
+      FROM prenotazioni p
+      JOIN utenti u ON p.cliente_id = u.id
+      ORDER BY giorno_conferimento DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Errore caricamento prenotazioni impianto:', err.message);
+    res.status(500).send('Errore');
+  }
+});
+app.get('/impianto/trasporti', async (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Accesso negato');
+
+  try {
+    const result = await db.query(`
+      SELECT r.*, u.email AS email_cliente
+      FROM richieste_trasporto r
+      JOIN utenti u ON r.cliente_id = u.id
+      ORDER BY data_trasporto DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('❌ Errore caricamento trasporti impianto:', err.message);
+    res.status(500).send('Errore');
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server avviato in ambiente: ${process.env.NODE_ENV || 'sviluppo'}`);

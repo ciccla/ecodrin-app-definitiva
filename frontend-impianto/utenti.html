@@ -16,16 +16,49 @@
       display: flex;
       flex-direction: column;
     }
-
+    header {
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    .logo-utente {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-utente img {
+      height: 35px;
+      width: auto;
+    }
+    .logo-utente span {
+      font-weight: bold;
+      font-size: 1em;
+      color: #2e7d32;
+    }
+    .nav-buttons button {
+      font-weight: bold;
+      background-color: #66bb6a;
+      color: white;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .nav-buttons button:hover {
+      background-color: #558b2f;
+    }
     .main-content {
       flex: 1;
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       flex-direction: column;
       padding: 20px;
     }
-
     .utenti-container {
       background-color: #ffffff;
       padding: 30px;
@@ -35,72 +68,73 @@
       max-width: 1000px;
       margin-top: 20px;
     }
-
     h1 {
-      text-align: center;
       color: #2e7d32;
-      margin-bottom: 25px;
+      margin: 0;
+      font-size: 1.8em;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 20px;
     }
-
     th, td {
       padding: 10px;
       border: 1px solid #c8e6c9;
       text-align: center;
+      font-size: 0.95em;
     }
-
     th {
       background-color: #dcedc8;
       font-weight: bold;
     }
-
     .badge {
       padding: 6px 12px;
       border-radius: 12px;
       font-weight: bold;
       text-transform: capitalize;
+      color: white;
     }
-
     .attivo {
       background-color: #2e7d32;
-      color: white;
     }
-
     .bloccato {
       background-color: #c62828;
-      color: white;
     }
-
     .actions button {
       padding: 6px 12px;
+      margin: 0 4px;
       background-color: #2e7d32;
       color: white;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      font-weight: bold;
-      margin: 5px;
+      font-size: 0.9em;
+      transition: background 0.2s;
     }
-
     .actions button:hover {
       background-color: #1b5e20;
     }
-
+    #notify {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #2ecc71;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 6px;
+      display: none;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
     .logo-footer {
       text-align: center;
       margin-top: 30px;
     }
-
     .logo-footer img {
       max-width: 150px;
       height: auto;
     }
-
     footer {
       text-align: center;
       padding: 20px;
@@ -112,6 +146,20 @@
   </style>
 </head>
 <body>
+
+  <header>
+    <div class="logo-utente">
+      <img src="/img/logo.png" alt="Logo Ecodrin">
+      <span>👤 Impianto</span>
+    </div>
+    <div class="nav-buttons">
+      <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+      <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+      <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+      <button onclick="location.href='utenti.html'">👥 Utenti</button>
+      <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+    </div>
+  </header>
 
   <div class="main-content">
     <h1>🔐 Gestione Utenti</h1>
@@ -140,6 +188,7 @@
       fetch('/check-utenti')
         .then(res => res.json())
         .then(utenti => {
+          console.log('Utenti ricevuti dal server:', utenti);
           const div = document.getElementById('utenti-container');
           if (!utenti.length) {
             div.innerHTML = '<p>Nessun utente trovato.</p>';
@@ -162,7 +211,6 @@
           utenti.forEach(u => {
             const statoClass = u.bloccato ? 'bloccato' : 'attivo';
             const statoText = u.bloccato ? 'Bloccato' : 'Attivo';
-
             html += `
               <tr>
                 <td>${u.id}</td>
@@ -171,15 +219,19 @@
                 <td>${u.ruolo}</td>
                 <td><span class="badge ${statoClass}">${statoText}</span></td>
                 <td class="actions">
-                  <button class="blocca" onclick="aggiornaStato(${u.id}, 'blocca')">Blocca</button>
-                  <button class="sblocca" onclick="aggiornaStato(${u.id}, 'sblocca')">Sblocca</button>
-                  <button class="elimina" onclick="eliminaUtente(${u.id})">Elimina</button>
+                  <button onclick="aggiornaStato(${u.id}, 'blocca')">Blocca</button>
+                  <button onclick="aggiornaStato(${u.id}, 'sblocca')">Sblocca</button>
+                  <button onclick="eliminaUtente(${u.id})">Elimina</button>
                 </td>
               </tr>`;
           });
 
           html += `</tbody></table>`;
           div.innerHTML = html;
+        })
+        .catch(err => {
+          console.error('Errore caricamento utenti:', err);
+          notify('Errore caricamento utenti', false);
         });
     }
 

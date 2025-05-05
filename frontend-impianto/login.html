@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Login Amministratore - Ecodrin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
   <style>
     html, body {
       height: 100%;
@@ -114,8 +115,8 @@
       <h1>Login Amministratore</h1>
 
       <form id="admin-login-form">
-        <label for="email">Email Admin</label>
-        <input type="text" id="email" name="email" required>
+        <label for="username">Email Admin</label>
+        <input type="text" id="username" name="username" required>
 
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required>
@@ -153,8 +154,8 @@
       const text = await res.text();
 
       if (text.includes('successo')) {
-        const email = formData.get('email');
-        localStorage.setItem('adminEmail', email);
+        const username = formData.get('username');
+        localStorage.setItem('adminUser', username);
         window.location.href = '/impianto/dashboard.html';
       } else {
         errorMsg.style.display = 'block';

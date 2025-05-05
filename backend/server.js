@@ -6,33 +6,24 @@ const multer = require('multer');
 const path = require('path');
 const bcrypt = require('bcrypt');
 const fs = require('fs');
-// 🔧 Crea la cartella "uploads" se non esiste
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
 const nodemailer = require('nodemailer');
 const db = require('./db');
 
+// 🔧 Crea la cartella "uploads" se non esiste
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+// 👉 Funzione per creare notifiche lato admin
+async function aggiungiNotifica(tipo, riferimento_id, messaggio) {
+  await db.query(`
+    INSERT INTO notifiche_admin (tipo, riferimento_id, messaggio)
+    VALUES ($1, $2, $3)
+  `, [tipo, riferimento_id, messaggio]);
+}
 // ------------------------ CONFIGURAZIONE SERVER ------------------------
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// ------------------------ SMTP CONFIG ------------------------
-const transporter = nodemailer.createTransport({
-  service: 'SendGrid',
-  auth: {
-    user: 'apikey',
-    pass: process.env.SENDGRID_API_KEY
-  }
-});
-
-// ------------------------ UPLOAD ------------------------
-const upload = multer({ dest: path.join(__dirname, 'uploads') });
 
 // ------------------------ SESSIONE ------------------------
 app.use(session({
@@ -45,6 +36,15 @@ app.use(session({
 app.use('/cliente', express.static(path.join(__dirname, '../frontend-cliente')));
 app.use('/impianto', express.static(path.join(__dirname, '../frontend-impianto')));
 app.use(express.static(path.join(__dirname, '../public')));
+
+// ------------------------ SMTP CONFIG ------------------------
+const transporter = nodemailer.createTransport({
+  service: 'SendGrid',
+  auth: {
+    user: 'apikey',
+    pass: process.env.SENDGRID_API_KEY
+  }
+});
 
 // ------------------------ TEST ------------------------
 app.get('/', (req, res) => {
@@ -74,7 +74,7 @@ app.post('/cliente/register', async (req, res) => {
   }
 });
 
-// ------------------------ CLIENTE: LOGIN ------------------------
+// ------------------------ CLIENTE: LOGIN / LOGOUT ------------------------
 app.post('/cliente/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.send('Compila tutti i campi');
@@ -99,10 +99,10 @@ app.post('/cliente/login', async (req, res) => {
   }
 });
 
-// ------------------------ CLIENTE: LOGOUT ------------------------
 app.get('/cliente/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/cliente/login.html'));
 });
+
 // ------------------------ CLIENTE: INFO ACCOUNT ------------------------
 app.get('/cliente/info', (req, res) => {
   if (!req.session.utente) return res.status(401).json({ error: 'Non autenticato' });
@@ -124,7 +124,7 @@ app.get('/cliente/prenotazioni', async (req, res) => {
   }
 });
 
-app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async (req, res) => {
+app.post('/cliente/prenotazione', multer({ dest: uploadDir }).single('certificato_analitico'), async (req, res) => {
   if (!req.session.utente) return res.status(403).send('Devi essere loggato');
   const {
     ragione_sociale, produttore, codice_cer, caratteristiche_pericolo,
@@ -153,6 +153,8 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
       caratteristiche, imballo_finale, stato_fisico,
       certificato, quantita, giorno_conferimento
     ]);
+    await aggiungiNotifica('prenotazione', null, `Nuova prenotazione da ${produttore}`);
+
     res.send('Prenotazione inserita correttamente ✅');
   } catch (err) {
     console.error('❌ Errore inserimento:', err.message);
@@ -165,8 +167,8 @@ app.post('/cliente/richieste-trasporto', async (req, res) => {
 
   const {
     richiedente, produttore, codice_cer, tipo_automezzo,
-    tipo_trasporto, // <-- aggiunto
-    data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
+    tipo_trasporto, data_trasporto, orario_preferito,
+    numero_referente, prezzo_pattuito
   } = req.body;
 
   try {
@@ -176,10 +178,12 @@ app.post('/cliente/richieste-trasporto', async (req, res) => {
          data_trasporto, orario_preferito, numero_referente, prezzo_pattuito)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
     `, [
-      req.session.utente.id, richiedente, produttore, codice_cer, tipo_automezzo, tipo_trasporto,
-      data_trasporto, orario_preferito, numero_referente, prezzo_pattuito
+      req.session.utente.id, richiedente, produttore, codice_cer,
+      tipo_automezzo, tipo_trasporto, data_trasporto,
+      orario_preferito, numero_referente, prezzo_pattuito
     ]);
-    
+    await aggiungiNotifica('trasporto', null, `Nuova richiesta trasporto da ${produttore}`);
+
     res.send('Richiesta trasporto inviata ✅');
   } catch (err) {
     console.error('❌ Errore richiesta trasporto:', err.message);
@@ -201,13 +205,71 @@ app.get('/cliente/richieste-trasporto', async (req, res) => {
   }
 });
 
+// ------------------------ POLLING STATO (variazioni prenotazioni/trasporti) ------------------------
+app.get('/cliente/notifiche-stato', async (req, res) => {
+  if (!req.session.utente) return res.status(401).json({ errore: 'Non autenticato' });
+
+  try {
+    const prenotazioni = await db.query(`
+      SELECT id, stato FROM prenotazioni WHERE cliente_id = $1
+    `, [req.session.utente.id]);
+
+    const trasporti = await db.query(`
+      SELECT id, stato FROM richieste_trasporto WHERE cliente_id = $1
+    `, [req.session.utente.id]);
+
+    res.json({
+      prenotazioni: prenotazioni.rows,
+      trasporti: trasporti.rows
+    });
+  } catch (err) {
+    console.error('❌ Errore polling stato:', err.message);
+    res.status(500).send('Errore');
+  }
+});
+
+// ------------------------ POLLING CHAT (conteggio ultimi messaggi) ------------------------
+app.get('/cliente/notifiche-messaggi', async (req, res) => {
+  if (!req.session.utente) return res.status(401).json({ errore: 'Non autenticato' });
+
+  try {
+    const pren = await db.query(`
+      SELECT prenotazione_id AS id, COUNT(*) AS tot
+      FROM messaggi
+      WHERE mittente = 'impianto' AND prenotazione_id IN (
+        SELECT id FROM prenotazioni WHERE cliente_id = $1
+      )
+      GROUP BY prenotazione_id
+    `, [req.session.utente.id]);
+
+    const tras = await db.query(`
+      SELECT trasporto_id AS id, COUNT(*) AS tot
+      FROM messaggi_trasporto
+      WHERE mittente = 'impianto' AND trasporto_id IN (
+        SELECT id FROM richieste_trasporto WHERE cliente_id = $1
+      )
+      GROUP BY trasporto_id
+    `, [req.session.utente.id]);
+
+    res.json({
+      prenotazioni: pren.rows,
+      trasporti: tras.rows
+    });
+  } catch (err) {
+    console.error('❌ Errore polling messaggi:', err.message);
+    res.status(500).send('Errore');
+  }
+});
 // ------------------------ ADMIN (IMPIANTO) ------------------------
 app.post('/impianto/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) return res.send('Compila tutti i campi');
 
   try {
-    const result = await db.query('SELECT * FROM utenti WHERE email = $1 AND ruolo = $2', [username, 'admin']);
+    const result = await db.query(
+      'SELECT * FROM utenti WHERE email = $1 AND ruolo = $2',
+      [username, 'admin']
+    );
     const user = result.rows[0];
     if (!user) return res.send('Admin non trovato');
 
@@ -217,33 +279,7 @@ app.post('/impianto/login', async (req, res) => {
     req.session.admin = { id: user.id, username: user.username, ruolo: user.ruolo };
     res.send('Login impianto effettuato con successo ✅');
   } catch (err) {
-    console.error(err);
     res.send('Errore login impianto');
-  }
-});
-
-app.get('/impianto/logout', (req, res) => {
-  req.session.destroy(() => res.redirect('/impianto/login.html'));
-});
-
-app.get('/impianto/prenotazioni', async (req, res) => {
-  if (!req.session.admin) return res.status(403).send('Accesso negato');
-  try {
-    const result = await db.query('SELECT * FROM prenotazioni ORDER BY giorno_conferimento DESC');
-    res.json(result.rows);
-  } catch (err) {
-    res.send('Errore nel recupero');
-  }
-});
-
-app.get('/impianto/richieste-trasporto', async (req, res) => {
-  if (!req.session.admin) return res.status(403).send('Non autorizzato');
-  try {
-    const result = await db.query('SELECT * FROM richieste_trasporto ORDER BY data_trasporto DESC');
-    res.json(result.rows);
-  } catch (err) {
-    console.error('❌ Errore nel recupero richieste trasporto:', err.message);
-    res.status(500).send('Errore server');
   }
 });
 
@@ -255,8 +291,10 @@ app.post('/impianto/cambia-stato', async (req, res) => {
     await db.query('UPDATE prenotazioni SET stato = $1 WHERE id = $2', [nuovo_stato, id]);
 
     const { rows } = await db.query(`
-      SELECT u.email, p.produttore, p.giorno_conferimento FROM prenotazioni p
-      JOIN utenti u ON p.cliente_id = u.id WHERE p.id = $1
+      SELECT u.email, p.giorno_conferimento
+      FROM prenotazioni p
+      JOIN utenti u ON p.cliente_id = u.id
+      WHERE p.id = $1
     `, [id]);
 
     if (rows.length > 0) {
@@ -280,8 +318,7 @@ Impianto`;
 
     res.send('Stato aggiornato ✅');
   } catch (err) {
-    console.error(err);
-    res.send('Errore aggiornamento');
+    res.status(500).send('Errore aggiornamento');
   }
 });
 
@@ -295,7 +332,6 @@ app.post('/impianto/aggiorna-trasporto', async (req, res) => {
       [nuovo_stato, nota, id]
     );
 
-    // Usa la logica della prenotazione per invio email
     const { rows } = await db.query(`
       SELECT u.email, r.data_trasporto 
       FROM richieste_trasporto r
@@ -305,12 +341,10 @@ app.post('/impianto/aggiorna-trasporto', async (req, res) => {
 
     if (rows.length > 0) {
       const email = rows[0].email;
-      const dataTrasporto = rows[0].data_trasporto;
-
       const testo = `
 Gentile cliente,
 
-La tua richiesta di trasporto n°${id} del ${dataTrasporto} è stata aggiornata a: ${nuovo_stato.toUpperCase()}
+La tua richiesta di trasporto n°${id} del ${rows[0].data_trasporto} è stata aggiornata a: ${nuovo_stato.toUpperCase()}
 ${nota ? `\nNota dell’impianto:\n${nota}` : ''}
 
 Cordiali saluti,
@@ -322,19 +356,13 @@ Impianto`;
         subject: `Richiesta Trasporto #${id} aggiornata`,
         text: testo
       });
-
-      console.log(`📧 Email trasporto inviata a: ${email}`);
     }
 
     res.send('Stato trasporto aggiornato e email inviata ✅');
   } catch (err) {
-    console.error('❌ Errore aggiornamento trasporto:', err.message);
     res.status(500).send('Errore aggiornamento');
   }
 });
-
-
-
 // ------------------------ CHAT PRENOTAZIONI ------------------------
 app.get('/chat/prenotazione/:id', async (req, res) => {
   try {
@@ -343,8 +371,7 @@ app.get('/chat/prenotazione/:id', async (req, res) => {
       [req.params.id]
     );
     res.json(result.rows);
-  } catch (err) {
-    console.error('Errore messaggi prenotazione:', err.message);
+  } catch {
     res.status(500).send('Errore');
   }
 });
@@ -359,8 +386,7 @@ app.post('/chat/prenotazione', async (req, res) => {
       [prenotazione_id, mittente, messaggio]
     );
     res.send('Messaggio inviato ✅');
-  } catch (err) {
-    console.error(err);
+  } catch {
     res.status(500).send('Errore');
   }
 });
@@ -373,7 +399,7 @@ app.get('/chat/trasporto/:id', async (req, res) => {
       [req.params.id]
     );
     res.json(result.rows);
-  } catch (err) {
+  } catch {
     res.status(500).send('Errore');
   }
 });
@@ -388,41 +414,33 @@ app.post('/chat/trasporto', async (req, res) => {
       [trasporto_id, mittente, messaggio]
     );
     res.send('Messaggio inviato ✅');
-  } catch (err) {
+  } catch {
     res.status(500).send('Errore');
   }
 });
+// ------------------------ DOWNLOAD CERTIFICATO PER ADMIN ------------------------
+app.get('/impianto/download-certificato/:filename', (req, res) => {
+  if (!req.session.admin) return res.status(403).send('Non autorizzato');
 
-// ------------------------ GESTIONE UTENTI ADMIN ------------------------
-app.get('/check-utenti', async (req, res) => {
-  if (!req.session.admin) return res.status(403).send('Accesso negato');
-  try {
-    const { rows } = await db.query('SELECT id, username, email, ruolo, bloccato FROM utenti');
-    res.json(rows);
-  } catch {
-    res.status(500).send('Errore nel recupero utenti');
+  const filePath = path.join(__dirname, 'uploads', req.params.filename);
+
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('File non trovato');
   }
 });
 
-app.post('/admin/blocco-utente', async (req, res) => {
-  const { id, azione } = req.body;
-  if (!req.session.admin) return res.status(403).send('Accesso negato');
-  try {
-    await db.query('UPDATE utenti SET bloccato = $1 WHERE id = $2', [azione === 'blocca', id]);
-    res.send('Utente aggiornato');
-  } catch {
-    res.status(500).send('Errore aggiornamento');
-  }
-});
+// ------------------------ DOWNLOAD CERTIFICATO PER CLIENTE ------------------------
+app.get('/cliente/download-certificato/:filename', (req, res) => {
+  if (!req.session.utente) return res.status(403).send('Non autorizzato');
 
-app.post('/admin/elimina-utente', async (req, res) => {
-  const { id } = req.body;
-  if (!req.session.admin) return res.status(403).send('Accesso negato');
-  try {
-    await db.query('DELETE FROM utenti WHERE id = $1', [id]);
-    res.send('Utente eliminato');
-  } catch {
-    res.status(500).send('Errore eliminazione');
+  const filePath = path.join(__dirname, 'uploads', req.params.filename);
+
+  if (fs.existsSync(filePath)) {
+    res.download(filePath);
+  } else {
+    res.status(404).send('File non trovato');
   }
 });
 // ------------------------ STATISTICHE ------------------------
@@ -436,7 +454,6 @@ app.get('/stats/prenotazioni-giorno', async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
-    console.error('❌ Errore /stats/prenotazioni-giorno:', err.message);
     res.status(500).send('Errore');
   }
 });
@@ -452,7 +469,6 @@ app.get('/stats/stato-prenotazioni', async (req, res) => {
     rows.forEach(r => output[r.stato] = parseInt(r.totale));
     res.json(output);
   } catch (err) {
-    console.error('❌ Errore /stats/stato-prenotazioni:', err.message);
     res.status(500).send('Errore');
   }
 });
@@ -468,7 +484,6 @@ app.get('/stats/automezzi', async (req, res) => {
     rows.forEach(r => output[r.tipo_automezzo] = parseInt(r.totale));
     res.json(output);
   } catch (err) {
-    console.error('❌ Errore /stats/automezzi:', err.message);
     res.status(500).send('Errore');
   }
 });
@@ -484,11 +499,10 @@ app.get('/stats/utenti-ruolo', async (req, res) => {
     rows.forEach(r => output[r.ruolo] = parseInt(r.totale));
     res.json(output);
   } catch (err) {
-    console.error('❌ Errore /stats/utenti-ruolo:', err.message);
     res.status(500).send('Errore');
   }
 });
-// ------------------------ STATISTICHE COMPLETE ------------------------
+
 app.get('/stats/dati-completi', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');
   try {
@@ -502,32 +516,22 @@ app.get('/stats/dati-completi', async (req, res) => {
       trasporti: trasporti.rows
     });
   } catch (err) {
-    console.error('❌ Errore /stats/dati-completi:', err.message);
     res.status(500).send('Errore nel caricamento statistiche');
   }
 });
-// ------------------------ DOWNLOAD CERTIFICATO PER ADMIN ------------------------
-app.get('/impianto/download-certificato/:filename', (req, res) => {
+// ------------------------ NOTIFICHE ADMIN ------------------------
+app.get('/notifiche/admin', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Non autorizzato');
-
-  const filePath = path.join(__dirname, 'uploads', req.params.filename);
-
-  if (fs.existsSync(filePath)) {
-    res.download(filePath);
-  } else {
-    res.status(404).send('File non trovato');
-  }
-});
-// ------------------------ DOWNLOAD CERTIFICATO PER CLIENTE ------------------------
-app.get('/cliente/download-certificato/:filename', (req, res) => {
-  if (!req.session.utente) return res.status(403).send('Non autorizzato');
-
-  const filePath = path.join(__dirname, 'uploads', req.params.filename);
-
-  if (fs.existsSync(filePath)) {
-    res.download(filePath);
-  } else {
-    res.status(404).send('File non trovato');
+  try {
+    const { rows } = await db.query(`
+      SELECT * FROM notifiche_admin 
+      ORDER BY timestamp DESC 
+      LIMIT 20
+    `);
+    res.json(rows);
+  } catch (err) {
+    console.error('❌ Errore fetch notifiche admin:', err.message);
+    res.status(500).send('Errore');
   }
 });
 

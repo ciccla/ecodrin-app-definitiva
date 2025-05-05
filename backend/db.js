@@ -69,6 +69,15 @@ CREATE TABLE IF NOT EXISTS messaggi (
         stato TEXT DEFAULT 'in attesa',
         nota TEXT
       );
+      CREATE TABLE IF NOT EXISTS notifiche_admin (
+  id SERIAL PRIMARY KEY,
+  tipo TEXT NOT NULL, -- 'prenotazione' o 'trasporto'
+  riferimento_id INTEGER NOT NULL,
+  messaggio TEXT NOT NULL,
+  letto BOOLEAN DEFAULT FALSE,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
     `);
     console.log("✅ Tabelle PostgreSQL create correttamente");
   } catch (err) {

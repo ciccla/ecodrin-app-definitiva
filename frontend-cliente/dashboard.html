@@ -23,7 +23,6 @@
   </div>
 </header>
 
-
 <section class="filter-bar">
   <label for="filtroTipo">Filtra per:</label>
   <select id="filtroTipo">
@@ -46,7 +45,29 @@
 
 <div id="notify"></div>
 <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+
 <script>
+  // Richiesta permesso notifiche
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission().then(permission => {
+      if (permission !== "granted") {
+        console.warn("🔕 Notifiche disabilitate");
+      }
+    });
+  }
+
+  // Funzione per mostrare notifiche
+  function mostraNotifica(titolo, messaggio, tag = '') {
+    if (Notification.permission === 'granted') {
+      new Notification(titolo, {
+        body: messaggio,
+        icon: '/img/logo.png',
+        tag,
+        renotify: false
+      });
+    }
+  }
+
   // Mostra nome utente
   fetch('/cliente/info')
     .then(res => res.json())
@@ -95,6 +116,11 @@
         if (chatsLetti[`${tipo}-${id}`] !== undefined && nuovi > chatsLetti[`${tipo}-${id}`]) {
           unread.style.display = 'inline-block';
           document.getElementById('notifica-audio').play();
+
+          const titolo = tipo === 'trasporto'
+            ? `🚚 Messaggio Trasporto #${id}`
+            : `📦 Messaggio Prenotazione #${id}`;
+          mostraNotifica(titolo, 'Hai ricevuto un nuovo messaggio.', `chat-${tipo}-${id}`);
         }
 
         chatsLetti[`${tipo}-${id}`] = nuovi;
@@ -109,7 +135,6 @@
         box.scrollTop = box.scrollHeight;
       });
   }
-
   function inviaMessaggio(id, tipo) {
     const input = document.getElementById(`msg-${tipo}-${id}`);
     const testo = input.value.trim();
@@ -279,6 +304,7 @@
     });
   }, 3000);
 </script>
+
 <footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
   © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
 </footer>

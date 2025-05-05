@@ -40,6 +40,11 @@
 <audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 
 <script>
+  // Richiesta permesso notifiche
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+
   const notifyBox = document.getElementById('notify');
   const chatsLetti = {};
 
@@ -48,6 +53,12 @@
     notifyBox.style.background = success ? '#2ecc71' : '#e74c3c';
     notifyBox.style.display = 'block';
     setTimeout(() => notifyBox.style.display = 'none', 4000);
+  }
+
+  function browserNotify(titolo, corpo) {
+    if (Notification.permission === 'granted') {
+      new Notification(titolo, { body: corpo });
+    }
   }
 
   function toggleGiorno(data) {
@@ -66,6 +77,7 @@
         if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
           unread.style.display = 'inline-block';
           document.getElementById('suonoNotifica').play();
+          browserNotify("💬 Nuovo messaggio (Trasporto)", `ID ${id}: hai un nuovo messaggio dal cliente.`);
         }
 
         chatsLetti[id] = nuovi;
@@ -108,11 +120,13 @@
     }).then(res => res.text())
       .then(msg => {
         notify(msg);
+        browserNotify("🔄 Stato trasporto aggiornato", `Trasporto ID ${id} -> ${stato}`);
         const badge = document.getElementById(`stato-badge-${id}`);
         badge.className = 'badge ' + stato.replace(/\s/g, '-');
         badge.textContent = stato;
       });
   }
+
   function applyFilter() {
     const type = document.getElementById('filter-type').value;
     const value = document.getElementById('filter-value').value.toLowerCase();
@@ -188,6 +202,7 @@
                 <option value="accettata">Accettata</option>
                 <option value="non accettata">Non Accettata</option>
                 <option value="in attesa">in attesa</option>
+              </select>
               <button onclick="aggiornaStato(${id})">✔️</button>
             </td>
             <td>
@@ -201,11 +216,12 @@
           tbody.appendChild(row);
 
           caricaChat(id);
-          setInterval(() => caricaChat(id), 2000);
+          setInterval(() => caricaChat(id), 4000);
         });
       });
     });
 </script>
+
 <footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
   © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
 </footer>

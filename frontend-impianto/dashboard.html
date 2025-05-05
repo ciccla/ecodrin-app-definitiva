@@ -41,6 +41,20 @@
 <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 
 <script>
+  // Richiesta permesso notifiche browser
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+
+  function mostraNotificaBrowser(titolo, corpo) {
+    if (Notification.permission === 'granted') {
+      new Notification(titolo, {
+        body: corpo,
+        icon: '/img/logo.png'
+      });
+    }
+  }
+
   function notify(msg, success = true) {
     const n = document.getElementById('notify');
     n.innerText = msg;
@@ -137,7 +151,7 @@
           tbody.appendChild(riga);
 
           caricaChat(id);
-          setInterval(() => caricaChat(id), 2000);
+          setInterval(() => caricaChat(id), 3000);
         });
       });
     });
@@ -153,6 +167,7 @@
         if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
           unread.style.display = 'inline-block';
           document.getElementById('notifica-audio').play();
+          mostraNotificaBrowser("Nuovo messaggio", `Prenotazione #${id} ha un nuovo messaggio da parte del cliente`);
         }
 
         chatsLetti[id] = nuovi;
@@ -195,7 +210,6 @@
       notify("Prenotazione aggiornata");
       inviaEmail(email, id, data, orario, stato);
 
-      // 🔥 Aggiorna visivamente il badge subito
       const badge = document.getElementById(`badge-${id}`);
       badge.className = 'badge ' + stato.replace(/\s/g, '-');
       badge.textContent = stato;
@@ -214,6 +228,7 @@
     });
   }
 </script>
+
 <footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
   © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
 </footer>

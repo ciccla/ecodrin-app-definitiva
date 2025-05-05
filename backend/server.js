@@ -253,31 +253,44 @@ app.get('/cliente/notifiche-messaggi', async (req, res) => {
 // ------------------------ ADMIN (IMPIANTO) ------------------------
 app.post('/impianto/login', async (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.send('Compila tutti i campi');
+  if (!username || !password) {
+    return res.status(400).send('Compila tutti i campi');
+  }
 
   try {
+    // Cerca l'admin per email
     const result = await db.query(
-      'SELECT * FROM utenti WHERE email = $1 AND ruolo = $2',
+      'SELECT * FROM utenti WHERE LOWER(email) = LOWER($1) AND ruolo = $2',
       [username, 'admin']
     );
+
     const user = result.rows[0];
-    if (!user) return res.send('Admin non trovato');
+    if (!user) {
+      console.warn(`Tentativo di login fallito: admin non trovato per ${username}`);
+      return res.status(401).send('Admin non trovato');
+    }
 
+    // Confronta la password
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.send('Password errata');
+    if (!valid) {
+      console.warn(`Password errata per admin ${username}`);
+      return res.status(401).send('Password errata');
+    }
 
-    // ✅ Salva sessione
-    req.session.admin = { id: user.id, username: user.username, ruolo: user.ruolo };
-    console.log('✅ Sessione admin attiva:', req.session.admin);
+    // Login riuscito
+    req.session.admin = {
+      id: user.id,
+      username: user.username,
+      ruolo: user.ruolo
+    };
 
-    // ✅ Reindirizza alla dashboard
+    console.log('✅ Login admin riuscito:', req.session.admin);
     res.redirect('/impianto/dashboard.html');
   } catch (err) {
-    console.error('❌ Errore login impianto:', err.message);
-    res.send('Errore login impianto');
+    console.error('❌ Errore durante il login admin:', err.message);
+    res.status(500).send('Errore login impianto');
   }
 });
-
 
 app.post('/impianto/cambia-stato', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Dashboard Trasporti - Impianto</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
@@ -112,8 +112,8 @@
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({ trasporto_id:id, mittente:'admin', messaggio:inp.value })
       }).then(()=>{
-        inp.value='';
-        document.getElementById(`unread-${id}`).style.display='none';
+        inp.value = '';
+        document.getElementById(`unread-${id}`).style.display = 'none';
         caricaChat(id);
       });
     }
@@ -134,26 +134,23 @@
       });
     }
 
-    // Carica richieste trasporto
+    // Caricamento trasporti
     fetch('/impianto/richieste-trasporto')
       .then(r=>r.json())
       .then(data=>{
-        const cont = document.getElementById('trasporti-container');
-        if (!data.length) {
-          cont.innerHTML = '<p style="padding:20px;">Nessuna richiesta trovata.</p>';
-          return;
-        }
-        const perG = {};
+        const perDay = {};
         data.forEach(t => {
-          perG[t.data_trasporto] = perG[t.data_trasporto]||[];
-          perG[t.data_trasporto].push(t);
+          perDay[t.data_trasporto] = perDay[t.data_trasporto] || [];
+          perDay[t.data_trasporto].push(t);
         });
-        Object.keys(perG).sort().forEach(day=>{
+
+        const container = document.getElementById('trasporti-container');
+        Object.keys(perDay).sort().forEach(day => {
           const div = document.createElement('div');
           div.className = 'giorno-bolla';
           div.innerHTML = `
             <div class="giorno-toggle" onclick="toggleGiorno('${day}')">
-              📅 ${day} (${perG[day].length})
+              📅 ${day} (${perDay[day].length})
             </div>
             <div id="box-${day}" class="hidden">
               <table>
@@ -167,11 +164,12 @@
                 <tbody id="tb-${day}"></tbody>
               </table>
             </div>`;
-          cont.appendChild(div);
-          const tb = div.querySelector('tbody');
-          perG[day].forEach(r=>{
+          container.appendChild(div);
+
+          const tbody = div.querySelector('tbody');
+          perDay[day].forEach(r => {
             const sc = (r.stato||'in attesa').replace(/\s/g,'-');
-            tb.insertAdjacentHTML('beforeend',`
+            tbody.insertAdjacentHTML('beforeend', `
               <tr>
                 <td>${r.id}</td>
                 <td>${r.richiedente}</td>
@@ -200,15 +198,16 @@
                     <span class="badge-unread hidden" id="unread-${r.id}">NUOVO</span>
                   </div>
                 </td>
-              </tr>`);
+              </tr>
+            `);
             caricaChat(r.id);
             setInterval(()=>caricaChat(r.id),2000);
           });
         });
       })
       .catch(e=>{
-        console.error(e);
-        notify('Errore caricamento trasporti',false);
+        console.error('❌ Errore caricamento trasporti:', e);
+        notify('Errore caricamento trasporti', false);
       });
   </script>
 </body>

@@ -350,6 +350,18 @@ app.get('/notifiche/admin-chat', async (req, res) => {
     res.status(500).send('Errore');
   }
 });
+// ------------------------ ADMIN: LOGOUT ------------------------
+app.get('/impianto/logout', (req, res) => {
+  // distrugge la sessione admin e rimanda alla pagina di login
+  req.session.destroy(err => {
+    if (err) {
+      console.error('❌ Logout impianto:', err);
+      return res.status(500).send('Errore durante il logout');
+    }
+    res.redirect('/impianto/login.html');
+  });
+});
+
 app.get('/impianto/prenotazioni', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');
 

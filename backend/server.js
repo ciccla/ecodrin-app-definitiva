@@ -196,37 +196,126 @@ app.post('/impianto/login', async (req, res) => {
     res.send('Errore login impianto');
   }
 });
-
+// ------------------------ ADMIN: CAMBIA STATO PRENOTAZIONE ------------------------
 app.post('/impianto/cambia-stato', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');
   const { id, nuovo_stato, richiesta } = req.body;
   try {
-    await db.query('UPDATE prenotazioni SET stato = $1 WHERE id = $2', [nuovo_stato, id]);
-    const { rows } = await db.query('SELECT u.email, p.giorno_conferimento FROM prenotazioni p JOIN utenti u ON p.cliente_id = u.id WHERE p.id = $1', [id]);
+    // aggiorno lo stato in DB
+    await db.query(
+      'UPDATE prenotazioni SET stato = $1 WHERE id = $2',
+      [nuovo_stato, id]
+    );
+
+    // recupero tutti i dettagli della prenotazione
+    const { rows } = await db.query(`
+      SELECT 
+        u.email,
+        p.ragione_sociale,
+        p.produttore,
+        p.codice_cer,
+        p.quantita,
+        p.giorno_conferimento
+      FROM prenotazioni p
+      JOIN utenti u ON p.cliente_id = u.id
+      WHERE p.id = $1
+    `, [id]);
+
     if (rows.length > 0) {
-      const email = rows[0].email;
-      const testo = `Gentile cliente,\n\nLa tua prenotazione n°${id} del ${rows[0].giorno_conferimento} è stata aggiornata a: ${nuovo_stato.toUpperCase()}\n${richiesta ? '\nRichiesta dell’impianto:\n' + richiesta : ''}\n\nCordiali saluti,\nImpianto`;
-      await transporter.sendMail({ from: `"Ecodrin" <${process.env.EMAIL_USER}>`, to: email, subject: `Prenotazione #${id} aggiornata`, text: testo });
+      const info = rows[0];
+      const testo = `
+Gentile cliente,
+
+La tua prenotazione n° ${id} è stata aggiornata.
+
+Dettagli prenotazione:
+• Ragione Sociale: ${info.ragione_sociale}
+• Produttore: ${info.produttore}
+• Codice CER: ${info.codice_cer}
+• Quantità: ${info.quantita}
+• Data conferimento: ${info.giorno_conferimento}
+
+Nuovo stato: ${nuovo_stato.toUpperCase()}
+
+${richiesta ? `Richiesta impianto:\n${richiesta}\n\n` : ''}Cordiali saluti,
+Impianto`;
+
+      await transporter.sendMail({
+        from: `"Ecodrin" <${process.env.EMAIL_USER}>`,
+        to: info.email,
+        subject: `Prenotazione #${id} aggiornata a ${nuovo_stato}`,
+        text: testo
+      });
     }
+
     res.send('Stato aggiornato ✅');
-  } catch {
+  } catch (err) {
+    console.error('❌ Errore cambia-stato:', err);
     res.status(500).send('Errore aggiornamento');
   }
 });
 
+// ------------------------ ADMIN: AGGIORNA STATO TRASPORTO ------------------------
 app.post('/impianto/aggiorna-trasporto', async (req, res) => {
   if (!req.session.admin) return res.status(403).send('Accesso negato');
   const { id, nuovo_stato, nota } = req.body;
   try {
-    await db.query('UPDATE richieste_trasporto SET stato = $1, nota = $2 WHERE id = $3', [nuovo_stato, nota, id]);
-    const { rows } = await db.query('SELECT u.email, r.data_trasporto FROM richieste_trasporto r JOIN utenti u ON r.cliente_id = u.id WHERE r.id = $1', [id]);
+    // aggiorno stato e nota in DB
+    await db.query(
+      'UPDATE richieste_trasporto SET stato = $1, nota = $2 WHERE id = $3',
+      [nuovo_stato, nota, id]
+    );
+
+    // recupero dettagli della richiesta di trasporto
+    const { rows } = await db.query(`
+      SELECT 
+        u.email,
+        r.richiedente,
+        r.produttore,
+        r.codice_cer,
+        r.tipo_automezzo,
+        r.tipo_trasporto,
+        r.data_trasporto,
+        r.numero_referente,
+        r.prezzo_pattuito
+      FROM richieste_trasporto r
+      JOIN utenti u ON r.cliente_id = u.id
+      WHERE r.id = $1
+    `, [id]);
+
     if (rows.length > 0) {
-      const email = rows[0].email;
-      const testo = `Gentile cliente,\n\nLa tua richiesta di trasporto n°${id} del ${rows[0].data_trasporto} è stata aggiornata a: ${nuovo_stato.toUpperCase()}\n${nota ? '\nNota dell’impianto:\n' + nota : ''}\n\nCordiali saluti,\nImpianto`;
-      await transporter.sendMail({ from: `"Ecodrin" <${process.env.EMAIL_USER}>`, to: email, subject: `Richiesta Trasporto #${id} aggiornata`, text: testo });
+      const info = rows[0];
+      const testo = `
+Gentile cliente,
+
+La tua richiesta di trasporto n° ${id} è stata aggiornata.
+
+Dettagli richiesta:
+• Richiedente: ${info.richiedente}
+• Produttore: ${info.produttore}
+• Codice CER: ${info.codice_cer}
+• Automezzo: ${info.tipo_automezzo}
+• Tipo trasporto: ${info.tipo_trasporto}
+• Data trasporto: ${info.data_trasporto}
+• Contatto referente: ${info.numero_referente}
+• Prezzo pattuito: ${info.prezzo_pattuito} €
+
+Nuovo stato: ${nuovo_stato.toUpperCase()}
+
+${nota ? `Nota impianto:\n${nota}\n\n` : ''}Cordiali saluti,
+Impianto`;
+
+      await transporter.sendMail({
+        from: `"Ecodrin" <${process.env.EMAIL_USER}>`,
+        to: info.email,
+        subject: `Trasporto #${id} aggiornato a ${nuovo_stato}`,
+        text: testo
+      });
     }
+
     res.send('Stato trasporto aggiornato e email inviata ✅');
-  } catch {
+  } catch (err) {
+    console.error('❌ Errore aggiorna-trasporto:', err);
     res.status(500).send('Errore aggiornamento');
   }
 });

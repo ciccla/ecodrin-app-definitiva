@@ -179,7 +179,7 @@
               <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
               <td><span id="stato-badge-${r.id}" class="badge ${statoClass}">${r.stato}</span></td>
               <td>
-                <select id="stato-${id}">
+<select id="stato-${r.id}">
   <option value="accettata">Accettata</option>
   <option value="non accettata">Non Accettata</option>
   <option value="richieste integrazioni">Richieste Integrazioni</option>

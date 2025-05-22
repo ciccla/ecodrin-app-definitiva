@@ -241,3 +241,7 @@ button:hover {
   border-top: 1px solid #ccc;
   margin-top: auto;
 }
+.richieste-integrazioni {
+  background: orange;
+  color: white;
+}

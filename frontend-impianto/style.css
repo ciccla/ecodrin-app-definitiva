@@ -113,6 +113,7 @@ th {
 .non-accettata { background: #c62828; }
 .info-richieste { background: #1565c0; }
 .in-attesa { background: #f9a825; }
+.richieste-integrazioni { background: #f39c12; }
 .attivo { background: #2e7d32; }
 .bloccato { background: #c62828; }
 .chat-box {

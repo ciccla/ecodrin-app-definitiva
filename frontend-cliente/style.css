@@ -78,6 +78,7 @@ th {
 .accettata { background: #2e7d32; }
 .non-accettata { background: #c62828; }
 .info-richieste { background: #1565c0; }
+.richieste-integrazioni { background: #f39c12; }
 .in-attesa { background: #f9a825; }
 
 /* Chat */

@@ -131,7 +131,20 @@
 
       <label for="produttore">Produttore</label>
       <input type="text" name="produttore" id="produttore" required>
+<label for="produttore">Produttore</label>
+<input type="text" name="produttore" id="produttore" required>
 
+<!-- Codice CER -->
+<label for="codice_cer">Codice CER</label>
+<input 
+  type="text" 
+  name="codice_cer" 
+  id="codice_cer" 
+  required 
+  pattern="[0-9]{6}" 
+  title="Inserisci un codice CER a 6 cifre, es.: 200101" 
+  placeholder="es. 200101">
+      
       <label>Caratteristiche di Pericolo</label>
       <div class="caratteristiche-pericolo">
         <label><input type="checkbox" name="caratteristiche_pericolo" value="HP1"> HP1</label>

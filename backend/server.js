@@ -112,7 +112,7 @@ app.get('/cliente/prenotazioni', async (req, res) => {
   }
 });
 
-app.post('/cliente/prenotazione', multer({ dest: uploadDir }).single('certificato_analitico'), async (req, res) => {
+app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async (req, res) => {
   if (!req.session.utente) return res.status(403).send('Devi essere loggato');
   const {
     ragione_sociale, produttore, codice_cer, caratteristiche_pericolo,

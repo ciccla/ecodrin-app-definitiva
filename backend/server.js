@@ -10,7 +10,18 @@ const db = require('./db');
 
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir); // salva nella cartella uploads
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname); // esempio: ".pdf"
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    cb(null, filename);
+  }
+});
 
+const upload = multer({ storage });
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
@@ -25,6 +36,7 @@ app.use(session({
 app.use('/cliente', express.static(path.join(__dirname, '../frontend-cliente')));
 app.use('/impianto', express.static(path.join(__dirname, '../frontend-impianto')));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const transporter = nodemailer.createTransport({
   service: 'SendGrid',

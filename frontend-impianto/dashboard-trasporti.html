@@ -5,13 +5,8 @@
   <title>Dashboard Trasporti - Ecodrin</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css">
-  <style>
-    /* Piccole aggiunte locali se servono */
-    .hidden { display: none; }
-  </style>
 </head>
 <body>
-
 <header>
   <div class="logo-utente">
     <img src="/img/logo.png" alt="Logo Ecodrin" />
@@ -45,19 +40,23 @@
 <audio id="suonoNotifica" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
 
 <script>
-  const notifyBox = document.getElementById('notify');
-  const chatsLetti = {};
-
   function notify(msg, success = true) {
-    notifyBox.innerText = msg;
-    notifyBox.style.background = success ? '#2ecc71' : '#e74c3c';
-    notifyBox.style.display = 'block';
-    setTimeout(() => notifyBox.style.display = 'none', 4000);
+    const n = document.getElementById('notify');
+    n.innerText = msg;
+    n.style.background = success ? '#2ecc71' : '#e74c3c';
+    n.style.display = 'block';
+    setTimeout(() => n.style.display = 'none', 4000);
   }
 
-  function toggleGiorno(data) {
-    document.getElementById(`box-${data}`).classList.toggle('hidden');
+  function formattaData(dataISO) {
+    const d = new Date(dataISO);
+    const gg = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth()+1).padStart(2, '0');
+    const aaaa = d.getFullYear();
+    return `${gg}-${mm}-${aaaa}`;
   }
+
+  const chatsLetti = {};
 
   function caricaChat(id) {
     fetch(`/chat/trasporto/${id}`)
@@ -66,13 +65,11 @@
         const box = document.getElementById(`chat-${id}`);
         const unread = document.getElementById(`unread-${id}`);
         const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
-
         if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
           unread.style.display = 'inline-block';
           document.getElementById('suonoNotifica').play();
         }
         chatsLetti[id] = nuovi;
-
         box.innerHTML = '';
         msgs.forEach(m => {
           const bubble = document.createElement('div');
@@ -88,7 +85,6 @@
     const input = document.getElementById(`msg-${id}`);
     const testo = input.value.trim();
     if (!testo) return;
-
     fetch('/chat/trasporto', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -120,13 +116,12 @@
     const type = document.getElementById('filter-type').value;
     const value = document.getElementById('filter-value').value.toLowerCase();
     document.querySelectorAll('#trasporti-container tbody tr').forEach(row => {
-      const tdMap = { id:0, richiedente:1, produttore:2, cer:3, stato:9, tipo_trasporto:5 };
-      const cell = row.children[tdMap[type]];
+      const map = { id:0, richiedente:1, produttore:2, cer:3, stato:9, tipo_trasporto:5 };
+      const cell = row.children[map[type]];
       row.style.display = cell && cell.textContent.toLowerCase().includes(value) ? '' : 'none';
     });
   }
 
-  // **Fetch corretto** qui
   fetch('/impianto/trasporti')
     .then(res => res.json())
     .then(data => {
@@ -135,56 +130,44 @@
         container.innerHTML = '<p style="padding:20px;">Nessuna richiesta trovata.</p>';
         return;
       }
-
       const perGiorno = {};
       data.forEach(r => {
-        perGiorno[r.data_trasporto] = perGiorno[r.data_trasporto] || [];
-        perGiorno[r.data_trasporto].push(r);
+        const giorno = formattaData(r.data_trasporto);
+        perGiorno[giorno] ||= [];
+        perGiorno[giorno].push(r);
       });
-
-      Object.keys(perGiorno).sort().forEach(data => {
-        const blocco = document.createElement('div');
-        blocco.className = 'utenti-container';
-        blocco.innerHTML = `
-          <div class="giorno-toggle" onclick="toggleGiorno('${data}')">
-            📅 ${data} (${perGiorno[data].length})
+      Object.keys(perGiorno).sort().forEach(giorno => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <div class="giorno-toggle" onclick="document.getElementById('box-${giorno}').classList.toggle('hidden')">
+            📅 ${giorno} (${perGiorno[giorno].length})
           </div>
-          <div id="box-${data}" class="hidden">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th>
-                  <th>Automezzo</th><th>Tipo Trasporto</th><th>Orario</th>
-                  <th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-${data}"></tbody>
-            </table>
+          <div id="box-${giorno}" class="hidden">
+            <table><thead>
+              <tr>
+                <th>ID</th><th>Richiedente</th><th>Produttore</th><th>CER</th>
+                <th>Automezzo</th><th>Tipo Trasporto</th><th>Orario</th>
+                <th>Telefono</th><th>Prezzo</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+              </tr>
+            </thead><tbody></tbody></table>
           </div>`;
-        container.appendChild(blocco);
-
-        const tbody = blocco.querySelector('tbody');
-        perGiorno[data].forEach(r => {
+        container.appendChild(div);
+        const tbody = div.querySelector('tbody');
+        perGiorno[giorno].forEach(r => {
           const statoClass = (r.stato||'in attesa').replace(/\s/g,'-');
           tbody.insertAdjacentHTML('beforeend', `
             <tr>
-              <td>${r.id}</td>
-              <td>${r.richiedente}</td>
-              <td>${r.produttore}</td>
-              <td>${r.codice_cer}</td>
-              <td>${r.tipo_automezzo}</td>
-              <td>${r.tipo_trasporto||'-'}</td>
-              <td>${r.orario_preferito}</td>
-              <td>${r.numero_referente}</td>
-              <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
+              <td>${r.id}</td><td>${r.richiedente}</td><td>${r.produttore}</td><td>${r.codice_cer}</td>
+              <td>${r.tipo_automezzo}</td><td>${r.tipo_trasporto||'-'}</td><td>${r.orario_preferito}</td>
+              <td>${r.numero_referente}</td><td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
               <td><span id="stato-badge-${r.id}" class="badge ${statoClass}">${r.stato}</span></td>
               <td>
-<select id="stato-${r.id}">
-  <option value="accettata">Accettata</option>
-  <option value="non accettata">Non Accettata</option>
-  <option value="richieste integrazioni">Richieste Integrazioni</option>
-</select>
-                <button onclick="aggiornaStato(${r.id})">✔️</button> 
+                <select id="stato-${r.id}">
+                  <option value="accettata">Accettata</option>
+                  <option value="non accettata">Non Accettata</option>
+                  <option value="richieste integrazioni">Richieste Integrazioni</option>
+                </select>
+                <button onclick="aggiornaStato(${r.id})">✔️</button>
               </td>
               <td>
                 <div class="chat-box">
@@ -202,14 +185,11 @@
       });
     })
     .catch(err => {
-      console.error('Errore caricamento trasporti:', err);
+      console.error('Errore:', err);
       notify('Errore caricamento trasporti', false);
     });
 </script>
 
-<footer style="text-align:center; padding: 20px; background: #f1f1f1; color: #555; font-size: 0.9em; margin-top: 40px;">
-  © 2025 Ecodrin - P.I: 03378791218 Tutti i diritti riservati
-</footer>
-
+<footer class="footer">© 2025 Ecodrin - P.I: 03378791218</footer>
 </body>
 </html>

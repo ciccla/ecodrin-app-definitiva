@@ -1,230 +1,205 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dashboard Prenotazioni - Impianto</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+<header>
+  <div class="logo-utente">
+    <img src="/img/logo.png" alt="Logo Ecodrin" />
+    <span>👤 Impianto</span>
+  </div>
+  <div class="nav-buttons">
+    <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
+    <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
+    <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
+    <button onclick="location.href='utenti.html'">👥 Utenti</button>
+    <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
+  </div>
+</header>
 
-  <header>
-    <div class="logo-utente">
-      <img src="/img/logo.png" alt="Logo Ecodrin">
-      <span>👤 Impianto</span>
-    </div>
-    <div class="nav-buttons">
-      <button onclick="location.href='dashboard.html'">🏠 Prenotazioni</button>
-      <button onclick="location.href='dashboard-trasporti.html'">🚚 Trasporti</button>
-      <button onclick="location.href='statistiche.html'">📊 Statistiche</button>
-      <button onclick="location.href='utenti.html'">👥 Utenti</button>
-      <button onclick="location.href='/impianto/logout'">🔒 Logout</button>
-    </div>
-  </header>
+<main>
+  <section class="filter-bar">
+    <label for="filtroTipo">Filtra per:</label>
+    <select id="filtroTipo">
+      <option value="">Tutti</option>
+      <option value="accettata">Accettate</option>
+      <option value="non accettata">Non Accettate</option>
+      <option value="in attesa">In attesa</option>
+      <option value="produttore">Produttore</option>
+      <option value="cer">Codice CER</option>
+    </select>
+    <input type="text" id="filtroValore" placeholder="Valore filtro" />
+    <button onclick="applicaFiltro()">Filtra</button>
+  </section>
 
-  <main>
-    <section class="filter-bar">
-      <label for="filtroTipo">Filtra per:</label>
-      <select id="filtroTipo">
-        <option value="">Tutti</option>
-        <option value="accettata">Accettate</option>
-        <option value="non accettata">Non Accettate</option>
-        <option value="in attesa">In attesa</option>
-        <option value="produttore">Produttore</option>
-        <option value="cer">Codice CER</option>
-      </select>
-      <input type="text" id="filtroValore" placeholder="Valore filtro">
-      <button onclick="applicaFiltro()">Filtra</button>
-    </section>
+  <div id="contenuto-prenotazioni"></div>
+  <div id="notify"></div>
+  <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+</main>
 
-    <div id="contenuto-prenotazioni"></div>
-    <div id="notify"></div>
-    <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
-  </main>
+<script>
+  function notify(msg, success = true) {
+    const n = document.getElementById('notify');
+    n.innerText = msg;
+    n.style.background = success ? '#2ecc71' : '#e74c3c';
+    n.style.display = 'block';
+    setTimeout(() => n.style.display = 'none', 4000);
+  }
 
-  <script>
-    function notify(msg, success = true) {
-      const n = document.getElementById('notify');
-      n.innerText = msg;
-      n.style.background = success ? '#2ecc71' : '#e74c3c';
-      n.style.display = 'block';
-      setTimeout(() => n.style.display = 'none', 4000);
-    }
+  function formattaData(dataISO) {
+    const d = new Date(dataISO);
+    const gg = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth()+1).padStart(2, '0');
+    const aaaa = d.getFullYear();
+    return `${gg}-${mm}-${aaaa}`;
+  }
 
-    function formattaData(dataISO) {
-      const d = new Date(dataISO);
-      const gg = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth()+1).padStart(2, '0');
-      const aaaa = d.getFullYear();
-      return `${gg}-${mm}-${aaaa}`;
-    }
+  function applicaFiltro() {
+    const tipo = document.getElementById('filtroTipo').value;
+    const valore = document.getElementById('filtroValore').value.toLowerCase();
+    document.querySelectorAll('.prenotazione-riga').forEach(row => {
+      const stato = row.dataset.stato;
+      const produttore = row.dataset.produttore.toLowerCase();
+      const cer = row.dataset.cer.toLowerCase();
+      row.style.display = (!tipo ||
+        (tipo === stato && stato.includes(valore)) ||
+        (tipo === 'produttore' && produttore.includes(valore)) ||
+        (tipo === 'cer' && cer.includes(valore)))
+        ? '' : 'none';
+    });
+  }
 
-    function applicaFiltro() {
-      const tipo   = document.getElementById('filtroTipo').value;
-      const valore = document.getElementById('filtroValore').value.toLowerCase();
-      document.querySelectorAll('.prenotazione-riga').forEach(row => {
-        const stato      = row.dataset.stato;
-        const produttore = row.dataset.produttore.toLowerCase();
-        const cer        = row.dataset.cer.toLowerCase();
-        if (!tipo ||
-            (tipo === stato && stato.includes(valore)) ||
-            (tipo === 'produttore' && produttore.includes(valore)) ||
-            (tipo === 'cer' && cer.includes(valore))) {
-          row.style.display = '';
-        } else {
-          row.style.display = 'none';
-        }
+  let chatsLetti = {};
+  const contenitore = document.getElementById('contenuto-prenotazioni');
+
+  fetch('/impianto/prenotazioni')
+    .then(res => res.json())
+    .then(data => {
+      const strutt = {};
+      data.forEach(p => {
+        const d = new Date(p.giorno_conferimento);
+        const anno = d.getFullYear();
+        const mese = d.toLocaleString('it-IT', { month: 'long' });
+        const giorno = formattaData(p.giorno_conferimento);
+        const settimana = `Settimana ${Math.ceil(d.getDate()/7)}`;
+
+        strutt[anno] ||= {};
+        strutt[anno][mese] ||= {};
+        strutt[anno][mese][settimana] ||= {};
+        strutt[anno][mese][settimana][giorno] ||= [];
+        strutt[anno][mese][settimana][giorno].push(p);
       });
-    }
 
-    let chatsLetti = {};
-    const contenitore = document.getElementById('contenuto-prenotazioni');
+      Object.keys(strutt).sort().forEach(anno => {
+        const boxAnno = document.createElement('div');
+        boxAnno.innerHTML = `<div class="giorno-toggle" onclick="document.getElementById('anno-${anno}').classList.toggle('hidden')">📅 ${anno}</div>
+          <div id="anno-${anno}" class="hidden" style="margin-left:10px;"></div>`;
+        contenitore.appendChild(boxAnno);
 
-    fetch('/impianto/prenotazioni')
-      .then(res => res.json())
-      .then(data => {
-        const prenotazioniStrutturate = {};
+        const containerAnno = boxAnno.querySelector(`#anno-${anno}`);
+        Object.keys(strutt[anno]).sort((a,b)=> new Date(`${a} 1`) - new Date(`${b} 1`)).forEach(mese => {
+          const boxMese = document.createElement('div');
+          boxMese.innerHTML = `<div class="giorno-toggle" onclick="document.getElementById('mese-${anno}-${mese}').classList.toggle('hidden')">🗓️ ${mese}</div>
+            <div id="mese-${anno}-${mese}" class="hidden" style="margin-left:20px;"></div>`;
+          containerAnno.appendChild(boxMese);
 
-        data.forEach(p => {
-          const dataObj = new Date(p.giorno_conferimento);
-          const anno = dataObj.getFullYear();
-          const mese = dataObj.toLocaleString('it-IT', { month: 'long' });
-          const giorno = formattaData(p.giorno_conferimento);
-          const settimana = `Settimana ${Math.ceil(dataObj.getDate()/7)}`;
+          const containerMese = boxMese.querySelector(`#mese-${anno}-${mese}`);
+          Object.keys(strutt[anno][mese]).sort().forEach(sett => {
+            const boxSet = document.createElement('div');
+            boxSet.innerHTML = `<div class="giorno-toggle" onclick="document.getElementById('sett-${anno}-${mese}-${sett}').classList.toggle('hidden')">📌 ${sett}</div>
+              <div id="sett-${anno}-${mese}-${sett}" class="hidden" style="margin-left:30px;"></div>`;
+            containerMese.appendChild(boxSet);
 
-          prenotazioniStrutturate[anno] ||= {};
-          prenotazioniStrutturate[anno][mese] ||= {};
-          prenotazioniStrutturate[anno][mese][settimana] ||= {};
-          prenotazioniStrutturate[anno][mese][settimana][giorno] ||= [];
-          prenotazioniStrutturate[anno][mese][settimana][giorno].push(p);
-        });
+            const containerSett = boxSet.querySelector(`#sett-${anno}-${mese}-${sett}`);
+            Object.keys(strutt[anno][mese][sett]).sort().forEach(giorno => {
+              const arr = strutt[anno][mese][sett][giorno];
+              const boxGiorno = document.createElement('div');
+              boxGiorno.innerHTML = `<div class="giorno-toggle" onclick="document.getElementById('gior-${anno}-${mese}-${sett}-${giorno}').classList.toggle('hidden')">📅 ${giorno} (${arr.length})</div>
+                <div id="gior-${anno}-${mese}-${sett}-${giorno}" class="hidden" style="margin-left:40px;">
+                  <table><thead>
+                    <tr><th>ID</th><th>Cliente</th><th>Produttore</th><th>CER</th><th>Pericolo</th><th>Quantità</th><th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th></tr>
+                  </thead><tbody></tbody></table>
+                </div>`;
+              containerSett.appendChild(boxGiorno);
 
-        Object.keys(prenotazioniStrutturate).sort().forEach(anno => {
-          const boxAnno = document.createElement('div');
-          boxAnno.innerHTML = `<h2>📅 ${anno}</h2>`;
-          contenitore.appendChild(boxAnno);
-
-          Object.keys(prenotazioniStrutturate[anno]).forEach(mese => {
-            const boxMese = document.createElement('div');
-            boxMese.innerHTML = `<h3 style="margin-left:20px;">🗓️ ${mese}</h3>`;
-            boxAnno.appendChild(boxMese);
-
-            Object.keys(prenotazioniStrutturate[anno][mese]).forEach(settimana => {
-              const boxSettimana = document.createElement('div');
-              boxSettimana.innerHTML = `<h4 style="margin-left:40px;">📌 ${settimana}</h4>`;
-              boxMese.appendChild(boxSettimana);
-
-              Object.keys(prenotazioniStrutturate[anno][mese][settimana]).sort().forEach(giorno => {
-                const prenotazioni = prenotazioniStrutturate[anno][mese][settimana][giorno];
-                const boxGiorno = document.createElement('div');
-                boxGiorno.innerHTML = `
-                  <div class="giorno-toggle" onclick="document.getElementById('giorno-${anno}-${mese}-${settimana}-${giorno}').classList.toggle('hidden')">
-                    📅 ${giorno} (${prenotazioni.length} prenotazioni)
-                  </div>
-                  <div id="giorno-${anno}-${mese}-${settimana}-${giorno}" class="hidden">
-                    <table>
-                      <thead> ... </thead><tbody></tbody>
-                    </table>
-                  </div>`;
-                boxSettimana.appendChild(boxGiorno);
-
-                const tbody = boxGiorno.querySelector('tbody');
-                prenotazioni.forEach(p => {
-                  const id         = p.id;
-                  const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-                  const riga       = document.createElement('tr');
-                  riga.classList.add('prenotazione-riga');
-                  riga.dataset.stato      = p.stato || 'in attesa';
-                  riga.dataset.produttore = p.produttore;
-                  riga.dataset.cer        = p.codice_cer;
-
-                  riga.innerHTML = `
-                    <td>${id}</td>
-                    <td>${p.ragione_sociale}</td>
-                    <td>${p.produttore}</td>
-                    <td>${p.codice_cer}</td>
-                    <td>${p.caratteristiche_pericolo || '-'}</td>
-                    <td>${p.quantita}</td>
-                    <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
-                    <td><span id="badge-${id}" class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-                    <td>
-                      <select id="stato-${id}">
-                        <option value="accettata">Accettata</option>
-                        <option value="non accettata">Non Accettata</option>
-                        <option value="richieste integrazioni">Richieste Integrazioni</option>
-                      </select>
-                      <button onclick="aggiornaStato(${id})">✔️</button>
-                    </td>
-                    <td>
-                      <div class="chat-box">
-                        <div class="chat-messages" id="chat-${id}"></div>
-                        <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi…" onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
-                        <button onclick="inviaMessaggio(${id})">Invia</button>
-                        <span class="badge-unread hidden" id="unread-${id}">NUOVO</span>
-                      </div>
-                    </td>`;
-
-                  tbody.appendChild(riga);
-                  caricaChat(id);
-                  setInterval(() => caricaChat(id), 2000);
-                });
+              const tb = boxGiorno.querySelector('tbody');
+              arr.forEach(p => {
+                const sid = String(p.stato||'in attesa').replace(/\s/g,'-');
+                const tr = document.createElement('tr');
+                tr.classList.add('prenotazione-riga');
+                tr.dataset.stato = p.stato||'in attesa';
+                tr.dataset.produttore = p.produttore;
+                tr.dataset.cer = p.codice_cer;
+                tr.innerHTML = `<td>${p.id}</td><td>${p.ragione_sociale}</td><td>${p.produttore}</td><td>${p.codice_cer}</td><td>${p.caratteristiche_pericolo||'-'}</td><td>${p.quantita}</td><td>${p.certificato_analitico?`<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>`:'-'}</td><td><span id="badge-${p.id}" class="badge ${sid}">${p.stato||'in attesa'}</span></td><td><select id="stato-${p.id}"><option value="accettata">Accettata</option><option value="non accettata">Non Accettata</option><option value="richieste integrazioni">Richieste Integrazioni</option></select><button onclick="aggiornaStato(${p.id})">✔️</button></td><td><div class="chat-box"><div class="chat-messages" id="chat-${p.id}"></div><input type="text" class="chat-input" id="msg-${p.id}" placeholder="Scrivi…" onkeydown="if(event.key==='Enter') inviaMessaggio(${p.id})"><button onclick="inviaMessaggio(${p.id})">Invia</button><span class="badge-unread hidden" id="unread-${p.id}">NUOVO</span></div></td>`;
+                tb.appendChild(tr);
+                caricaChat(p.id);
+                setInterval(() => caricaChat(p.id), 2000);
               });
             });
           });
         });
-      }).catch(err => console.error(err));
+      });
+    })
+    .catch(err => console.error('Errore fetch prenotazioni:', err));
 
-    function caricaChat(id) {
-      fetch('/chat/prenotazione/' + id)
-        .then(res => res.json())
-        .then(msgs => {
-          const box    = document.getElementById(`chat-${id}`);
-          const unread = document.getElementById(`unread-${id}`);
-          const nuovi  = msgs.filter(m => m.mittente !== 'admin').length;
-          if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
-            unread.style.display = 'inline-block';
-            document.getElementById('notifica-audio').play();
-          }
-          chatsLetti[id] = nuovi;
-          box.innerHTML = '';
-          msgs.forEach(m => {
-            const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
-            bubble.textContent = m.messaggio;
-            box.appendChild(bubble);
-          });
-          box.scrollTop = box.scrollHeight;
+  function caricaChat(id) {
+    fetch('/chat/prenotazione/' + id)
+      .then(res => res.json())
+      .then(msgs => {
+        const box = document.getElementById(`chat-${id}`),
+              unread = document.getElementById(`unread-${id}`),
+              nuovi = msgs.filter(m => m.mittente !== 'admin').length;
+        if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
+          unread.style.display = 'inline-block';
+          document.getElementById('notifica-audio').play();
+        }
+        chatsLetti[id] = nuovi;
+        box.innerHTML = '';
+        msgs.forEach(m => {
+          const b = document.createElement('div');
+          b.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+          b.textContent = m.messaggio;
+          box.appendChild(b);
         });
-    }
+        box.scrollTop = box.scrollHeight;
+      })
+      .catch(console.error);
+  }
 
-    function inviaMessaggio(id) {
-      const input = document.getElementById(`msg-${id}`);
-      const testo = input.value.trim();
-      if (!testo) return;
-      fetch('/chat/prenotazione', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prenotazione_id: id, mittente:'admin', messaggio: testo }) })
-        .then(() => {
-          input.value = '';
-          caricaChat(id);
-          document.getElementById(`unread-${id}`).style.display = 'none';
-        });
-    }
+  function inviaMessaggio(id) {
+    const input = document.getElementById(`msg-${id}`),
+          testo = input.value.trim();
+    if (!testo) return;
+    fetch('/chat/prenotazione', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ prenotazione_id:id, mittente:'admin', messaggio:testo })
+    }).then(() => {
+      input.value = '';
+      caricaChat(id);
+      document.getElementById(`unread-${id}`).style.display = 'none';
+    });
+  }
 
-    function aggiornaStato(id) {
-      const stato = document.getElementById(`stato-${id}`).value;
-      fetch('/impianto/cambia-stato', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id, nuovo_stato: stato }) })
-        .then(res => res.text())
-        .then(() => {
-          notify("Prenotazione aggiornata");
-          const badge = document.getElementById(`badge-${id}`);
-          badge.className = 'badge ' + stato.replace(/\s/g, '-');
-          badge.textContent = stato;
-        });
-    }
-  </script>
+  function aggiornaStato(id) {
+    const stato = document.getElementById(`stato-${id}`).value;
+    fetch('/impianto/cambia-stato', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ id, nuovo_stato: stato })
+    }).then(res => res.text()).then(() => {
+      notify("Prenotazione aggiornata");
+      const badge = document.getElementById(`badge-${id}`);
+      badge.className = 'badge ' + stato.replace(/\s/g,'-');
+      badge.textContent = stato;
+    }).catch(console.error);
+  }
+</script>
 
-  <footer class="footer">
-    © 2025 Ecodrin - P.I: 03378791218
-  </footer>
-
+<footer class="footer">© 2025 Ecodrin - P.I: 03378791218</footer>
 </body>
 </html>

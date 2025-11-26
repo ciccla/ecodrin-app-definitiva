@@ -112,16 +112,54 @@ function aggiornaStato(id) {
   });
 }
 
+//
+// 🔥 FILTRO LIVE CON DEBOUNCE (120ms)
+//
+let filterTimeout = null;
+
 function applyFilter() {
-  const type = document.getElementById('filter-type').value;
-  const value = document.getElementById('filter-value').value.toLowerCase();
-  document.querySelectorAll('#trasporti-container tbody tr').forEach(row => {
-    const map = { id:0, richiedente:1, produttore:2, cer:3, stato:9, tipo_trasporto:5 };
-    const cell = row.children[map[type]];
-    row.style.display = cell && cell.textContent.toLowerCase().includes(value) ? '' : 'none';
-  });
+  clearTimeout(filterTimeout);
+
+  filterTimeout = setTimeout(() => {
+    const type = document.getElementById('filter-type').value;
+    const value = document.getElementById('filter-value').value.trim().toLowerCase();
+
+    const indexMap = {
+      id: 0,
+      richiedente: 1,
+      produttore: 2,
+      cer: 3,
+      tipo_trasporto: 5,
+      stato: 9
+    };
+
+    // Se il campo è vuoto → mostra tutto
+    if (!value) {
+      document.querySelectorAll('#trasporti-container tbody tr').forEach(row => {
+        row.style.display = "";
+      });
+      return;
+    }
+
+    document.querySelectorAll('#trasporti-container tbody tr').forEach(row => {
+      const idx = indexMap[type];
+      const cell = row.children[idx];
+
+      if (!cell) {
+        row.style.display = "none";
+        return;
+      }
+
+      const testo = cell.textContent.trim().toLowerCase();
+      row.style.display = testo.includes(value) ? "" : "none";
+    });
+
+  }, 120);
 }
 
+//
+// CARICAMENTO TRASPORTI
+//
 fetch('/impianto/trasporti')
   .then(res => res.json())
   .then(data => {
@@ -184,9 +222,15 @@ fetch('/impianto/trasporti')
               const statoClass = (r.stato || 'in attesa').replace(/\s/g, '-');
               const riga = document.createElement('tr');
               riga.innerHTML = `
-                <td>${r.id}</td><td>${r.richiedente}</td><td>${r.produttore}</td><td>${r.codice_cer}</td>
-                <td>${r.tipo_automezzo}</td><td>${r.tipo_trasporto || '-'}</td><td>${r.orario_preferito}</td>
-                <td>${r.numero_referente}</td><td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
+                <td>${r.id}</td>
+                <td>${r.richiedente}</td>
+                <td>${r.produttore}</td>
+                <td>${r.codice_cer}</td>
+                <td>${r.tipo_automezzo}</td>
+                <td>${r.tipo_trasporto || '-'}</td>
+                <td>${r.orario_preferito}</td>
+                <td>${r.numero_referente}</td>
+                <td>${parseFloat(r.prezzo_pattuito).toFixed(2)} €</td>
                 <td><span id="stato-badge-${r.id}" class="badge ${statoClass}">${r.stato}</span></td>
                 <td>
                   <select id="stato-${r.id}">

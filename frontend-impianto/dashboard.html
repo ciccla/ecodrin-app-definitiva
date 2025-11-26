@@ -23,6 +23,8 @@
   </header>
 
   <main>
+
+    <!-- 🔎 FILTRO LIVE -->
     <section class="filter-bar">
       <label for="filtroTipo">Filtra per:</label>
       <select id="filtroTipo">
@@ -33,13 +35,13 @@
         <option value="produttore">Produttore</option>
         <option value="cer">Codice CER</option>
       </select>
-      <input type="text" id="filtroValore" placeholder="Valore filtro">
-      <button onclick="applicaFiltro()">Filtra</button>
+      <input type="text" id="filtroValore" placeholder="Valore filtro" oninput="applicaFiltro()">
     </section>
 
     <div id="contenuto-prenotazioni"></div>
     <div id="notify"></div>
     <audio id="notifica-audio" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_9ce296083a.mp3" preload="auto"></audio>
+
   </main>
 
   <script>
@@ -53,29 +55,55 @@
 
     function formattaData(dataISO) {
       const d = new Date(dataISO);
-      const gg = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth()+1).padStart(2, '0');
-      const aaaa = d.getFullYear();
-      return `${gg}-${mm}-${aaaa}`;
+      return String(d.getDate()).padStart(2, '0') + "-" +
+             String(d.getMonth()+1).padStart(2, '0') + "-" +
+             d.getFullYear();
     }
 
+    // 🔥 FILTRO LIVE (con debounce)
+    let filtroTimeout = null;
+
     function applicaFiltro() {
-      const tipo   = document.getElementById('filtroTipo').value;
-      const valore = document.getElementById('filtroValore').value.toLowerCase();
-      document.querySelectorAll('.prenotazione-riga').forEach(row => {
-        const stato      = row.dataset.stato;
-        const produttore = row.dataset.produttore.toLowerCase();
-        const cer        = row.dataset.cer.toLowerCase();
-        if (!tipo ||
-            (tipo === stato && stato.includes(valore)) ||
-            (tipo === 'produttore' && produttore.includes(valore)) ||
-            (tipo === 'cer' && cer.includes(valore))) {
-          row.style.display = '';
-        } else {
-          row.style.display = 'none';
-        }
-      });
+      clearTimeout(filtroTimeout);
+
+      filtroTimeout = setTimeout(() => {
+        const tipo = document.getElementById('filtroTipo').value.trim().toLowerCase();
+        const valore = document.getElementById('filtroValore').value.trim().toLowerCase();
+
+        document.querySelectorAll('.prenotazione-riga').forEach(row => {
+          const stato = (row.dataset.stato || '').toLowerCase();
+          const produttore = (row.dataset.produttore || '').toLowerCase();
+          const cer = (row.dataset.cer || '').toLowerCase();
+
+          let show = true;
+
+          // Nessun tipo specifico → cerca ovunque
+          if (!tipo) {
+            show =
+              !valore ||
+              produttore.includes(valore) ||
+              cer.includes(valore) ||
+              stato.includes(valore);
+          }
+          else if (['accettata','non accettata','in attesa'].includes(tipo)) {
+            show = stato === tipo && (!valore || stato.includes(valore));
+          }
+          else if (tipo === 'produttore') {
+            show = produttore.includes(valore);
+          }
+          else if (tipo === 'cer') {
+            show = cer.includes(valore);
+          }
+
+          row.style.display = show ? '' : 'none';
+        });
+
+      }, 120); // 💨 120ms perfetto per prestazioni fluide
     }
+
+    // -------------------
+    // CARICAMENTO PRENOTAZIONI
+    // -------------------
 
     let chatsLetti = {};
     const contenitore = document.getElementById('contenuto-prenotazioni');
@@ -123,20 +151,29 @@
                   </div>
                   <div id="giorno-${anno}-${mese}-${settimana}-${giorno}" class="hidden">
                     <table>
-                      <thead> ... </thead><tbody></tbody>
+                      <thead>
+                        <tr>
+                          <th>ID</th><th>Ragione Sociale</th><th>Produttore</th><th>CER</th>
+                          <th>Pericolo</th><th>Quantità</th><th>Certificato</th>
+                          <th>Stato</th><th>Azioni</th><th>Chat</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
                     </table>
                   </div>`;
                 boxSettimana.appendChild(boxGiorno);
 
                 const tbody = boxGiorno.querySelector('tbody');
+
                 prenotazioni.forEach(p => {
-                  const id         = p.id;
+                  const id = p.id;
                   const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-                  const riga       = document.createElement('tr');
+
+                  const riga = document.createElement('tr');
                   riga.classList.add('prenotazione-riga');
-                  riga.dataset.stato      = p.stato || 'in attesa';
+                  riga.dataset.stato = p.stato || 'in attesa';
                   riga.dataset.produttore = p.produttore;
-                  riga.dataset.cer        = p.codice_cer;
+                  riga.dataset.cer = p.codice_cer;
 
                   riga.innerHTML = `
                     <td>${id}</td>
@@ -145,8 +182,11 @@
                     <td>${p.codice_cer}</td>
                     <td>${p.caratteristiche_pericolo || '-'}</td>
                     <td>${p.quantita}</td>
-                    <td>${p.certificato_analitico ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` : '-'}</td>
+                    <td>${p.certificato_analitico ? 
+                      `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` 
+                      : '-'}</td>
                     <td><span id="badge-${id}" class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
+
                     <td>
                       <select id="stato-${id}">
                         <option value="accettata">Accettata</option>
@@ -155,16 +195,20 @@
                       </select>
                       <button onclick="aggiornaStato(${id})">✔️</button>
                     </td>
+
                     <td>
                       <div class="chat-box">
                         <div class="chat-messages" id="chat-${id}"></div>
-                        <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi…" onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+                        <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi…" 
+                          onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
                         <button onclick="inviaMessaggio(${id})">Invia</button>
                         <span class="badge-unread hidden" id="unread-${id}">NUOVO</span>
                       </div>
-                    </td>`;
+                    </td>
+                  `;
 
                   tbody.appendChild(riga);
+
                   caricaChat(id);
                   setInterval(() => caricaChat(id), 2000);
                 });
@@ -172,27 +216,35 @@
             });
           });
         });
-      }).catch(err => console.error(err));
+      })
+      .catch(err => console.error(err));
+
+    // CHAT E STATO
 
     function caricaChat(id) {
       fetch('/chat/prenotazione/' + id)
         .then(res => res.json())
         .then(msgs => {
-          const box    = document.getElementById(`chat-${id}`);
+          const box = document.getElementById(`chat-${id}`);
           const unread = document.getElementById(`unread-${id}`);
-          const nuovi  = msgs.filter(m => m.mittente !== 'admin').length;
+          const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
+
           if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
             unread.style.display = 'inline-block';
             document.getElementById('notifica-audio').play();
           }
+
           chatsLetti[id] = nuovi;
+
           box.innerHTML = '';
           msgs.forEach(m => {
             const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble ' + (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
+            bubble.className = 'chat-bubble ' + 
+                               (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
             bubble.textContent = m.messaggio;
             box.appendChild(bubble);
           });
+
           box.scrollTop = box.scrollHeight;
         });
     }
@@ -201,25 +253,35 @@
       const input = document.getElementById(`msg-${id}`);
       const testo = input.value.trim();
       if (!testo) return;
-      fetch('/chat/prenotazione', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ prenotazione_id: id, mittente:'admin', messaggio: testo }) })
-        .then(() => {
-          input.value = '';
-          caricaChat(id);
-          document.getElementById(`unread-${id}`).style.display = 'none';
-        });
+
+      fetch('/chat/prenotazione', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ prenotazione_id: id, mittente:'admin', messaggio: testo })
+      })
+      .then(() => {
+        input.value = '';
+        caricaChat(id);
+        document.getElementById(`unread-${id}`).style.display = 'none';
+      });
     }
 
     function aggiornaStato(id) {
       const stato = document.getElementById(`stato-${id}`).value;
-      fetch('/impianto/cambia-stato', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ id, nuovo_stato: stato }) })
-        .then(res => res.text())
-        .then(() => {
-          notify("Prenotazione aggiornata");
-          const badge = document.getElementById(`badge-${id}`);
-          badge.className = 'badge ' + stato.replace(/\s/g, '-');
-          badge.textContent = stato;
-        });
+      fetch('/impianto/cambia-stato', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({ id, nuovo_stato: stato })
+      })
+      .then(res => res.text())
+      .then(() => {
+        notify("Prenotazione aggiornata");
+        const badge = document.getElementById(`badge-${id}`);
+        badge.className = 'badge ' + stato.replace(/\s/g, '-');
+        badge.textContent = stato;
+      });
     }
+
   </script>
 
   <footer class="footer">

@@ -112,6 +112,18 @@ app.get('/cliente/prenotazioni', async (req, res) => {
 
 app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async (req, res) => {
   if (!req.session.utente) return res.status(403).send('Devi essere loggato');
+
+  // ⛔ BLOCCO ORARIO 15:30 → 08:30
+  const now = new Date();
+  const hour = now.getHours();
+  const min = now.getMinutes();
+  const after1530 = hour > 15 || (hour === 15 && min >= 30);
+  const before0830 = hour < 8 || (hour === 8 && min < 30);
+
+  if (after1530 || before0830) {
+    return res.status(400).send("❌ Le prenotazioni sono consentite solo dalle 08:30 alle 15:30.");
+  }
+
   const {
     ragione_sociale, produttore, codice_cer, caratteristiche_pericolo,
     tipo_imballo, tipo_imballo_altro, stato_fisico,
@@ -137,6 +149,19 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
 
 app.post('/cliente/richieste-trasporto', async (req, res) => {
   if (!req.session.utente) return res.status(403).send('Accesso negato');
+
+  // ⛔ Blocco trasporti tra le 15:30 e le 08:30
+const now = new Date();
+const hour = now.getHours();
+const min = now.getMinutes();
+
+const after1530 = hour > 15 || (hour === 15 && min >= 30);
+const before0830 = hour < 8 || (hour === 8 && min < 30);
+
+if (after1530 || before0830) {
+  return res.status(400).send("❌ Le richieste di trasporto sono consentite solo dalle 08:30 alle 15:30.");
+}
+
 
   const {
     richiedente, produttore, codice_cer, tipo_automezzo,

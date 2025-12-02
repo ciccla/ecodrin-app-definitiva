@@ -1,4 +1,7 @@
 require('dotenv').config();
+// 🔥 Forza il fuso orario dell’app su ora italiana (Roma)
+process.env.TZ = "Europe/Rome";
+
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');

@@ -127,6 +127,17 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
     return res.status(400).send("❌ Le prenotazioni sono consentite solo dalle 08:30 alle 15:30.");
   }
 
+  // ⛔ CONTROLLO DATA: consentito solo da DOMANI
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const conferimentoDate = new Date(req.body.giorno_conferimento);
+  conferimentoDate.setHours(0, 0, 0, 0);
+
+  if (conferimentoDate <= today) {
+    return res.status(400).send("❌ Puoi prenotare solo a partire da domani.");
+  }
+
   const {
     ragione_sociale, produttore, codice_cer, caratteristiche_pericolo,
     tipo_imballo, tipo_imballo_altro, stato_fisico,
@@ -143,6 +154,7 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
       tipo_imballo, stato_fisico, certificato_analitico, quantita, giorno_conferimento)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [req.session.utente.id, ragione_sociale, produttore, codice_cer, caratteristiche, imballo_finale, stato_fisico, certificato, quantita, giorno_conferimento]);
+
     res.send('Prenotazione inserita correttamente ✅');
   } catch (err) {
     console.error('❌ Errore inserimento:', err.message);
@@ -150,21 +162,32 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
   }
 });
 
+
 app.post('/cliente/richieste-trasporto', async (req, res) => {
   if (!req.session.utente) return res.status(403).send('Accesso negato');
 
-  // ⛔ Blocco trasporti tra le 15:30 e le 08:30
-const now = new Date();
-const hour = now.getHours();
-const min = now.getMinutes();
+  // ⛔ BLOCCO ORARIO 15:30 → 08:30
+  const now = new Date();
+  const hour = now.getHours();
+  const min = now.getMinutes();
 
-const after1530 = hour > 15 || (hour === 15 && min >= 30);
-const before0830 = hour < 8 || (hour === 8 && min < 30);
+  const after1530 = hour > 15 || (hour === 15 && min >= 30);
+  const before0830 = hour < 8 || (hour === 8 && min < 30);
 
-if (after1530 || before0830) {
-  return res.status(400).send("❌ Le richieste di trasporto sono consentite solo dalle 08:30 alle 15:30.");
-}
+  if (after1530 || before0830) {
+    return res.status(400).send("❌ Le richieste di trasporto sono consentite solo dalle 08:30 alle 15:30.");
+  }
 
+  // ⛔ CONTROLLO DATA: consentito solo da DOMANI
+  const today2 = new Date();
+  today2.setHours(0, 0, 0, 0);
+
+  const trasportoDate = new Date(req.body.data_trasporto);
+  trasportoDate.setHours(0, 0, 0, 0);
+
+  if (trasportoDate <= today2) {
+    return res.status(400).send("❌ Puoi richiedere il trasporto solo a partire da domani.");
+  }
 
   const {
     richiedente, produttore, codice_cer, tipo_automezzo,
@@ -178,12 +201,14 @@ if (after1530 || before0830) {
        data_trasporto, orario_preferito, numero_referente, prezzo_pattuito)
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
       [req.session.utente.id, richiedente, produttore, codice_cer, tipo_automezzo, tipo_trasporto, data_trasporto, orario_preferito, numero_referente, prezzo_pattuito]);
+
     res.send('Richiesta trasporto inviata ✅');
   } catch (err) {
     console.error('❌ Errore richiesta trasporto:', err.message);
     res.status(500).send('Errore richiesta trasporto');
   }
 });
+
 
 app.get('/cliente/richieste-trasporto', async (req, res) => {
   if (!req.session.utente) return res.status(403).send('Non autorizzato');

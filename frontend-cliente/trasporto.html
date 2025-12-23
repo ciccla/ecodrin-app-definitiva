@@ -196,10 +196,10 @@
   <script>
     // Riempie automaticamente il richiedente con l'account loggato
     fetch('/cliente/info')
-    .then(res => res.json())
-    .then(user => {
-      document.getElementById('richiedente').value = user.username;
-    });
+      .then(res => res.json())
+      .then(user => {
+        document.getElementById('richiedente').value = user.username;
+      });
 
 
     function controllaAutomezzo() {

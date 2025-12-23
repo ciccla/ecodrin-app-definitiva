@@ -214,17 +214,18 @@
 
   <script>
         // Riempie automaticamente la Ragione Sociale con l'account loggato
-    fetch('/cliente/info')
-      .then(res => {
-        if (!res.ok) throw new Error('Non autenticato');
-        return res.json();
-      })
-      .then(user => {
-        document.getElementById('ragione_sociale').value = user.username;
-      })
-      .catch(() => {
-        document.getElementById('ragione_sociale').value = '—';
-      });
+   fetch('/cliente/info')
+    .then(res => {
+      if (!res.ok) throw new Error('Non autenticato');
+      return res.json();
+    })
+    .then(user => {
+      document.getElementById('ragione_sociale').value = user.username;
+    })
+    .catch(() => {
+      document.getElementById('ragione_sociale').value = '—';
+    });
+
 
     
     function checkAltro() {

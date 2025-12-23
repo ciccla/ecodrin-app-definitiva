@@ -129,7 +129,7 @@
 
       <form id="trasportoForm">
         <label>Richiedente</label>
-        <input type="text" name="richiedente" required>
+        <input type="text" id="richiedente" disabled>
 
         <label>Produttore</label>
         <input type="text" name="produttore" required>
@@ -194,6 +194,19 @@
   </footer>
 
   <script>
+    // Riempie automaticamente il richiedente con l'account loggato
+    fetch('/cliente/info')
+      .then(res => {
+        if (!res.ok) throw new Error('Non autenticato');
+        return res.json();
+      })
+      .then(user => {
+        document.getElementById('richiedente').value = user.username;
+      })
+      .catch(() => {
+        document.getElementById('richiedente').value = '';
+      });
+
     function controllaAutomezzo() {
       const tipoAutomezzo = document.getElementById('tipo_automezzo').value;
       const tipoTrasporto = document.getElementById('tipo_trasporto');

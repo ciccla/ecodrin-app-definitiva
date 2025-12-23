@@ -127,7 +127,8 @@
 
     <form id="prenotazioneForm" enctype="multipart/form-data">
       <label for="ragione_sociale">Ragione Sociale</label>
-      <input type="text" name="ragione_sociale" id="ragione_sociale" required>
+      <input type="text" id="ragione_sociale" disabled>
+
 
 <label for="produttore">Produttore</label>
 <input type="text" name="produttore" id="produttore" required>
@@ -212,6 +213,19 @@
   </footer>
 
   <script>
+        // Riempie automaticamente la Ragione Sociale con l'account loggato
+    fetch('/me')
+      .then(res => {
+        if (!res.ok) throw new Error('Non autenticato');
+        return res.json();
+      })
+      .then(user => {
+        document.getElementById('ragione_sociale').value = user.nome;
+      })
+      .catch(() => {
+        document.getElementById('ragione_sociale').value = '';
+      });
+    
     function checkAltro() {
       const val = document.getElementById('tipo_imballo').value;
       document.getElementById('altroImballo').style.display = val === 'Altro' ? 'block' : 'none';

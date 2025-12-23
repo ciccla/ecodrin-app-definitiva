@@ -138,11 +138,15 @@ app.post('/cliente/prenotazione', upload.single('certificato_analitico'), async 
     return res.status(400).send("❌ Puoi prenotare solo a partire da domani.");
   }
 
+  // 🔐 Ragione sociale = account loggato
+  const ragione_sociale = req.session.utente.username;
+
   const {
-    ragione_sociale, produttore, codice_cer, caratteristiche_pericolo,
+    produttore, codice_cer, caratteristiche_pericolo,
     tipo_imballo, tipo_imballo_altro, stato_fisico,
     quantita, giorno_conferimento
   } = req.body;
+
 
   const caratteristiche = Array.isArray(caratteristiche_pericolo) ? caratteristiche_pericolo.join(',') : caratteristiche_pericolo || '';
   const imballo_finale = tipo_imballo === 'Altro' && tipo_imballo_altro ? tipo_imballo_altro : tipo_imballo;
@@ -189,11 +193,15 @@ app.post('/cliente/richieste-trasporto', async (req, res) => {
     return res.status(400).send("❌ Puoi richiedere il trasporto solo a partire da domani.");
   }
 
+   // 🔐 Richiedente = account loggato
+  const richiedente = req.session.utente.username;
+
   const {
-    richiedente, produttore, codice_cer, tipo_automezzo,
+    produttore, codice_cer, tipo_automezzo,
     tipo_trasporto, data_trasporto, orario_preferito,
     numero_referente, prezzo_pattuito
   } = req.body;
+
 
   try {
     await db.query(`INSERT INTO richieste_trasporto 

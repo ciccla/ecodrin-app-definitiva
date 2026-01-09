@@ -45,6 +45,9 @@
   </main>
 
   <script>
+    // -------------------
+    // NOTIFICHE
+    // -------------------
     function notify(msg, success = true) {
       const n = document.getElementById('notify');
       n.innerText = msg;
@@ -53,14 +56,38 @@
       setTimeout(() => n.style.display = 'none', 4000);
     }
 
-    function formattaData(dataISO) {
-      const d = new Date(dataISO);
+    // -------------------
+    // DATE: parser robusto
+    // -------------------
+    function parseDateAny(s) {
+      if (!s) return new Date(NaN);
+
+      // ISO: 2026-01-09 oppure 2026-01-09T...
+      if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
+        return new Date(s);
+      }
+
+      // IT: 09-01-2026
+      if (/^\d{2}-\d{2}-\d{4}$/.test(s)) {
+        const [dd, mm, yyyy] = s.split('-').map(Number);
+        return new Date(yyyy, mm - 1, dd);
+      }
+
+      // fallback
+      return new Date(s);
+    }
+
+    function formattaData(dataISOorIT) {
+      const d = parseDateAny(dataISOorIT);
+      if (isNaN(d.getTime())) return String(dataISOorIT || '');
       return String(d.getDate()).padStart(2, '0') + "-" +
-             String(d.getMonth()+1).padStart(2, '0') + "-" +
+             String(d.getMonth() + 1).padStart(2, '0') + "-" +
              d.getFullYear();
     }
 
-    // 🔥 FILTRO LIVE (con debounce)
+    // -------------------
+    // FILTRO LIVE (debounce)
+    // -------------------
     let filtroTimeout = null;
 
     function applicaFiltro() {
@@ -77,195 +104,44 @@
 
           let show = true;
 
-          // Nessun tipo specifico → cerca ovunque
           if (!tipo) {
             show =
               !valore ||
               produttore.includes(valore) ||
               cer.includes(valore) ||
               stato.includes(valore);
-          }
-          else if (['accettata','non accettata','in attesa'].includes(tipo)) {
+          } else if (['accettata', 'non accettata', 'in attesa'].includes(tipo)) {
             show = stato === tipo && (!valore || stato.includes(valore));
-          }
-          else if (tipo === 'produttore') {
+          } else if (tipo === 'produttore') {
             show = produttore.includes(valore);
-          }
-          else if (tipo === 'cer') {
+          } else if (tipo === 'cer') {
             show = cer.includes(valore);
           }
 
           row.style.display = show ? '' : 'none';
         });
-
-      }, 120); // 💨 120ms perfetto per prestazioni fluide
+      }, 120);
     }
 
     // -------------------
-    // CARICAMENTO PRENOTAZIONI
+    // CHAT + STATO
     // -------------------
-
     let chatsLetti = {};
-    const contenitore = document.getElementById('contenuto-prenotazioni');
-
-    fetch('/impianto/prenotazioni')
-      .then(res => res.json())
-      .then(data => {
-        const prenotazioniStrutturate = {};
-
-        data.forEach(p => {
-          const dataObj = new Date(p.giorno_conferimento);
-          const anno = dataObj.getFullYear();
-          const mese = dataObj.toLocaleString('it-IT', { month: 'long' });
-          const giorno = formattaData(p.giorno_conferimento);
-          const settimana = `Settimana ${Math.ceil(dataObj.getDate()/7)}`;
-
-          prenotazioniStrutturate[anno] ||= {};
-          prenotazioniStrutturate[anno][mese] ||= {};
-          prenotazioniStrutturate[anno][mese][settimana] ||= {};
-          prenotazioniStrutturate[anno][mese][settimana][giorno] ||= [];
-          prenotazioniStrutturate[anno][mese][settimana][giorno].push(p);
-        });
-
-      
-      
-
-        const annoCorrente = new Date().getFullYear();
-
-Object.keys(prenotazioniStrutturate)
-  .map(a => Number(a))
-  .sort((a, b) => b - a) // 2026 → 2025 → 2024
-  .forEach(anno => {
-
-    const isAnnoCorrente = anno === annoCorrente;
-
-    const boxAnno = document.createElement('div');
-    boxAnno.className = 'anno-bolla';
-
-    boxAnno.innerHTML = `
-      <div class="anno-toggle"
-           onclick="document.getElementById('anno-${anno}').classList.toggle('hidden')">
-        📅 ${anno} ${isAnnoCorrente ? '🟢 anno corrente' : ''}
-      </div>
-
-      <div id="anno-${anno}" class="${isAnnoCorrente ? '' : 'hidden'}"></div>
-    `;
-
-    contenitore.appendChild(boxAnno);
-
-    const contenutoAnno = boxAnno.querySelector('#anno-' + anno);
-
-    Object.keys(prenotazioniStrutturate[anno]).forEach(mese => {
-      const boxMese = document.createElement('div');
-      boxMese.innerHTML = `<h3 style="margin-left:20px;">🗓️ ${mese}</h3>`;
-      contenutoAnno.appendChild(boxMese);
-
-      Object.keys(prenotazioniStrutturate[anno][mese]).forEach(settimana => {
-        const boxSettimana = document.createElement('div');
-        boxSettimana.innerHTML = `<h4 style="margin-left:40px;">📌 ${settimana}</h4>`;
-        boxMese.appendChild(boxSettimana);
-
-        Object.keys(prenotazioniStrutturate[anno][mese][settimana])
-          .sort()
-          .forEach(giorno => {
-
-            const prenotazioni =
-              prenotazioniStrutturate[anno][mese][settimana][giorno];
-
-            const safeId = `giorno-${anno}-${mese}-${settimana}-${giorno}`
-              .replace(/\s|[^\w-]/g, '_');
-
-            const boxGiorno = document.createElement('div');
-            boxGiorno.innerHTML = `
-              <div class="giorno-toggle"
-                   onclick="document.getElementById('${safeId}').classList.toggle('hidden')">
-                📅 ${giorno} (${prenotazioni.length} prenotazioni)
-              </div>
-
-              <div id="${safeId}" class="hidden">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>ID</th><th>Ragione Sociale</th><th>Produttore</th>
-                      <th>CER</th><th>Pericolo</th><th>Quantità</th>
-                      <th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
-                    </tr>
-                  </thead>
-                  <tbody></tbody>
-                </table>
-              </div>
-            `;
-
-            boxSettimana.appendChild(boxGiorno);
-            const tbody = boxGiorno.querySelector('tbody');
-
-            prenotazioni.forEach(p => {
-              const id = p.id;
-              const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-
-              const riga = document.createElement('tr');
-              riga.classList.add('prenotazione-riga');
-              riga.dataset.stato = p.stato || 'in attesa';
-              riga.dataset.produttore = p.produttore;
-              riga.dataset.cer = p.codice_cer;
-
-              riga.innerHTML = `
-                <td>${id}</td>
-                <td>${p.ragione_sociale}</td>
-                <td>${p.produttore}</td>
-                <td>${p.codice_cer}</td>
-                <td>${p.caratteristiche_pericolo || '-'}</td>
-                <td>${p.quantita}</td>
-                <td>${p.certificato_analitico
-                  ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>`
-                  : '-'}</td>
-                <td><span id="badge-${id}" class="badge ${statoClass}">
-                  ${p.stato || 'in attesa'}
-                </span></td>
-                <td>
-                  <select id="stato-${id}">
-                    <option value="accettata">Accettata</option>
-                    <option value="non accettata">Non Accettata</option>
-                    <option value="richieste integrazioni">Richieste Integrazioni</option>
-                  </select>
-                  <button onclick="aggiornaStato(${id})">✔️</button>
-                </td>
-                <td>
-                  <div class="chat-box">
-                    <div class="chat-messages" id="chat-${id}"></div>
-                    <input type="text" id="msg-${id}" class="chat-input"
-                      placeholder="Scrivi…" onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
-                    <button onclick="inviaMessaggio(${id})">Invia</button>
-                    <span class="badge-unread hidden" id="unread-${id}">NUOVO</span>
-                  </div>
-                </td>
-              `;
-
-              tbody.appendChild(riga);
-              caricaChat(id);
-              setInterval(() => caricaChat(id), 2000);
-            });
-          });
-      });
-    });
-  });
-
-      })
-      .catch(err => console.error(err));
-
-    // CHAT E STATO
 
     function caricaChat(id) {
-      fetch('/chat/prenotazione/' + id)
+      fetch('/chat/prenotazione/' + id, { credentials: 'include' })
         .then(res => res.json())
         .then(msgs => {
           const box = document.getElementById(`chat-${id}`);
           const unread = document.getElementById(`unread-${id}`);
+          if (!box || !unread) return;
+
           const nuovi = msgs.filter(m => m.mittente !== 'admin').length;
 
           if (chatsLetti[id] !== undefined && nuovi > chatsLetti[id]) {
             unread.style.display = 'inline-block';
-            document.getElementById('notifica-audio').play();
+            const audio = document.getElementById('notifica-audio');
+            if (audio) audio.play().catch(() => {});
           }
 
           chatsLetti[id] = nuovi;
@@ -273,48 +149,271 @@ Object.keys(prenotazioniStrutturate)
           box.innerHTML = '';
           msgs.forEach(m => {
             const bubble = document.createElement('div');
-            bubble.className = 'chat-bubble ' + 
+            bubble.className = 'chat-bubble ' +
                                (m.mittente === 'admin' ? 'bubble-left' : 'bubble-right');
             bubble.textContent = m.messaggio;
             box.appendChild(bubble);
           });
 
           box.scrollTop = box.scrollHeight;
-        });
+        })
+        .catch(() => {});
     }
 
     function inviaMessaggio(id) {
       const input = document.getElementById(`msg-${id}`);
+      if (!input) return;
+
       const testo = input.value.trim();
       if (!testo) return;
 
       fetch('/chat/prenotazione', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ prenotazione_id: id, mittente:'admin', messaggio: testo })
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prenotazione_id: id, mittente: 'admin', messaggio: testo })
       })
       .then(() => {
         input.value = '';
         caricaChat(id);
-        document.getElementById(`unread-${id}`).style.display = 'none';
-      });
+        const badge = document.getElementById(`unread-${id}`);
+        if (badge) badge.style.display = 'none';
+      })
+      .catch(() => {});
     }
 
     function aggiornaStato(id) {
-      const stato = document.getElementById(`stato-${id}`).value;
+      const sel = document.getElementById(`stato-${id}`);
+      if (!sel) return;
+
+      const stato = sel.value;
+
       fetch('/impianto/cambia-stato', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ id, nuovo_stato: stato })
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, nuovo_stato: stato })
       })
       .then(res => res.text())
       .then(() => {
         notify("Prenotazione aggiornata");
         const badge = document.getElementById(`badge-${id}`);
-        badge.className = 'badge ' + stato.replace(/\s/g, '-');
-        badge.textContent = stato;
-      });
+        if (badge) {
+          badge.className = 'badge ' + stato.replace(/\s/g, '-');
+          badge.textContent = stato;
+        }
+      })
+      .catch(() => notify("Errore aggiornamento stato", false));
     }
+
+    // -------------------
+    // RENDER PRENOTAZIONI
+    // -------------------
+    const contenitore = document.getElementById('contenuto-prenotazioni');
+
+    function renderPrenotazioni(lista) {
+      contenitore.innerHTML = '';
+
+      if (!Array.isArray(lista) || lista.length === 0) {
+        contenitore.innerHTML = '<p style="padding:20px;">Nessuna prenotazione trovata.</p>';
+        return;
+      }
+
+      const prenotazioniStrutturate = {};
+
+      lista.forEach(p => {
+        const dataObj = parseDateAny(p.giorno_conferimento);
+
+        if (isNaN(dataObj.getTime())) {
+          prenotazioniStrutturate["Senza data valida"] ||= {};
+          prenotazioniStrutturate["Senza data valida"]["-"] ||= {};
+          prenotazioniStrutturate["Senza data valida"]["-"]["-"] ||= {};
+          const giornoFallback = String(p.giorno_conferimento || '—');
+          prenotazioniStrutturate["Senza data valida"]["-"]["-"][giornoFallback] ||= [];
+          prenotazioniStrutturate["Senza data valida"]["-"]["-"][giornoFallback].push(p);
+          return;
+        }
+
+        const anno = dataObj.getFullYear();
+        const mese = dataObj.toLocaleString('it-IT', { month: 'long' });
+        const giorno = formattaData(p.giorno_conferimento);
+        const settimana = `Settimana ${Math.ceil(dataObj.getDate() / 7)}`;
+
+        prenotazioniStrutturate[anno] ||= {};
+        prenotazioniStrutturate[anno][mese] ||= {};
+        prenotazioniStrutturate[anno][mese][settimana] ||= {};
+        prenotazioniStrutturate[anno][mese][settimana][giorno] ||= [];
+        prenotazioniStrutturate[anno][mese][settimana][giorno].push(p);
+      });
+
+      const annoCorrente = new Date().getFullYear();
+
+      Object.keys(prenotazioniStrutturate)
+        .map(a => (a === "Senza data valida" ? a : Number(a)))
+        .sort((a, b) => {
+          if (a === "Senza data valida") return 1;
+          if (b === "Senza data valida") return -1;
+          return b - a;
+        })
+        .forEach(annoKey => {
+          const isSpecial = (annoKey === "Senza data valida");
+          const anno = annoKey;
+          const isAnnoCorrente = (!isSpecial && anno === annoCorrente);
+
+          const boxAnno = document.createElement('div');
+          boxAnno.className = 'anno-bolla';
+
+          const idAnno = `anno-${String(anno).replace(/[^\w-]/g, '_')}`;
+
+          boxAnno.innerHTML = `
+            <div class="anno-toggle"
+                 onclick="document.getElementById('${idAnno}').classList.toggle('hidden')">
+              📅 ${anno} ${isAnnoCorrente ? '🟢 anno corrente' : ''} ${isSpecial ? '⚠️' : ''}
+            </div>
+            <div id="${idAnno}" class="${isAnnoCorrente || isSpecial ? '' : 'hidden'}"></div>
+          `;
+
+          contenitore.appendChild(boxAnno);
+          const contenutoAnno = boxAnno.querySelector('#' + idAnno);
+
+          Object.keys(prenotazioniStrutturate[anno]).forEach(mese => {
+            const boxMese = document.createElement('div');
+            boxMese.innerHTML = `<h3 style="margin-left:20px;">🗓️ ${mese}</h3>`;
+            contenutoAnno.appendChild(boxMese);
+
+            Object.keys(prenotazioniStrutturate[anno][mese]).forEach(settimana => {
+              const boxSettimana = document.createElement('div');
+              boxSettimana.innerHTML = `<h4 style="margin-left:40px;">📌 ${settimana}</h4>`;
+              boxMese.appendChild(boxSettimana);
+
+              Object.keys(prenotazioniStrutturate[anno][mese][settimana])
+                .sort((g1, g2) => {
+                  const d1 = parseDateAny(g1);
+                  const d2 = parseDateAny(g2);
+                  const t1 = d1.getTime();
+                  const t2 = d2.getTime();
+                  if (!isNaN(t1) && !isNaN(t2)) return t1 - t2;
+                  return String(g1).localeCompare(String(g2));
+                })
+                .forEach(giorno => {
+                  const prenotazioni = prenotazioniStrutturate[anno][mese][settimana][giorno];
+
+                  const safeId = `giorno-${anno}-${mese}-${settimana}-${giorno}`
+                    .replace(/\s|[^\w-]/g, '_');
+
+                  const boxGiorno = document.createElement('div');
+                  boxGiorno.innerHTML = `
+                    <div class="giorno-toggle"
+                         onclick="document.getElementById('${safeId}').classList.toggle('hidden')">
+                      📅 ${giorno} (${prenotazioni.length} prenotazioni)
+                    </div>
+
+                    <div id="${safeId}" class="hidden">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>ID</th><th>Ragione Sociale</th><th>Produttore</th>
+                            <th>CER</th><th>Pericolo</th><th>Quantità</th>
+                            <th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                          </tr>
+                        </thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
+                  `;
+
+                  boxSettimana.appendChild(boxGiorno);
+                  const tbody = boxGiorno.querySelector('tbody');
+
+                  prenotazioni.forEach(p => {
+                    const id = p.id;
+                    const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+
+                    const riga = document.createElement('tr');
+                    riga.classList.add('prenotazione-riga');
+                    riga.dataset.stato = p.stato || 'in attesa';
+                    riga.dataset.produttore = p.produttore || '';
+                    riga.dataset.cer = p.codice_cer || '';
+
+                    riga.innerHTML = `
+                      <td>${id}</td>
+                      <td>${p.ragione_sociale || ''}</td>
+                      <td>${p.produttore || ''}</td>
+                      <td>${p.codice_cer || ''}</td>
+                      <td>${p.caratteristiche_pericolo || '-'}</td>
+                      <td>${p.quantita ?? ''}</td>
+                      <td>${p.certificato_analitico
+                        ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>`
+                        : '-'}</td>
+                      <td><span id="badge-${id}" class="badge ${statoClass}">
+                        ${p.stato || 'in attesa'}
+                      </span></td>
+                      <td>
+                        <select id="stato-${id}">
+                          <option value="accettata">Accettata</option>
+                          <option value="non accettata">Non Accettata</option>
+                          <option value="richieste integrazioni">Richieste Integrazioni</option>
+                        </select>
+                        <button onclick="aggiornaStato(${id})">✔️</button>
+                      </td>
+                      <td>
+                        <div class="chat-box">
+                          <div class="chat-messages" id="chat-${id}"></div>
+                          <input type="text" id="msg-${id}" class="chat-input"
+                            placeholder="Scrivi…" onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+                          <button onclick="inviaMessaggio(${id})">Invia</button>
+                          <span class="badge-unread hidden" id="unread-${id}">NUOVO</span>
+                        </div>
+                      </td>
+                    `;
+
+                    tbody.appendChild(riga);
+
+                    caricaChat(id);
+                    setInterval(() => caricaChat(id), 2000);
+                  });
+                });
+            });
+          });
+        });
+
+      applicaFiltro();
+    }
+
+    // -------------------
+    // FETCH PRENOTAZIONI (robusto)
+    // -------------------
+    fetch('/impianto/prenotazioni', { credentials: 'include' })
+      .then(async (res) => {
+        const contentType = res.headers.get('content-type') || '';
+
+        if (!res.ok) {
+          const txt = await res.text().catch(() => '');
+          throw new Error(`HTTP ${res.status} - ${txt.slice(0, 200)}`);
+        }
+
+        if (!contentType.includes('application/json')) {
+          const txt = await res.text().catch(() => '');
+          console.error('Risposta NON JSON da /impianto/prenotazioni:', txt.slice(0, 500));
+          throw new Error('La risposta non è JSON (probabile redirect/login o errore server).');
+        }
+
+        return res.json();
+      })
+      .then((data) => {
+        const lista = Array.isArray(data) ? data : (data?.prenotazioni || []);
+        console.log('Prenotazioni ricevute:', lista.length, lista[0]);
+        renderPrenotazioni(lista);
+      })
+      .catch(err => {
+        console.error(err);
+        contenitore.innerHTML = `
+          <div style="padding:20px;">
+            <b>Errore caricamento prenotazioni</b><br>
+            ${String(err.message || err)}
+          </div>
+        `;
+      });
 
   </script>
 

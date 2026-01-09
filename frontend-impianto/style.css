@@ -271,3 +271,15 @@ canvas {
 .toggle-bolla:hover {
   background: #e0e0e0;
 }
+
+.anno-toggle {
+  background:#dcedc8;
+  padding:14px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:bold;
+  margin:30px auto 10px auto;
+  width:95%;
+  box-shadow: var(--shadow);
+}
+.anno-toggle:hover { background:#c5e1a5; }

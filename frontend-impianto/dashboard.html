@@ -127,95 +127,129 @@
           prenotazioniStrutturate[anno][mese][settimana][giorno].push(p);
         });
 
-        Object.keys(prenotazioniStrutturate).sort().forEach(anno => {
-          const boxAnno = document.createElement('div');
-          boxAnno.innerHTML = `<h2>📅 ${anno}</h2>`;
-          contenitore.appendChild(boxAnno);
+      
+      
 
-          Object.keys(prenotazioniStrutturate[anno]).forEach(mese => {
-            const boxMese = document.createElement('div');
-            boxMese.innerHTML = `<h3 style="margin-left:20px;">🗓️ ${mese}</h3>`;
-            boxAnno.appendChild(boxMese);
+        const annoCorrente = new Date().getFullYear();
 
-            Object.keys(prenotazioniStrutturate[anno][mese]).forEach(settimana => {
-              const boxSettimana = document.createElement('div');
-              boxSettimana.innerHTML = `<h4 style="margin-left:40px;">📌 ${settimana}</h4>`;
-              boxMese.appendChild(boxSettimana);
+Object.keys(prenotazioniStrutturate)
+  .map(a => Number(a))
+  .sort((a, b) => b - a) // 2026 → 2025 → 2024
+  .forEach(anno => {
 
-              Object.keys(prenotazioniStrutturate[anno][mese][settimana]).sort().forEach(giorno => {
-                const prenotazioni = prenotazioniStrutturate[anno][mese][settimana][giorno];
-                const boxGiorno = document.createElement('div');
-                boxGiorno.innerHTML = `
-                  <div class="giorno-toggle" onclick="document.getElementById('giorno-${anno}-${mese}-${settimana}-${giorno}').classList.toggle('hidden')">
-                    📅 ${giorno} (${prenotazioni.length} prenotazioni)
+    const isAnnoCorrente = anno === annoCorrente;
+
+    const boxAnno = document.createElement('div');
+    boxAnno.className = 'anno-bolla';
+
+    boxAnno.innerHTML = `
+      <div class="anno-toggle"
+           onclick="document.getElementById('anno-${anno}').classList.toggle('hidden')">
+        📅 ${anno} ${isAnnoCorrente ? '🟢 anno corrente' : ''}
+      </div>
+
+      <div id="anno-${anno}" class="${isAnnoCorrente ? '' : 'hidden'}"></div>
+    `;
+
+    contenitore.appendChild(boxAnno);
+
+    const contenutoAnno = boxAnno.querySelector('#anno-' + anno);
+
+    Object.keys(prenotazioniStrutturate[anno]).forEach(mese => {
+      const boxMese = document.createElement('div');
+      boxMese.innerHTML = `<h3 style="margin-left:20px;">🗓️ ${mese}</h3>`;
+      contenutoAnno.appendChild(boxMese);
+
+      Object.keys(prenotazioniStrutturate[anno][mese]).forEach(settimana => {
+        const boxSettimana = document.createElement('div');
+        boxSettimana.innerHTML = `<h4 style="margin-left:40px;">📌 ${settimana}</h4>`;
+        boxMese.appendChild(boxSettimana);
+
+        Object.keys(prenotazioniStrutturate[anno][mese][settimana])
+          .sort()
+          .forEach(giorno => {
+
+            const prenotazioni =
+              prenotazioniStrutturate[anno][mese][settimana][giorno];
+
+            const safeId = `giorno-${anno}-${mese}-${settimana}-${giorno}`
+              .replace(/\s|[^\w-]/g, '_');
+
+            const boxGiorno = document.createElement('div');
+            boxGiorno.innerHTML = `
+              <div class="giorno-toggle"
+                   onclick="document.getElementById('${safeId}').classList.toggle('hidden')">
+                📅 ${giorno} (${prenotazioni.length} prenotazioni)
+              </div>
+
+              <div id="${safeId}" class="hidden">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th><th>Ragione Sociale</th><th>Produttore</th>
+                      <th>CER</th><th>Pericolo</th><th>Quantità</th>
+                      <th>Certificato</th><th>Stato</th><th>Azioni</th><th>Chat</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            `;
+
+            boxSettimana.appendChild(boxGiorno);
+            const tbody = boxGiorno.querySelector('tbody');
+
+            prenotazioni.forEach(p => {
+              const id = p.id;
+              const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
+
+              const riga = document.createElement('tr');
+              riga.classList.add('prenotazione-riga');
+              riga.dataset.stato = p.stato || 'in attesa';
+              riga.dataset.produttore = p.produttore;
+              riga.dataset.cer = p.codice_cer;
+
+              riga.innerHTML = `
+                <td>${id}</td>
+                <td>${p.ragione_sociale}</td>
+                <td>${p.produttore}</td>
+                <td>${p.codice_cer}</td>
+                <td>${p.caratteristiche_pericolo || '-'}</td>
+                <td>${p.quantita}</td>
+                <td>${p.certificato_analitico
+                  ? `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>`
+                  : '-'}</td>
+                <td><span id="badge-${id}" class="badge ${statoClass}">
+                  ${p.stato || 'in attesa'}
+                </span></td>
+                <td>
+                  <select id="stato-${id}">
+                    <option value="accettata">Accettata</option>
+                    <option value="non accettata">Non Accettata</option>
+                    <option value="richieste integrazioni">Richieste Integrazioni</option>
+                  </select>
+                  <button onclick="aggiornaStato(${id})">✔️</button>
+                </td>
+                <td>
+                  <div class="chat-box">
+                    <div class="chat-messages" id="chat-${id}"></div>
+                    <input type="text" id="msg-${id}" class="chat-input"
+                      placeholder="Scrivi…" onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
+                    <button onclick="inviaMessaggio(${id})">Invia</button>
+                    <span class="badge-unread hidden" id="unread-${id}">NUOVO</span>
                   </div>
-                  <div id="giorno-${anno}-${mese}-${settimana}-${giorno}" class="hidden">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>ID</th><th>Ragione Sociale</th><th>Produttore</th><th>CER</th>
-                          <th>Pericolo</th><th>Quantità</th><th>Certificato</th>
-                          <th>Stato</th><th>Azioni</th><th>Chat</th>
-                        </tr>
-                      </thead>
-                      <tbody></tbody>
-                    </table>
-                  </div>`;
-                boxSettimana.appendChild(boxGiorno);
+                </td>
+              `;
 
-                const tbody = boxGiorno.querySelector('tbody');
-
-                prenotazioni.forEach(p => {
-                  const id = p.id;
-                  const statoClass = (p.stato || 'in attesa').replace(/\s/g, '-');
-
-                  const riga = document.createElement('tr');
-                  riga.classList.add('prenotazione-riga');
-                  riga.dataset.stato = p.stato || 'in attesa';
-                  riga.dataset.produttore = p.produttore;
-                  riga.dataset.cer = p.codice_cer;
-
-                  riga.innerHTML = `
-                    <td>${id}</td>
-                    <td>${p.ragione_sociale}</td>
-                    <td>${p.produttore}</td>
-                    <td>${p.codice_cer}</td>
-                    <td>${p.caratteristiche_pericolo || '-'}</td>
-                    <td>${p.quantita}</td>
-                    <td>${p.certificato_analitico ? 
-                      `<a href="/impianto/download-certificato/${p.certificato_analitico}" target="_blank">Scarica</a>` 
-                      : '-'}</td>
-                    <td><span id="badge-${id}" class="badge ${statoClass}">${p.stato || 'in attesa'}</span></td>
-
-                    <td>
-                      <select id="stato-${id}">
-                        <option value="accettata">Accettata</option>
-                        <option value="non accettata">Non Accettata</option>
-                        <option value="richieste integrazioni">Richieste Integrazioni</option>
-                      </select>
-                      <button onclick="aggiornaStato(${id})">✔️</button>
-                    </td>
-
-                    <td>
-                      <div class="chat-box">
-                        <div class="chat-messages" id="chat-${id}"></div>
-                        <input type="text" class="chat-input" id="msg-${id}" placeholder="Scrivi…" 
-                          onkeydown="if(event.key==='Enter') inviaMessaggio(${id})">
-                        <button onclick="inviaMessaggio(${id})">Invia</button>
-                        <span class="badge-unread hidden" id="unread-${id}">NUOVO</span>
-                      </div>
-                    </td>
-                  `;
-
-                  tbody.appendChild(riga);
-
-                  caricaChat(id);
-                  setInterval(() => caricaChat(id), 2000);
-                });
-              });
+              tbody.appendChild(riga);
+              caricaChat(id);
+              setInterval(() => caricaChat(id), 2000);
             });
           });
-        });
+      });
+    });
+  });
+
       })
       .catch(err => console.error(err));
 
